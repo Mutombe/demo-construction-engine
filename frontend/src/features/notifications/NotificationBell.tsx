@@ -117,7 +117,7 @@ export function NotificationBell() {
             className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
             onClick={() => void markAll.mutateAsync().catch(() => undefined)}
           >
-            <Checks className="h-3.5 w-3.5" /> Mark all read
+            <Checks className="h-3.5 w-3.5" /> Mark All Read
           </button>
         )}
       </div>

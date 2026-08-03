@@ -77,7 +77,7 @@ function SuppliersPage() {
                 setDialogOpen(true);
               }}
             >
-              <Plus /> New supplier
+              <Plus /> New Supplier
             </Button>
           </Can>
         }

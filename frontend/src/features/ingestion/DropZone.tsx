@@ -1,4 +1,5 @@
-import { Sparkle, UploadSimple } from "@phosphor-icons/react";
+import { UploadSimple } from "@phosphor-icons/react";
+import { ClaudeIcon } from "@/components/ui/claude-icon";
 import { useRef, useState } from "react";
 import { useAiStatus } from "@/features/ai/useAiStatus";
 import { cn } from "@/lib/utils";
@@ -38,7 +39,7 @@ export function DropZone({ onFiles }: { onFiles: (files: File[]) => void }) {
     >
       {disabled ? (
         <>
-          <Sparkle className="h-8 w-8 text-muted-foreground" />
+          <ClaudeIcon className="h-8 w-8 text-muted-foreground" />
           <div className="text-sm font-medium">AI features are not configured</div>
           <div className="text-xs text-muted-foreground">
             Set ANTHROPIC_API_KEY on the backend to enable the AI inbox.

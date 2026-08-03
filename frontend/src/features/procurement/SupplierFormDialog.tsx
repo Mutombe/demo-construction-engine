@@ -109,17 +109,17 @@ export function SupplierFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{supplier ? `Edit ${supplier.name}` : "New supplier"}</DialogTitle>
+          <DialogTitle>{supplier ? `Edit ${supplier.name}` : "New Supplier"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="s-name">Company name</Label>
+            <Label htmlFor="s-name">Company Name</Label>
             <Input id="s-name" {...register("name")} />
             {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="s-contact">Contact person</Label>
+              <Label htmlFor="s-contact">Contact Person</Label>
               <Input id="s-contact" {...register("contact_name")} />
             </div>
             <div className="space-y-1.5">
@@ -138,7 +138,7 @@ export function SupplierFormDialog({
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="s-cats">Categories (comma-separated)</Label>
+            <Label htmlFor="s-cats">Categories (Comma-Separated)</Label>
             <Input id="s-cats" placeholder="cement, steel, plumbing" {...register("categories")} />
           </div>
           <div className="space-y-1.5">
@@ -150,7 +150,7 @@ export function SupplierFormDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={busy}>
-              {busy ? "Saving…" : supplier ? "Save changes" : "Create supplier"}
+              {busy ? "Saving…" : supplier ? "Save Changes" : "Create Supplier"}
             </Button>
           </DialogFooter>
         </form>

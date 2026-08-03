@@ -163,7 +163,7 @@ export function DayEntryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Site day entry</DialogTitle>
+          <DialogTitle>Site Day Entry</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
@@ -188,7 +188,7 @@ export function DayEntryDialog({
             <Label>Crew — tab through quantities</Label>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => markAll("1")}>
-                Everyone full day
+                Everyone Full Day
               </Button>
               <Button variant="outline" size="sm" onClick={() => setRows({})}>
                 Clear
@@ -260,7 +260,7 @@ export function DayEntryDialog({
                 Cancel
               </Button>
               <Button disabled={bulkMutation.isPending} onClick={() => void save()}>
-                {bulkMutation.isPending ? "Saving…" : "Record day"}
+                {bulkMutation.isPending ? "Saving…" : "Record Day"}
               </Button>
             </div>
           </DialogFooter>

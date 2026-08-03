@@ -145,7 +145,7 @@ function PayRunDetailPage() {
                 <Trash /> Delete
               </Button>
               <Button disabled={approveMutation.isPending} onClick={() => void approve()}>
-                <CheckCircle /> Approve &amp; post costs
+                <CheckCircle /> Approve &amp; Post Costs
               </Button>
             </>
           ) : (
@@ -158,7 +158,7 @@ function PayRunDetailPage() {
                 ).catch(() => toast.error("Download failed"))
               }
             >
-              <DownloadSimple /> All payslips (PDF)
+              <DownloadSimple /> All Payslips (PDF)
             </Button>
           )}
         </div>

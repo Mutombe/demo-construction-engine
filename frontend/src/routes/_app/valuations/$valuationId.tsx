@@ -151,7 +151,7 @@ function ValuationDetailPage() {
                     )
                   }
                 >
-                  <CheckCircle /> Mark paid
+                  <CheckCircle /> Mark Paid
                 </Button>
                 <Button
                   variant="outline"
@@ -197,7 +197,7 @@ function ValuationDetailPage() {
       {(valuation.lines ?? []).length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Measurement sheet</CardTitle>
+            <CardTitle>Measurement Sheet</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
@@ -206,8 +206,8 @@ function ValuationDetailPage() {
                   <TableHead>Item</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Unit</TableHead>
-                  <TableHead className="text-right">BOQ qty</TableHead>
-                  <TableHead className="text-right">Qty to date</TableHead>
+                  <TableHead className="text-right">BOQ Qty</TableHead>
+                  <TableHead className="text-right">Qty to Date</TableHead>
                   <TableHead className="text-right">Rate</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                 </TableRow>

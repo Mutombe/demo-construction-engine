@@ -98,7 +98,7 @@ function InventoryPage() {
                   setItemDialog(true);
                 }}
               >
-                <Plus /> New item
+                <Plus /> New Item
               </Button>
             </Can>
           </>
@@ -137,8 +137,8 @@ function InventoryPage() {
             <TableRow>
               <TableHead>Item</TableHead>
               <TableHead>Category</TableHead>
-              <TableHead className="text-right">On hand</TableHead>
-              <TableHead className="text-right">Avg cost</TableHead>
+              <TableHead className="text-right">On Hand</TableHead>
+              <TableHead className="text-right">Avg Cost</TableHead>
               <TableHead className="text-right">Value</TableHead>
               <TableHead className="w-56" />
             </TableRow>

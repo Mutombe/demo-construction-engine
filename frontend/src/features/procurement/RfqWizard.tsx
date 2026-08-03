@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { ClaudeIcon } from "@/components/ui/claude-icon";
 import { useNavigate } from "@tanstack/react-router";
-import { Sparkle } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
@@ -123,7 +123,7 @@ export function RfqWizard({
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>
-            {step === 1 ? "New RFQ — select BOQ items" : "New RFQ — document"}
+            {step === 1 ? "New RFQ — Select BOQ Items" : "New RFQ — Document"}
           </DialogTitle>
         </DialogHeader>
 
@@ -192,7 +192,7 @@ export function RfqWizard({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="rfq-due">Quotes due</Label>
+                <Label htmlFor="rfq-due">Quotes Due</Label>
                 <Input
                   id="rfq-due"
                   type="date"
@@ -204,7 +204,7 @@ export function RfqWizard({
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label htmlFor="rfq-body">RFQ document body</Label>
+                <Label htmlFor="rfq-body">RFQ Document Body</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     className="h-8 w-64 text-xs"
@@ -220,7 +220,7 @@ export function RfqWizard({
                     title={aiAvailable ? undefined : "AI not configured — add ANTHROPIC_API_KEY"}
                     onClick={() => void draftWithAi()}
                   >
-                    <Sparkle className="h-3.5 w-3.5" />
+                    <ClaudeIcon className="h-3.5 w-3.5" />
                     {generateMutation.isPending
                       ? "Drafting…"
                       : aiUsed
@@ -248,7 +248,7 @@ export function RfqWizard({
                 Back
               </Button>
               <Button disabled={createMutation.isPending} onClick={() => void save()}>
-                {createMutation.isPending ? "Saving…" : "Create RFQ draft"}
+                {createMutation.isPending ? "Saving…" : "Create RFQ Draft"}
               </Button>
             </div>
           </div>

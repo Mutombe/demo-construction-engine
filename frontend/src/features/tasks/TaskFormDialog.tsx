@@ -141,7 +141,7 @@ export function TaskFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>{task ? "Edit task" : "New task"}</DialogTitle>
+          <DialogTitle>{task ? "Edit Task" : "New Task"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-4 gap-3">
@@ -150,7 +150,7 @@ export function TaskFormDialog({
               <Input id="t-wbs" placeholder="2.3" {...register("wbs_code")} />
             </div>
             <div className="col-span-3 space-y-1.5">
-              <Label htmlFor="t-name">Task name</Label>
+              <Label htmlFor="t-name">Task Name</Label>
               <Input id="t-name" {...register("name")} />
               {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
             </div>
@@ -207,16 +207,16 @@ export function TaskFormDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="t-start">Planned start</Label>
+              <Label htmlFor="t-start">Planned Start</Label>
               <Input id="t-start" type="date" {...register("planned_start")} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="t-end">Planned end</Label>
+              <Label htmlFor="t-end">Planned End</Label>
               <Input id="t-end" type="date" {...register("planned_end")} />
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="t-pred">Depends on (predecessor)</Label>
+            <Label htmlFor="t-pred">Depends On (Predecessor)</Label>
             <Select id="t-pred" {...register("predecessor_id")}>
               <option value="">No dependency</option>
               {candidatePredecessors.map((t) => (
@@ -235,7 +235,7 @@ export function TaskFormDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={busy}>
-              {busy ? "Saving…" : task ? "Save changes" : "Create task"}
+              {busy ? "Saving…" : task ? "Save Changes" : "Create Task"}
             </Button>
           </DialogFooter>
         </form>

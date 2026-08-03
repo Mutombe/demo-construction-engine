@@ -70,7 +70,7 @@ function OverviewTab() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Budget by category</CardTitle>
+          <CardTitle>Budget by Category</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2.5">
           {!boq?.by_category.length && (
@@ -115,7 +115,7 @@ function OverviewTab() {
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
             <CardTitle className={cn(overdue?.length && "text-destructive")}>
-              Overdue tasks {overdue?.length ? `(${overdue.length})` : ""}
+              Overdue Tasks {overdue?.length ? `(${overdue.length})` : ""}
             </CardTitle>
             <Link
               to="/projects/$projectId/tasks"
@@ -145,7 +145,7 @@ function OverviewTab() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Recent costs</CardTitle>
+            <CardTitle>Recent Costs</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1.5">
             {!costs?.items.length && (

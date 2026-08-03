@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Sparkle, Warning } from "@phosphor-icons/react";
+import { Warning } from "@phosphor-icons/react";
+import { ClaudeIcon } from "@/components/ui/claude-icon";
 import { useEffect, useState } from "react";
 import { toast } from "@/lib/toast";
 import { Badge } from "@/components/ui/badge";
@@ -171,7 +172,7 @@ export function QuoteExtractDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Record quote — {rfq.doc_number}</DialogTitle>
+          <DialogTitle>Record Quote — {rfq.doc_number}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -195,7 +196,7 @@ export function QuoteExtractDialog({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Valid until</Label>
+                <Label>Valid Until</Label>
                 <Input
                   type="date"
                   value={validUntil}
@@ -203,7 +204,7 @@ export function QuoteExtractDialog({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Payment terms</Label>
+                <Label>Payment Terms</Label>
                 <Input
                   value={paymentTerms}
                   onChange={(e) => setPaymentTerms(e.target.value)}
@@ -224,7 +225,7 @@ export function QuoteExtractDialog({
                 title={aiAvailable ? undefined : "AI not configured — add ANTHROPIC_API_KEY"}
                 onClick={() => void extract()}
               >
-                <Sparkle className="h-3.5 w-3.5" />
+                <ClaudeIcon className="h-3.5 w-3.5" />
                 {extractMutation.isPending ? "Extracting…" : "Extract with AI"}
               </Button>
             </div>
@@ -239,9 +240,9 @@ export function QuoteExtractDialog({
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label>Quote lines</Label>
+              <Label>Quote Lines</Label>
               <Button type="button" variant="ghost" size="sm" onClick={addManualLine}>
-                + Add line manually
+                + Add Line Manually
               </Button>
             </div>
             <div className="max-h-64 space-y-1.5 overflow-y-auto pr-1">
@@ -307,7 +308,7 @@ export function QuoteExtractDialog({
               Cancel
             </Button>
             <Button disabled={createMutation.isPending} onClick={() => void save()}>
-              {createMutation.isPending ? "Saving…" : "Save quote"}
+              {createMutation.isPending ? "Saving…" : "Save Quote"}
             </Button>
           </div>
         </div>

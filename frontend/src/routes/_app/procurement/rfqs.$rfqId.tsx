@@ -106,7 +106,7 @@ function RfqDetailPage() {
           {rfq.status !== "draft" && (
             <Can perm="procurement:write">
               <Button onClick={() => setQuoteDialogOpen(true)}>
-                <Plus /> Record quote
+                <Plus /> Record Quote
               </Button>
             </Can>
           )}
@@ -124,7 +124,7 @@ function RfqDetailPage() {
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Schedule of items</CardTitle>
+              <CardTitle>Schedule of Items</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
@@ -154,7 +154,7 @@ function RfqDetailPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" /> RFQ document
+                  <FileText className="h-4 w-4" /> RFQ Document
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -206,7 +206,7 @@ function RfqDetailPage() {
                     <div className="mt-2">
                       <Can perm="procurement:write">
                         <Button size="sm" variant="outline" onClick={() => setPoQuoteId(quote.id)}>
-                          <ShoppingCart className="h-3.5 w-3.5" /> Create purchase order
+                          <ShoppingCart className="h-3.5 w-3.5" /> Create Purchase Order
                         </Button>
                       </Can>
                     </div>

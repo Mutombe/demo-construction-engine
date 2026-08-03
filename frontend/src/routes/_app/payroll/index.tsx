@@ -91,7 +91,7 @@ function PayRunCreateDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>New pay run</DialogTitle>
+          <DialogTitle>New Pay Run</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
@@ -113,7 +113,7 @@ function PayRunCreateDialog({
               Cancel
             </Button>
             <Button disabled={createMutation.isPending} onClick={() => void save()}>
-              {createMutation.isPending ? "Building…" : "Create draft"}
+              {createMutation.isPending ? "Building…" : "Create Draft"}
             </Button>
           </DialogFooter>
         </div>
@@ -155,12 +155,12 @@ function PayrollPage() {
           <div className="flex gap-2">
             <Can perm="timesheet:write">
               <Button variant="outline" onClick={() => setDayDialog(true)}>
-                <CalendarPlus /> Site day entry
+                <CalendarPlus /> Site Day Entry
               </Button>
             </Can>
             <Can perm="payroll:write">
               <Button onClick={() => setRunDialog(true)}>
-                <Money /> New pay run
+                <Money /> New Pay Run
               </Button>
             </Can>
           </div>
@@ -171,7 +171,7 @@ function PayrollPage() {
         <TabsList>
           <TabsTrigger value="timesheets">Timesheets</TabsTrigger>
           <TabsTrigger value="workers">Workers</TabsTrigger>
-          {canAdmin && <TabsTrigger value="runs">Pay runs</TabsTrigger>}
+          {canAdmin && <TabsTrigger value="runs">Pay Runs</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="timesheets">
@@ -186,7 +186,7 @@ function PayrollPage() {
                 action={
                   <Can perm="timesheet:write">
                     <Button size="sm" onClick={() => setDayDialog(true)}>
-                      <CalendarPlus /> Site day entry
+                      <CalendarPlus /> Site Day Entry
                     </Button>
                   </Can>
                 }
@@ -287,7 +287,7 @@ function PayrollPage() {
                 action={
                   <Can perm="payroll:write">
                     <Button size="sm" onClick={() => setWorkerDialog(true)}>
-                      <Plus /> Add worker
+                      <Plus /> Add Worker
                     </Button>
                   </Can>
                 }
@@ -375,7 +375,7 @@ function PayrollPage() {
                   setWorkerDialog(true);
                 }}
               >
-                <Plus /> Add worker
+                <Plus /> Add Worker
               </Button>
             </div>
           )}
@@ -393,7 +393,7 @@ function PayrollPage() {
                   hint="A pay run gathers all unpaid timesheets in a period, prices them and posts labour costs on approval."
                   action={
                     <Button size="sm" onClick={() => setRunDialog(true)}>
-                      <Money /> New pay run
+                      <Money /> New Pay Run
                     </Button>
                   }
                 />

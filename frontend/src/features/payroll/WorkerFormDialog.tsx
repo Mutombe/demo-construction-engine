@@ -137,12 +137,12 @@ export function WorkerFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{worker ? worker.full_name : "New worker"}</DialogTitle>
+          <DialogTitle>{worker ? worker.full_name : "New Worker"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Full name</Label>
+              <Label>Full Name</Label>
               <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
             </div>
             <div className="space-y-1.5">
@@ -156,7 +156,7 @@ export function WorkerFormDialog({
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <Label>Pay basis</Label>
+              <Label>Pay Basis</Label>
               <Select
                 value={payBasis}
                 onChange={(e) => setPayBasis(e.target.value as "daily" | "hourly")}
@@ -202,7 +202,7 @@ export function WorkerFormDialog({
 
           {worker && (
             <div className="space-y-2 rounded-md border p-3">
-              <Label>Recurring allowances &amp; deductions (per pay run)</Label>
+              <Label>Recurring Allowances &amp; Deductions (per Pay Run)</Label>
               {(worker.pay_items ?? []).length === 0 && (
                 <p className="text-xs text-muted-foreground">None yet.</p>
               )}
@@ -267,7 +267,7 @@ export function WorkerFormDialog({
               Cancel
             </Button>
             <Button disabled={pending} onClick={() => void save()}>
-              {pending ? "Saving…" : worker ? "Save changes" : "Add worker"}
+              {pending ? "Saving…" : worker ? "Save Changes" : "Add Worker"}
             </Button>
           </DialogFooter>
         </div>

@@ -39,11 +39,11 @@ export function pct(value: number | null | undefined): string {
 export const STATUS_LABELS: Record<string, string> = {
   planning: "Planning",
   active: "Active",
-  on_hold: "On hold",
+  on_hold: "On Hold",
   completed: "Completed",
   cancelled: "Cancelled",
-  not_started: "Not started",
-  in_progress: "In progress",
+  not_started: "Not Started",
+  in_progress: "In Progress",
   blocked: "Blocked",
   done: "Done",
 };

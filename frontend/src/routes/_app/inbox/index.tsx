@@ -34,9 +34,9 @@ export const Route = createFileRoute("/_app/inbox/")({
 });
 
 const STATUS_FILTERS: { value: string; label: string }[] = [
-  { value: "", label: "All statuses" },
-  { value: "needs_info", label: "Needs review" },
-  { value: "drafted", label: "Ready to approve" },
+  { value: "", label: "All Statuses" },
+  { value: "needs_info", label: "Needs Review" },
+  { value: "drafted", label: "Ready to Approve" },
   { value: "posted", label: "Posted" },
   { value: "rejected", label: "Rejected" },
   { value: "failed", label: "Failed" },

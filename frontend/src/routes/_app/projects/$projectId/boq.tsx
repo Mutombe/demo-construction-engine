@@ -28,10 +28,10 @@ function BoqTab() {
     <div>
       <div className="mb-3 flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={() => void exportCost("csv")}>
-          <DownloadSimple /> Cost report CSV
+          <DownloadSimple /> Cost Report CSV
         </Button>
         <Button variant="outline" size="sm" onClick={() => void exportCost("xlsx")}>
-          <DownloadSimple /> Cost report Excel
+          <DownloadSimple /> Cost Report Excel
         </Button>
       </div>
       <BoqSheet projectId={projectId} tree={data} />

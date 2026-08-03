@@ -21,6 +21,7 @@
   --destructive-foreground: oklch(0.985 0.002 90);
   --success: oklch(0.55 0.13 150);
   --warning: oklch(0.7 0.15 75);
+  --claude: #d97757;
   --border: oklch(0.91 0.005 260);
   --input: oklch(0.91 0.005 260);
   --ring: oklch(0.45 0.13 255);
@@ -50,6 +51,7 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  --color-claude: var(--claude);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -145,4 +147,23 @@
   .row-creating {
     animation: none;
   }
+}
+
+/* --- Leaflet map markers ----------------------------------------------------
+   Leaflet gives divIcons a white box + border by default; our progress-ring
+   markers bring their own chrome, and the % must sit dead-centre. */
+.erp-map-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.erp-map-marker .marker-pct {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
 }

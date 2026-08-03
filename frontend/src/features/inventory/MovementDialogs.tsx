@@ -109,9 +109,9 @@ export function MovementDialog({
   };
 
   const titles: Record<MovementKind, string> = {
-    "goods-in": `Goods in — ${item.name}`,
-    issue: `Issue to project — ${item.name}`,
-    adjust: `Adjust stock — ${item.name}`,
+    "goods-in": `Goods In — ${item.name}`,
+    issue: `Issue to Project — ${item.name}`,
+    adjust: `Adjust Stock — ${item.name}`,
   };
 
   return (
@@ -139,7 +139,7 @@ export function MovementDialog({
             </div>
             {kind === "goods-in" && (
               <div className="space-y-1.5">
-                <Label>Unit cost (USD)</Label>
+                <Label>Unit Cost (USD)</Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -151,7 +151,7 @@ export function MovementDialog({
             )}
             {kind === "issue" && (
               <div className="space-y-1.5">
-                <Label>Charge to project</Label>
+                <Label>Charge to Project</Label>
                 <Select value={projectId} onChange={(e) => setProjectId(e.target.value)}>
                   <option value="">Select project…</option>
                   {projects?.items.map((p) => (
@@ -165,7 +165,7 @@ export function MovementDialog({
           </div>
           {kind === "goods-in" && (
             <div className="space-y-1.5">
-              <Label>Reference (PO / delivery note)</Label>
+              <Label>Reference (PO / Delivery Note)</Label>
               <Input
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}
@@ -174,7 +174,7 @@ export function MovementDialog({
             </div>
           )}
           <div className="space-y-1.5">
-            <Label>Notes{kind === "adjust" && " (required)"}</Label>
+            <Label>Notes{kind === "adjust" && " (Required)"}</Label>
             <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
           <DialogFooter>

@@ -110,7 +110,7 @@ function ExpenseClaimDetailPage() {
                 void act(() => cancelMutation.mutateAsync({ claimId }), "Claim cancelled")
               }
             >
-              <Prohibit /> Cancel claim
+              <Prohibit /> Cancel Claim
             </Button>
           )}
         </div>
@@ -139,7 +139,7 @@ function ExpenseClaimDetailPage() {
                 ).then(() => setRejecting(false))
               }
             >
-              Confirm reject
+              Confirm Reject
             </Button>
           </CardContent>
         </Card>
@@ -148,7 +148,7 @@ function ExpenseClaimDetailPage() {
       <div className="grid gap-4 xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader>
-            <CardTitle>Claim details</CardTitle>
+            <CardTitle>Claim Details</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <Meta label="Amount">

@@ -1,5 +1,6 @@
 import { useRouterState } from "@tanstack/react-router";
-import { ArrowCounterClockwise, MagnifyingGlass, PaperPlaneTilt, Sparkle, StopCircle, X } from "@phosphor-icons/react";
+import { ArrowCounterClockwise, MagnifyingGlass, PaperPlaneTilt, StopCircle, X } from "@phosphor-icons/react";
+import { ClaudeIcon } from "@/components/ui/claude-icon";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,7 +42,7 @@ export function ChatPanel() {
     <div className="fixed inset-y-0 right-0 z-50 flex w-[400px] flex-col border-l bg-card shadow-xl">
       <div className="flex h-14 shrink-0 items-center justify-between border-b px-4">
         <div className="flex items-center gap-2 font-semibold">
-          <Sparkle className="h-4 w-4 text-primary" /> Assistant
+          <ClaudeIcon className="h-4 w-4 text-claude" /> Assistant
         </div>
         <div className="flex items-center gap-1">
           <Button

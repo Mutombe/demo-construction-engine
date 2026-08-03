@@ -131,7 +131,7 @@ function ExpensesPage() {
         actions={
           <Can perm="expense:submit">
             <Button onClick={() => setDialogOpen(true)}>
-              <Plus /> New claim
+              <Plus /> New Claim
             </Button>
           </Can>
         }
@@ -152,7 +152,7 @@ function ExpensesPage() {
             })
           }
         >
-          <option value="">All statuses</option>
+          <option value="">All Statuses</option>
           <option value="pending">Pending</option>
           <option value="approved">Approved</option>
           <option value="rejected">Rejected</option>
@@ -298,7 +298,7 @@ function ExpensesPage() {
       <Dialog open={rejecting !== null} onOpenChange={(open) => !open && setRejecting(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject claim</DialogTitle>
+            <DialogTitle>Reject Claim</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <Textarea
@@ -316,7 +316,7 @@ function ExpensesPage() {
                 disabled={!rejectReason.trim() || rejectMutation.isPending}
                 onClick={() => void reject()}
               >
-                Reject claim
+                Reject Claim
               </Button>
             </DialogFooter>
           </div>

@@ -91,7 +91,7 @@ export function StockItemFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{item ? `Edit ${item.code}` : "New stock item"}</DialogTitle>
+          <DialogTitle>{item ? `Edit ${item.code}` : "New Stock Item"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-3">
@@ -118,7 +118,7 @@ export function StockItemFormDialog({
               <Input value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="bag" />
             </div>
             <div className="space-y-1.5">
-              <Label>Reorder level</Label>
+              <Label>Reorder Level</Label>
               <Input
                 type="number"
                 step="any"
@@ -133,7 +133,7 @@ export function StockItemFormDialog({
               Cancel
             </Button>
             <Button onClick={save}>
-              {item ? "Save changes" : "Create item"}
+              {item ? "Save Changes" : "Create Item"}
             </Button>
           </DialogFooter>
         </div>

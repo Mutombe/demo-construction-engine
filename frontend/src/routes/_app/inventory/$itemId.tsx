@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_app/inventory/$itemId")({
 });
 
 const MovementTypeBadge = makeBadge({
-  goods_in: ["success", "Goods in"],
+  goods_in: ["success", "Goods In"],
   issue: ["default", "Issue"],
   adjustment: ["secondary", "Adjustment"],
 });
@@ -110,9 +110,9 @@ function StockItemDetailPage() {
               <TableHead>Type</TableHead>
               <TableHead>Date</TableHead>
               <TableHead className="text-right">Qty</TableHead>
-              <TableHead className="text-right">Unit cost</TableHead>
+              <TableHead className="text-right">Unit Cost</TableHead>
               <TableHead>Project</TableHead>
-              <TableHead>Reference / notes</TableHead>
+              <TableHead>Reference / Notes</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

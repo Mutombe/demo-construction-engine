@@ -61,8 +61,8 @@ function ProgressRing({ pct, size = 64 }: { pct: number; size?: number }) {
 
 const STATUS_LABEL: Record<string, string> = {
   planning: "Planning",
-  active: "In progress",
-  on_hold: "On hold",
+  active: "In Progress",
+  on_hold: "On Hold",
   completed: "Completed",
   cancelled: "Cancelled",
 };
@@ -268,7 +268,7 @@ function ProjectView({
         onClick={onBack}
         className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
-        <ArrowLeft className="h-3.5 w-3.5" /> All projects
+        <ArrowLeft className="h-3.5 w-3.5" /> All Projects
       </button>
 
       <div className="flex flex-wrap items-center gap-5 rounded-xl border bg-card p-5 shadow-sm">
@@ -351,7 +351,7 @@ function ProjectView({
 
       <section>
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Payment certificates
+          Payment Certificates
         </h2>
         {(valuationsQuery.data?.length ?? 0) === 0 ? (
           <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">

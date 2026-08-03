@@ -83,7 +83,7 @@ function WorkerDetailPage() {
         </div>
         <Can perm="payroll:write">
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-            <PencilSimple /> Edit worker
+            <PencilSimple /> Edit Worker
           </Button>
         </Can>
       </div>
@@ -114,7 +114,7 @@ function WorkerDetailPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Recent timesheets</CardTitle>
+          <CardTitle>Recent Timesheets</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Table>

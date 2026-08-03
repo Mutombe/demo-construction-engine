@@ -51,7 +51,7 @@ const FILTERS = [
   { key: "all", label: "All" },
   { key: "active", label: "Active" },
   { key: "planning", label: "Planning" },
-  { key: "on_hold", label: "On hold" },
+  { key: "on_hold", label: "On Hold" },
   { key: "completed", label: "Completed" },
 ] as const;
 
@@ -66,13 +66,13 @@ function buildMarkerIcon(status: string, progress = 0) {
   const offset = c - (safe / 100) * c;
   const fontSize = safe >= 100 ? 10 : 11;
   const html = `
-    <div style="position:relative;width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
+    <div style="position:relative;width:${size}px;height:${size}px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
       <svg width="${size}" height="${size}" style="position:absolute;inset:0;transform:rotate(-90deg);">
         <circle cx="${cx}" cy="${cx}" r="${r}" fill="white" stroke="rgba(17,17,17,0.1)" stroke-width="3"/>
         <circle cx="${cx}" cy="${cx}" r="${r}" fill="none" stroke="${color}" stroke-width="3"
           stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${offset}"/>
       </svg>
-      <span style="position:relative;font-family:system-ui,sans-serif;font-size:${fontSize}px;font-weight:600;color:${color};line-height:1;">${safe}%</span>
+      <span class="marker-pct" style="font-family:system-ui,sans-serif;font-size:${fontSize}px;color:${color};">${safe}%</span>
     </div>`;
   return L.divIcon({
     className: "erp-map-marker",
@@ -143,7 +143,7 @@ function SiteMapPage() {
   return (
     <div>
       <PageHeader
-        title="Site map"
+        title="Site Map"
         description="Every pinned project — colour is status, the ring is live progress"
       />
 

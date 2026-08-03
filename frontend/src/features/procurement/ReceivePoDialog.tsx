@@ -213,7 +213,7 @@ export function ReceivePoDialog({
               disabled={receiveMutation.isPending || !storeReady}
               onClick={() => void submit()}
             >
-              {receiveMutation.isPending ? "Receiving…" : "Receive delivery"}
+              {receiveMutation.isPending ? "Receiving…" : "Receive Delivery"}
             </Button>
           </DialogFooter>
         </div>

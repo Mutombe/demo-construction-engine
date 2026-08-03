@@ -55,7 +55,7 @@ function ClientsPage() {
                 setDialogOpen(true);
               }}
             >
-              <Plus /> New client
+              <Plus /> New Client
             </Button>
           </Can>
         }

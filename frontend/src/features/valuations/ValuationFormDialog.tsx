@@ -125,16 +125,16 @@ export function ValuationFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{valuation ? `Edit ${valuation.doc_number}` : "New valuation"}</DialogTitle>
+          <DialogTitle>{valuation ? `Edit ${valuation.doc_number}` : "New Valuation"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Period ending</Label>
+              <Label>Period Ending</Label>
               <Input type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label>Gross valuation to date (USD)</Label>
+              <Label>Gross Valuation to Date (USD)</Label>
               <Input
                 type="number"
                 step="0.01"
@@ -188,7 +188,7 @@ export function ValuationFormDialog({
               Cancel
             </Button>
             <Button disabled={pending} onClick={() => void save()}>
-              {pending ? "Saving…" : valuation ? "Save changes" : "Create draft"}
+              {pending ? "Saving…" : valuation ? "Save Changes" : "Create Draft"}
             </Button>
           </DialogFooter>
         </div>

@@ -112,7 +112,7 @@ export function ExpenseFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>New expense claim</DialogTitle>
+          <DialogTitle>New Expense Claim</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
@@ -167,11 +167,11 @@ export function ExpenseFormDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Receipt reference</Label>
+              <Label>Receipt Reference</Label>
               <Input value={receiptRef} onChange={(e) => setReceiptRef(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label>BOQ line (optional)</Label>
+              <Label>BOQ Line (Optional)</Label>
               <Select value={boqItemId} onChange={(e) => setBoqItemId(e.target.value)}>
                 <option value="">Unallocated</option>
                 {boq?.sections.flatMap((s) =>
@@ -188,7 +188,7 @@ export function ExpenseFormDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={save}>Submit claim</Button>
+            <Button onClick={save}>Submit Claim</Button>
           </DialogFooter>
         </div>
       </DialogContent>

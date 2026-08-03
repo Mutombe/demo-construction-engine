@@ -87,15 +87,15 @@ function LineageLink({
 
 const FIELD_LABELS: Record<string, string> = {
   supplier_name: "Supplier",
-  invoice_number: "Invoice number",
-  invoice_date: "Invoice date",
-  total_amount: "Total amount",
+  invoice_number: "Invoice Number",
+  invoice_date: "Invoice Date",
+  total_amount: "Total Amount",
   project_match: "Project",
   vendor_name: "Vendor",
-  receipt_date: "Receipt date",
+  receipt_date: "Receipt Date",
   description: "Description",
-  po_match: "Purchase order",
-  delivery_date: "Delivery date",
+  po_match: "Purchase Order",
+  delivery_date: "Delivery Date",
   rfq_match: "RFQ",
 };
 
@@ -361,7 +361,7 @@ export function ReviewPanel({
                   disabled={rejectMutation.isPending}
                   onClick={() => void reject()}
                 >
-                  <XCircle /> Confirm reject
+                  <XCircle /> Confirm Reject
                 </Button>
               </>
             ) : (
@@ -375,7 +375,7 @@ export function ReviewPanel({
                     disabled={redraftMutation.isPending}
                     onClick={() => void recheck()}
                   >
-                    {redraftMutation.isPending ? "Re-checking…" : "Apply corrections"}
+                    {redraftMutation.isPending ? "Re-checking…" : "Apply Corrections"}
                   </Button>
                 )}
                 <Can perm="ingestion:approve">
@@ -392,7 +392,7 @@ export function ReviewPanel({
                     }
                     onClick={() => void approve()}
                   >
-                    <CheckCircle /> Approve &amp; post
+                    <CheckCircle /> Approve &amp; Post
                   </Button>
                 </Can>
               </>

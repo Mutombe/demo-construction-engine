@@ -1,4 +1,5 @@
-import { Copy, Sparkle } from "@phosphor-icons/react";
+import { Copy } from "@phosphor-icons/react";
+import { ClaudeIcon } from "@/components/ui/claude-icon";
 import { useEffect, useState } from "react";
 import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
@@ -74,12 +75,12 @@ export function WeeklyReportDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Weekly site report</DialogTitle>
+          <DialogTitle>Weekly Site Report</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="flex items-end gap-3">
             <div className="space-y-1.5">
-              <Label>Week starting</Label>
+              <Label>Week Starting</Label>
               <Input
                 type="date"
                 className="w-44"
@@ -92,7 +93,7 @@ export function WeeklyReportDialog({
               title={aiAvailable ? undefined : "AI not configured — add ANTHROPIC_API_KEY"}
               onClick={() => void generate()}
             >
-              <Sparkle />
+              <ClaudeIcon />
               {generateMutation.isPending ? "Writing report…" : markdown ? "Regenerate" : "Generate"}
             </Button>
             {markdown && (

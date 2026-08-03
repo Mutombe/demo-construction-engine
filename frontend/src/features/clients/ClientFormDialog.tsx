@@ -78,16 +78,16 @@ export function ClientFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{client ? client.name : "New client"}</DialogTitle>
+          <DialogTitle>{client ? client.name : "New Client"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Company / client name</Label>
+            <Label>Company / Client Name</Label>
             <Input value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Contact person</Label>
+              <Label>Contact Person</Label>
               <Input value={contact} onChange={(e) => setContact(e.target.value)} />
             </div>
             <div className="space-y-1.5">
@@ -108,7 +108,7 @@ export function ClientFormDialog({
               Cancel
             </Button>
             <Button disabled={pending} onClick={() => void save()}>
-              {pending ? "Saving…" : client ? "Save changes" : "Add client"}
+              {pending ? "Saving…" : client ? "Save Changes" : "Add Client"}
             </Button>
           </DialogFooter>
         </div>

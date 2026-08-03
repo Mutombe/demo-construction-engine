@@ -120,11 +120,11 @@ export function ProjectFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>{project ? `Edit ${project.code}` : "New project"}</DialogTitle>
+          <DialogTitle>{project ? `Edit ${project.code}` : "New Project"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="p-name">Project name</Label>
+            <Label htmlFor="p-name">Project Name</Label>
             <Input id="p-name" {...register("name")} />
             {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
           </div>
@@ -160,21 +160,21 @@ export function ProjectFormDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="p-start">Planned start</Label>
+              <Label htmlFor="p-start">Planned Start</Label>
               <Input id="p-start" type="date" {...register("planned_start")} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="p-end">Planned end</Label>
+              <Label htmlFor="p-end">Planned End</Label>
               <Input id="p-end" type="date" {...register("planned_end")} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="p-value">Contract value (USD)</Label>
+              <Label htmlFor="p-value">Contract Value (USD)</Label>
               <Input id="p-value" type="number" step="0.01" min="0" {...register("contract_value")} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="p-pm">Project manager</Label>
+              <Label htmlFor="p-pm">Project Manager</Label>
               <Select id="p-pm" {...register("project_manager_id")}>
                 <option value="">Unassigned</option>
                 {users?.items
@@ -189,7 +189,7 @@ export function ProjectFormDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="p-site">Site address</Label>
+              <Label htmlFor="p-site">Site Address</Label>
               <Input id="p-site" {...register("site_address")} />
             </div>
             <div className="space-y-1.5">
@@ -206,7 +206,7 @@ export function ProjectFormDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={busy}>
-              {busy ? "Saving…" : project ? "Save changes" : "Create project"}
+              {busy ? "Saving…" : project ? "Save Changes" : "Create Project"}
             </Button>
           </DialogFooter>
         </form>

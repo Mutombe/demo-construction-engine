@@ -106,7 +106,7 @@ function SupplierDetailPage() {
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Purchase orders</CardTitle>
+            <CardTitle>Purchase Orders</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <Table>

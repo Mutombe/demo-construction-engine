@@ -83,7 +83,7 @@ function TasksTab() {
               setDialogOpen(true);
             }}
           >
-            <Plus /> New task
+            <Plus /> New Task
           </Button>
         </Can>
       </div>

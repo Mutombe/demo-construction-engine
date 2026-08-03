@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowCounterClockwise, CheckCircle, FileText, Plus, Sparkle } from "@phosphor-icons/react";
+import { ArrowCounterClockwise, CheckCircle, FileText, Plus } from "@phosphor-icons/react";
+import { ClaudeIcon } from "@/components/ui/claude-icon";
 import { useState } from "react";
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/toast";
@@ -71,13 +72,13 @@ function SiteTab() {
       <div className="flex justify-end gap-2">
         <Can perm="site:write">
           <Button variant="outline" onClick={() => setReportDialog(true)}>
-            <Sparkle className="text-primary" /> Draft weekly report
+            <ClaudeIcon className="text-claude" /> Draft Weekly Report
           </Button>
           <Button
             variant="outline"
             onClick={() => setIssueDialog(true)}
           >
-            <Plus /> Raise issue
+            <Plus /> Raise Issue
           </Button>
           <Button
             onClick={() => {
@@ -85,14 +86,14 @@ function SiteTab() {
               setDiaryDialog(true);
             }}
           >
-            <FileText /> New diary entry
+            <FileText /> New Diary Entry
           </Button>
         </Can>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Daily site diary</CardTitle>
+          <CardTitle>Daily Site Diary</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -101,7 +102,7 @@ function SiteTab() {
                 <TableHead>Date</TableHead>
                 <TableHead>Weather</TableHead>
                 <TableHead className="text-right">Labour</TableHead>
-                <TableHead>Work done</TableHead>
+                <TableHead>Work Done</TableHead>
                 <TableHead>Delays</TableHead>
               </TableRow>
             </TableHeader>
@@ -155,7 +156,7 @@ function SiteTab() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Issues & incidents</CardTitle>
+          <CardTitle>Issues & Incidents</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>

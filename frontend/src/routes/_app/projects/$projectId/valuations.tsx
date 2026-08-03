@@ -153,7 +153,7 @@ function ValuationsTab() {
               setFormOpen(true);
             }}
           >
-            <Plus /> New valuation
+            <Plus /> New Valuation
           </Button>
         </Can>
       </div>
@@ -166,12 +166,12 @@ function ValuationsTab() {
                 <TableHead>No.</TableHead>
                 <TableHead>Document</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Period end</TableHead>
+                <TableHead>Period End</TableHead>
                 <TableHead className="text-right">Gross</TableHead>
                 <TableHead className="text-right">Retention</TableHead>
                 <TableHead className="text-right">Previous</TableHead>
-                <TableHead className="text-right">Net certified</TableHead>
-                <TableHead>Issued / paid</TableHead>
+                <TableHead className="text-right">Net Certified</TableHead>
+                <TableHead>Issued / Paid</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>

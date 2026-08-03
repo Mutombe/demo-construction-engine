@@ -261,7 +261,7 @@ export function BoqSheet({ projectId, tree }: { projectId: string; tree: BoqTree
                 onClick={() => void addItem(section.id, items)}
                 className="flex w-full items-center gap-1.5 border-b px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               >
-                <Plus className="h-3.5 w-3.5" /> Add line to {section.code}
+                <Plus className="h-3.5 w-3.5" /> Add Line to {section.code}
               </button>
             )}
           </div>
@@ -273,7 +273,7 @@ export function BoqSheet({ projectId, tree }: { projectId: string; tree: BoqTree
           onClick={() => void addSection()}
           className="flex w-full items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
-          <Plus className="h-4 w-4" /> Add section
+          <Plus className="h-4 w-4" /> Add Section
         </button>
       )}
 

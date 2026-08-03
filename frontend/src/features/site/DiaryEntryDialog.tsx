@@ -93,7 +93,7 @@ export function DiaryEntryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{entry ? "Edit diary entry" : "New diary entry"}</DialogTitle>
+          <DialogTitle>{entry ? "Edit Diary Entry" : "New Diary Entry"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-3">
@@ -111,7 +111,7 @@ export function DiaryEntryDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Labour headcount</Label>
+              <Label>Labour Headcount</Label>
               <Input
                 type="number"
                 min="0"
@@ -121,7 +121,7 @@ export function DiaryEntryDialog({
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Plant & equipment on site</Label>
+            <Label>Plant & Equipment on Site</Label>
             <Input
               value={plant}
               onChange={(e) => setPlant(e.target.value)}
@@ -129,7 +129,7 @@ export function DiaryEntryDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Work done</Label>
+            <Label>Work Done</Label>
             <Textarea rows={3} value={workDone} onChange={(e) => setWorkDone(e.target.value)} />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -147,7 +147,7 @@ export function DiaryEntryDialog({
               Cancel
             </Button>
             <Button disabled={busy} onClick={() => void save()}>
-              {busy ? "Saving…" : "Save entry"}
+              {busy ? "Saving…" : "Save Entry"}
             </Button>
           </DialogFooter>
         </div>

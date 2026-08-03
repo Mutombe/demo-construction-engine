@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Sparkle } from "@phosphor-icons/react";
+import { ClaudeIcon } from "@/components/ui/claude-icon";
 import { useEffect, useState } from "react";
 import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
@@ -94,7 +94,7 @@ export function PoFromQuoteDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Create purchase order from quote</DialogTitle>
+          <DialogTitle>Create Purchase Order from Quote</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
@@ -102,7 +102,7 @@ export function PoFromQuoteDialog({
             drafts the commercial terms text.
           </p>
           <div className="space-y-1.5">
-            <Label htmlFor="po-delivery">Expected delivery</Label>
+            <Label htmlFor="po-delivery">Expected Delivery</Label>
             <Input
               id="po-delivery"
               type="date"
@@ -113,7 +113,7 @@ export function PoFromQuoteDialog({
           </div>
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="po-terms">Commercial terms</Label>
+              <Label htmlFor="po-terms">Commercial Terms</Label>
               <Button
                 type="button"
                 variant="outline"
@@ -122,8 +122,8 @@ export function PoFromQuoteDialog({
                 title={aiAvailable ? undefined : "AI not configured — add ANTHROPIC_API_KEY"}
                 onClick={() => void draftTerms()}
               >
-                <Sparkle className="h-3.5 w-3.5" />
-                {draftMutation.isPending ? "Drafting…" : "Draft terms with AI"}
+                <ClaudeIcon className="h-3.5 w-3.5" />
+                {draftMutation.isPending ? "Drafting…" : "Draft Terms with AI"}
               </Button>
             </div>
             <Textarea
@@ -135,7 +135,7 @@ export function PoFromQuoteDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="po-notes">Internal notes</Label>
+            <Label htmlFor="po-notes">Internal Notes</Label>
             <Textarea
               id="po-notes"
               rows={2}
@@ -148,7 +148,7 @@ export function PoFromQuoteDialog({
               Cancel
             </Button>
             <Button disabled={createMutation.isPending} onClick={() => void create()}>
-              {createMutation.isPending ? "Creating…" : "Create PO draft"}
+              {createMutation.isPending ? "Creating…" : "Create PO Draft"}
             </Button>
           </DialogFooter>
         </div>

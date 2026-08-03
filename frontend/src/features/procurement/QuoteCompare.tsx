@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, Sparkle } from "@phosphor-icons/react";
+import { Check } from "@phosphor-icons/react";
+import { ClaudeIcon } from "@/components/ui/claude-icon";
 import { useState } from "react";
 import { toast } from "@/lib/toast";
 import { Badge } from "@/components/ui/badge";
@@ -70,15 +71,15 @@ export function QuoteCompare({
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
-        <CardTitle>Compare quotes</CardTitle>
+        <CardTitle>Compare Quotes</CardTitle>
         <Button
           size="sm"
           disabled={!aiAvailable || compareMutation.isPending}
           title={aiAvailable ? undefined : "AI not configured — add ANTHROPIC_API_KEY"}
           onClick={() => void analyze()}
         >
-          <Sparkle className="h-3.5 w-3.5" />
-          {compareMutation.isPending ? "Analyzing…" : "Analyze & recommend"}
+          <ClaudeIcon className="h-3.5 w-3.5" />
+          {compareMutation.isPending ? "Analyzing…" : "Analyze & Recommend"}
         </Button>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -99,7 +100,7 @@ export function QuoteCompare({
                       {s.supplier_name}
                       {String(s.quote_id) === String(recommendedQuoteId) && (
                         <Badge variant="success" className="ml-1.5">
-                          AI pick
+                          AI Pick
                         </Badge>
                       )}
                     </th>
@@ -146,7 +147,7 @@ export function QuoteCompare({
                   </tr>
                 ))}
                 <tr className="border-b bg-secondary/40 text-xs">
-                  <td className="px-2 py-1.5 font-medium">Coverage of RFQ lines</td>
+                  <td className="px-2 py-1.5 font-medium">Coverage of RFQ Lines</td>
                   {matrix.suppliers.map((s) => (
                     <td key={s.quote_id} className="px-2 py-1.5 text-right">
                       {s.coverage_pct}%
@@ -154,7 +155,7 @@ export function QuoteCompare({
                   ))}
                 </tr>
                 <tr className="border-b text-xs">
-                  <td className="px-2 py-1.5 font-medium">Comparable basis total</td>
+                  <td className="px-2 py-1.5 font-medium">Comparable Basis Total</td>
                   {matrix.suppliers.map((s) => (
                     <td key={s.quote_id} className="px-2 py-1.5 text-right tabular-nums">
                       {moneyExact(s.comparable_total)}
@@ -162,7 +163,7 @@ export function QuoteCompare({
                   ))}
                 </tr>
                 <tr className="font-semibold">
-                  <td className="px-2 py-2">Quoted total</td>
+                  <td className="px-2 py-2">Quoted Total</td>
                   {matrix.suppliers.map((s) => (
                     <td key={s.quote_id} className="px-2 py-2 text-right tabular-nums">
                       {moneyExact(s.total_amount)}
@@ -212,7 +213,7 @@ export function QuoteCompare({
             )}
             <div className="rounded-md border bg-card p-3">
               <div className="mb-1 flex items-center gap-2 text-sm font-semibold">
-                <Sparkle className="h-4 w-4 text-primary" />
+                <ClaudeIcon className="h-4 w-4 text-claude" />
                 Recommendation: {analysis.recommendation.supplier_name}
               </div>
               <p className="text-sm text-muted-foreground">

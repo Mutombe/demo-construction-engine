@@ -1,5 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { AddressBook, Buildings, CaretDoubleLeft, CaretDoubleRight, ChartBar, Gear, HardHat, MapTrifold, Money, Package, Receipt, ShoppingCart, SignOut, Sparkle, SquaresFour, Tray } from "@phosphor-icons/react";
+import { AddressBook, Buildings, CaretDoubleLeft, CaretDoubleRight, ChartBar, Gear, HardHat, MapTrifold, Money, Package, Receipt, ShoppingCart, SignOut, SquaresFour, Tray } from "@phosphor-icons/react";
+import { ClaudeIcon } from "@/components/ui/claude-icon";
 import type { ReactNode } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -31,7 +32,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { to: "/", label: "Dashboard", icon: <SquaresFour /> },
   { to: "/projects", label: "Projects", icon: <Buildings /> },
-  { to: "/map", label: "Site map", icon: <MapTrifold />, permission: "project:read" },
+  { to: "/map", label: "Site Map", icon: <MapTrifold />, permission: "project:read" },
   { to: "/clients", label: "Clients", icon: <AddressBook />, permission: "project:read" },
   { to: "/procurement", label: "Procurement", icon: <ShoppingCart />, permission: "procurement:read" },
   { to: "/expenses", label: "Expenses", icon: <Receipt />, permission: "expense:read" },
@@ -145,7 +146,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               onClick={toggleChat}
               title="AI assistant"
             >
-              <Sparkle className="text-primary" /> Assistant
+              <ClaudeIcon className="text-claude" /> Assistant
             </Button>
             <NotificationBell />
             {user && (

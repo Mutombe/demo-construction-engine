@@ -69,7 +69,7 @@ function ProjectsPage() {
         actions={
           <Can perm="project:write">
             <Button onClick={() => setDialogOpen(true)}>
-              <Plus /> New project
+              <Plus /> New Project
             </Button>
           </Can>
         }
@@ -104,10 +104,10 @@ function ProjectsPage() {
             })
           }
         >
-          <option value="">All statuses</option>
+          <option value="">All Statuses</option>
           <option value="planning">Planning</option>
           <option value="active">Active</option>
-          <option value="on_hold">On hold</option>
+          <option value="on_hold">On Hold</option>
           <option value="completed">Completed</option>
           <option value="cancelled">Cancelled</option>
         </Select>
@@ -122,7 +122,7 @@ function ProjectsPage() {
               <TableHead>Client</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Dates</TableHead>
-              <TableHead className="text-right">Contract value</TableHead>
+              <TableHead className="text-right">Contract Value</TableHead>
               <TableHead>PM</TableHead>
             </TableRow>
           </TableHeader>

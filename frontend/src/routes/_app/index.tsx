@@ -126,7 +126,7 @@ function DashboardPage() {
 
       <Card className="mb-4">
         <CardHeader className="flex-row items-center justify-between space-y-0">
-          <CardTitle>Revenue vs cost — last 6 months</CardTitle>
+          <CardTitle>Revenue vs Cost — Last 6 Months</CardTitle>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-sm bg-muted-foreground/40" /> Cost
@@ -194,7 +194,7 @@ function DashboardPage() {
       <div className="grid gap-4 xl:grid-cols-5">
         <Card className="xl:col-span-3">
           <CardHeader>
-            <CardTitle>Budget vs actual by project</CardTitle>
+            <CardTitle>Budget vs Actual by Project</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
@@ -229,7 +229,7 @@ function DashboardPage() {
 
         <Card className="xl:col-span-2">
           <CardHeader>
-            <CardTitle>Budget alerts</CardTitle>
+            <CardTitle>Budget Alerts</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2.5">
             {alertsLoading && !alerts && <CardListSkeleton count={3} />}
@@ -308,7 +308,7 @@ function DashboardPage() {
 
         <Card className="xl:col-span-2">
           <CardHeader>
-            <CardTitle>Upcoming deadlines (21 days)</CardTitle>
+            <CardTitle>Upcoming Deadlines (21 Days)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {deadlinesLoading && !deadlines && <CardListSkeleton count={3} />}

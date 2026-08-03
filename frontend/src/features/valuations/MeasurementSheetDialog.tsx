@@ -95,7 +95,7 @@ export function MeasurementSheetDialog({
     <Dialog open={!!valuationId} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[85vh] max-w-4xl flex-col">
         <DialogHeader>
-          <DialogTitle>Measurement sheet</DialogTitle>
+          <DialogTitle>Measurement Sheet</DialogTitle>
         </DialogHeader>
         <p className="text-xs text-muted-foreground">
           Enter the cumulative quantity executed to date per BOQ line. The gross valuation is
@@ -116,10 +116,10 @@ export function MeasurementSheetDialog({
                 <tr>
                   <th className="px-3 py-2 text-left font-medium">Item</th>
                   <th className="px-3 py-2 text-left font-medium">Description</th>
-                  <th className="px-2 py-2 text-right font-medium">BOQ qty</th>
+                  <th className="px-2 py-2 text-right font-medium">BOQ Qty</th>
                   <th className="px-2 py-2 text-right font-medium">Rate</th>
                   <th className="px-2 py-2 text-right font-medium">Prev.</th>
-                  <th className="w-28 px-2 py-2 text-right font-medium">Qty to date</th>
+                  <th className="w-28 px-2 py-2 text-right font-medium">Qty to Date</th>
                   <th className="px-2 py-2 text-right font-medium">%</th>
                   <th className="px-3 py-2 text-right font-medium">Amount</th>
                 </tr>
@@ -227,7 +227,7 @@ export function MeasurementSheetDialog({
             Cancel
           </Button>
           <Button disabled={saveMutation.isPending} onClick={() => void save()}>
-            {saveMutation.isPending ? "Saving…" : "Save measurement"}
+            {saveMutation.isPending ? "Saving…" : "Save Measurement"}
           </Button>
         </DialogFooter>
       </DialogContent>

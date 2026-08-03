@@ -77,7 +77,7 @@ export function PortalAccessCard({
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <CardTitle className="flex items-center gap-2 text-base">
-          <Globe className="h-4 w-4 text-primary" /> Client portal access
+          <Globe className="h-4 w-4 text-primary" /> Client Portal Access
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -149,7 +149,7 @@ export function PortalAccessCard({
             disabled={createMutation.isPending}
             onClick={() => void generate()}
           >
-            {createMutation.isPending ? "Creating…" : "Generate link"}
+            {createMutation.isPending ? "Creating…" : "Generate Link"}
           </Button>
         </div>
       </CardContent>

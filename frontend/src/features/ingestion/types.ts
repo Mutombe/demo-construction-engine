@@ -42,10 +42,10 @@ export function fieldValue(item: IngestionItemRead, field: string): string {
 }
 
 export const DOC_TYPE_LABELS: Record<string, string> = {
-  supplier_invoice: "Supplier invoice",
-  expense_receipt: "Expense receipt",
-  delivery_note: "Delivery note",
-  supplier_quote: "Supplier quote",
+  supplier_invoice: "Supplier Invoice",
+  expense_receipt: "Expense Receipt",
+  delivery_note: "Delivery Note",
+  supplier_quote: "Supplier Quote",
 };
 
 export const ACTION_LABELS: Record<string, string> = {

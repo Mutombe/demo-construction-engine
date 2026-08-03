@@ -96,7 +96,7 @@ function ReportsPage() {
 
   const projectOptions = (
     <>
-      <option value="">All projects</option>
+      <option value="">All Projects</option>
       {projects?.items.map((p) => (
         <option key={p.id} value={p.id}>
           {p.code} — {p.name}
@@ -113,7 +113,7 @@ function ReportsPage() {
       />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <ReportCard
-          title="Project cost report"
+          title="Project Cost Report"
           description="Budget vs actual per BOQ line, with variance and unallocated costs."
           footer={
             <ExportButtons
@@ -127,7 +127,7 @@ function ReportsPage() {
           <div className="space-y-1.5">
             <Label>Project (required)</Label>
             <Select value={costProject} onChange={(e) => setCostProject(e.target.value)}>
-              <option value="">Select project…</option>
+              <option value="">Select Project…</option>
               {projects?.items.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.code} — {p.name}
@@ -138,7 +138,7 @@ function ReportsPage() {
         </ReportCard>
 
         <ReportCard
-          title="Cost ledger"
+          title="Cost Ledger"
           description="Every cost entry for a project with BOQ codes, source and reference."
           footer={
             <ExportButtons
@@ -156,7 +156,7 @@ function ReportsPage() {
             <div className="space-y-1.5">
               <Label>Project (required)</Label>
               <Select value={ledgerProject} onChange={(e) => setLedgerProject(e.target.value)}>
-                <option value="">Select project…</option>
+                <option value="">Select Project…</option>
                 {projects?.items.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.code} — {p.name}
@@ -169,7 +169,7 @@ function ReportsPage() {
               <Select value={ledgerSource} onChange={(e) => setLedgerSource(e.target.value)}>
                 {COST_SOURCES.map((s) => (
                   <option key={s} value={s}>
-                    {s === "" ? "All sources" : s.replace("_", " ")}
+                    {s === "" ? "All Sources" : s.replace("_", " ")}
                   </option>
                 ))}
               </Select>
@@ -178,7 +178,7 @@ function ReportsPage() {
         </ReportCard>
 
         <ReportCard
-          title="Procurement register"
+          title="Procurement Register"
           description="RFQs, quotes and purchase orders in one register, with statuses."
           footer={
             <ExportButtons
@@ -197,7 +197,7 @@ function ReportsPage() {
         </ReportCard>
 
         <ReportCard
-          title="Expense register"
+          title="Expense Register"
           description="Expense claims with claimant, approver and approval status."
           footer={
             <ExportButtons
@@ -220,7 +220,7 @@ function ReportsPage() {
             <div className="space-y-1.5">
               <Label>Status</Label>
               <Select value={expenseStatus} onChange={(e) => setExpenseStatus(e.target.value)}>
-                <option value="">All statuses</option>
+                <option value="">All Statuses</option>
                 {["pending", "approved", "rejected", "cancelled"].map((s) => (
                   <option key={s} value={s}>
                     {s}
@@ -232,7 +232,7 @@ function ReportsPage() {
         </ReportCard>
 
         <ReportCard
-          title="Stock valuation"
+          title="Stock Valuation"
           description="Store stock at weighted-average cost, with reorder flags."
           footer={
             <ExportButtons

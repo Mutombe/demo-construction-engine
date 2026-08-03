@@ -125,7 +125,7 @@ function UsersPage() {
         description="Manage workspace members and their roles"
         actions={
           <Button onClick={() => setDialogOpen(true)}>
-            <Plus /> Add user
+            <Plus /> Add User
           </Button>
         }
       />
@@ -138,7 +138,7 @@ function UsersPage() {
               <TableHead>Email</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Last login</TableHead>
+              <TableHead>Last Login</TableHead>
               <TableHead className="w-28" />
             </TableRow>
           </TableHeader>
@@ -200,7 +200,7 @@ function UsersPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add user</DialogTitle>
+            <DialogTitle>Add User</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-1.5">
@@ -239,7 +239,7 @@ function UsersPage() {
                 Cancel
               </Button>
               <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending ? "Creating…" : "Create user"}
+                {createMutation.isPending ? "Creating…" : "Create User"}
               </Button>
             </DialogFooter>
           </form>

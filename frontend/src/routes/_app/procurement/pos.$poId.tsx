@@ -174,7 +174,7 @@ function PoDetailPage() {
       <div className="grid gap-4 xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader>
-            <CardTitle>Order lines</CardTitle>
+            <CardTitle>Order Lines</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
@@ -183,7 +183,7 @@ function PoDetailPage() {
                   <TableHead>Description</TableHead>
                   <TableHead className="text-right">Qty</TableHead>
                   <TableHead>Unit</TableHead>
-                  <TableHead className="text-right">Unit price</TableHead>
+                  <TableHead className="text-right">Unit Price</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                 </TableRow>
               </TableHeader>
@@ -223,7 +223,7 @@ function PoDetailPage() {
           {po.terms && (
             <Card>
               <CardHeader>
-                <CardTitle>Commercial terms</CardTitle>
+                <CardTitle>Commercial Terms</CardTitle>
               </CardHeader>
               <CardContent>
                 <pre className="whitespace-pre-wrap font-sans text-sm text-muted-foreground">
@@ -235,7 +235,7 @@ function PoDetailPage() {
           {po.notes && (
             <Card>
               <CardHeader>
-                <CardTitle>Internal notes</CardTitle>
+                <CardTitle>Internal Notes</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="whitespace-pre-wrap text-sm text-muted-foreground">{po.notes}</p>

@@ -67,7 +67,7 @@ export function RaiseIssueDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Raise site issue</DialogTitle>
+          <DialogTitle>Raise Site Issue</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-3">
@@ -98,7 +98,7 @@ export function RaiseIssueDialog({
               Cancel
             </Button>
             <Button disabled={createMutation.isPending} onClick={() => void save()}>
-              Raise issue
+              Raise Issue
             </Button>
           </DialogFooter>
         </div>
@@ -141,7 +141,7 @@ export function ResolveIssueDialog({
     <Dialog open={issueId !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Resolve issue</DialogTitle>
+          <DialogTitle>Resolve Issue</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <Textarea
@@ -155,7 +155,7 @@ export function ResolveIssueDialog({
               Cancel
             </Button>
             <Button disabled={resolveMutation.isPending} onClick={() => void resolve()}>
-              Mark resolved
+              Mark Resolved
             </Button>
           </DialogFooter>
         </div>
