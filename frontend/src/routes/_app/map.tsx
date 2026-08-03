@@ -55,25 +55,29 @@ const FILTERS = [
   { key: "completed", label: "Completed" },
 ] as const;
 
-/** Status-coloured progress ring with the percentage inside — reads at a glance. */
+/** Status-coloured progress ring with the percentage inside — reads at a glance.
+ *  Everything (ring + number) lives inside ONE inline SVG: no HTML overlay, no
+ *  stylesheet dependence, so nothing in the app's CSS reset can hide the text. */
 function buildMarkerIcon(status: string, progress = 0) {
   const color = STATUS_HEX[status] ?? "#2A4B8D";
   const safe = Math.max(0, Math.min(100, Math.round(progress)));
-  const size = 42;
+  const size = 44;
   const cx = size / 2;
   const r = 16;
   const c = 2 * Math.PI * r;
   const offset = c - (safe / 100) * c;
-  const fontSize = safe >= 100 ? 10 : 11;
+  const fontSize = safe >= 100 ? 10.5 : 12;
   const html = `
-    <div style="position:relative;width:${size}px;height:${size}px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
-      <svg width="${size}" height="${size}" style="position:absolute;inset:0;transform:rotate(-90deg);">
-        <circle cx="${cx}" cy="${cx}" r="${r}" fill="white" stroke="rgba(17,17,17,0.1)" stroke-width="3"/>
-        <circle cx="${cx}" cy="${cx}" r="${r}" fill="none" stroke="${color}" stroke-width="3"
-          stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${offset}"/>
-      </svg>
-      <span class="marker-pct" style="font-family:system-ui,sans-serif;font-size:${fontSize}px;color:${color};">${safe}%</span>
-    </div>`;
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"
+      style="display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.25));">
+      <circle cx="${cx}" cy="${cx}" r="${r}" fill="#ffffff" stroke="rgba(17,17,17,0.1)" stroke-width="3.5"/>
+      <circle cx="${cx}" cy="${cx}" r="${r}" fill="none" stroke="${color}" stroke-width="3.5"
+        stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${offset}"
+        transform="rotate(-90 ${cx} ${cx})"/>
+      <text x="${cx}" y="${cx}" dy="0.06em" text-anchor="middle" dominant-baseline="central"
+        font-family="system-ui,-apple-system,sans-serif" font-size="${fontSize}"
+        font-weight="700" fill="${color}">${safe}%</text>
+    </svg>`;
   return L.divIcon({
     className: "erp-map-marker",
     html,
