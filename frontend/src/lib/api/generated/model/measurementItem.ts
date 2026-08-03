@@ -4,6 +4,7 @@
  * Construction ERP API
  * OpenAPI spec version: 0.1.0
  */
+import type { BoqItemType } from './boqItemType.ts';
 
 export interface MeasurementItem {
   boq_item_id: string;
@@ -14,6 +15,8 @@ export interface MeasurementItem {
   boq_quantity: string;
   /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
   rate: string;
+  item_type: BoqItemType;
+  variation_ref: string | null;
   /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
   previous_qty: string;
   current_qty: string | null;

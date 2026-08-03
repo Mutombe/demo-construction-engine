@@ -196,6 +196,44 @@ def test_low_stock_flag(client, db):
     assert res.json()["total"] == 1
 
 
+def test_barcode_assignment_and_lookup(client, db):
+    headers = _proc(db)
+    item = _make_item(client, headers, barcode="6001234567890")
+    assert item["barcode"] == "6001234567890"
+
+    res = client.get("/api/v1/stock-items/by-barcode/6001234567890", headers=headers)
+    assert res.status_code == 200
+    assert res.json()["id"] == item["id"]
+
+    res = client.get("/api/v1/stock-items/by-barcode/0000000000000", headers=headers)
+    assert res.status_code == 404
+
+
+def test_barcode_uniqueness(client, db):
+    headers = _proc(db)
+    _make_item(client, headers, code="A-1", barcode="111")
+    other = _make_item(client, headers, code="A-2")
+
+    # Duplicate on create
+    res = client.post(
+        "/api/v1/stock-items",
+        json={"code": "A-3", "name": "Dup barcode", "unit": "ea", "barcode": "111"},
+        headers=headers,
+    )
+    assert res.status_code == 409
+
+    # Duplicate on update
+    res = client.patch(
+        f"/api/v1/stock-items/{other['id']}", json={"barcode": "111"}, headers=headers
+    )
+    assert res.status_code == 409
+
+    # Re-saving an item's own barcode is not a conflict
+    first_id = client.get("/api/v1/stock-items/by-barcode/111", headers=headers).json()["id"]
+    res = client.patch(f"/api/v1/stock-items/{first_id}", json={"barcode": "111"}, headers=headers)
+    assert res.status_code == 200
+
+
 def test_inventory_roles(client, db):
     viewer = auth_headers(make_user(db, role=UserRole.viewer))
     site = auth_headers(make_user(db, role=UserRole.site_manager))

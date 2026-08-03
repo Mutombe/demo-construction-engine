@@ -56,6 +56,25 @@ def _latest_certified(db: Session, project_id: uuid.UUID) -> Valuation | None:
     )
 
 
+def _boq_type_totals(db: Session, project_id: uuid.UUID) -> dict[BoqItemType, Decimal]:
+    rows = db.execute(
+        select(BoqItem.item_type, func.coalesce(func.sum(BoqItem.amount), 0))
+        .where(BoqItem.project_id == project_id)
+        .group_by(BoqItem.item_type)
+    ).all()
+    return dict(rows)
+
+
+def effective_contract_value(db: Session, project: Project) -> Decimal | None:
+    """The certifiable ceiling: contract sum plus variations, less omissions."""
+    if project.contract_value is None:
+        return None
+    totals = _boq_type_totals(db, project.id)
+    variation = totals.get(BoqItemType.variation, ZERO)
+    omission = totals.get(BoqItemType.omission, ZERO)
+    return (project.contract_value + variation - omission).quantize(CENT)
+
+
 def _check_gross(db: Session, project: Project, gross: Decimal) -> None:
     latest = _latest_certified(db, project.id)
     if latest and gross < latest.gross_valuation:
@@ -63,10 +82,11 @@ def _check_gross(db: Session, project: Project, gross: Decimal) -> None:
             f"Gross valuation cannot be below the last certified gross "
             f"({latest.gross_valuation})"
         )
-    if project.contract_value and gross > project.contract_value:
+    ceiling = effective_contract_value(db, project)
+    if ceiling is not None and gross > ceiling:
         raise ValidationFailedError(
-            "Gross valuation exceeds the contract value; capture variations by "
-            "updating the contract value first"
+            f"Gross valuation exceeds the contract value adjusted for variations "
+            f"({ceiling}); capture extra work as variation items on the BOQ first"
         )
 
 
@@ -265,14 +285,22 @@ def revenue_summary(db: Session, project_id: uuid.UUID) -> RevenueSummary:
         select(func.count()).select_from(Valuation).where(Valuation.project_id == project_id)
     ) or 0
 
+    totals = _boq_type_totals(db, project_id)
+    variation_total = totals.get(BoqItemType.variation, ZERO)
+    omission_total = totals.get(BoqItemType.omission, ZERO)
+    effective = effective_contract_value(db, project)
+
     suggested = None
-    if project.contract_value:
+    if effective:
         progress = project_progress_pct(db, project_id)
-        suggested = (project.contract_value * Decimal(str(progress)) / 100).quantize(CENT)
+        suggested = (effective * Decimal(str(progress)) / 100).quantize(CENT)
 
     return RevenueSummary(
         project_id=project_id,
         contract_value=project.contract_value,
+        variation_total=variation_total,
+        omission_total=omission_total,
+        effective_contract_value=effective,
         retention_pct=project.retention_pct,
         certified_gross=latest.gross_valuation if latest else ZERO,
         retention_held=latest.retention_amount if latest else ZERO,
@@ -357,6 +385,8 @@ def measurement_context(db: Session, valuation_id: uuid.UUID) -> MeasurementCont
     )
     out: list[MeasurementSection] = []
     for section in sections:
+        # Omission items are included read-only: they cannot be measured, but
+        # the QS should see the omitted scope on the sheet it came out of.
         items = [
             MeasurementItem(
                 boq_item_id=item.id,
@@ -365,12 +395,17 @@ def measurement_context(db: Session, valuation_id: uuid.UUID) -> MeasurementCont
                 unit=item.unit,
                 boq_quantity=item.quantity,
                 rate=item.rate,
+                item_type=item.item_type,
+                variation_ref=item.variation_ref,
                 previous_qty=previous_qty.get(item.id, ZERO),
                 current_qty=current_qty.get(item.id),
             )
             for item in section.items
-            if item.item_type != BoqItemType.omission
         ]
         if items:
             out.append(MeasurementSection(code=section.code, title=section.title, items=items))
-    return MeasurementContext(valuation_id=valuation.id, sections=out)
+    return MeasurementContext(
+        valuation_id=valuation.id,
+        effective_contract_value=effective_contract_value(db, valuation.project),
+        sections=out,
+    )

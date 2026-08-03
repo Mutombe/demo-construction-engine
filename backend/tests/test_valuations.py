@@ -327,6 +327,86 @@ def test_measurement_guards(client, db):
     assert res.status_code == 409
 
 
+def test_variations_raise_ceiling_omissions_lower_it(client, db):
+    from app.common.enums import BoqItemType
+    from tests.factories import make_boq_item, make_boq_section
+
+    headers = _pm(db)
+    project = make_project(db, contract_value=Decimal("100000"))
+    section = make_boq_section(db, project)
+    # +20000 variation, -5000 omission -> effective ceiling 115000
+    make_boq_item(
+        db, section, description="Extra retaining wall", unit="m",
+        quantity=Decimal("200"), rate=Decimal("100"),
+        item_type=BoqItemType.variation, variation_ref="VO-001",
+    )
+    make_boq_item(
+        db, section, description="Omitted paving", unit="m2",
+        quantity=Decimal("50"), rate=Decimal("100"),
+        item_type=BoqItemType.omission, variation_ref="VO-002",
+    )
+
+    assert _create(client, headers, project.id, "115000").status_code == 201
+    v = client.get(f"/api/v1/projects/{project.id}/valuations", headers=headers).json()
+    client.delete(f"/api/v1/valuations/{v['items'][0]['id']}", headers=headers)
+    assert _create(client, headers, project.id, "115001").status_code == 422
+
+    summary = client.get(
+        f"/api/v1/projects/{project.id}/revenue-summary", headers=headers
+    ).json()
+    assert Decimal(summary["variation_total"]) == Decimal("20000.00")
+    assert Decimal(summary["omission_total"]) == Decimal("5000.00")
+    assert Decimal(summary["effective_contract_value"]) == Decimal("115000.00")
+
+
+def test_measurement_context_shows_variations_and_omissions(client, db):
+    from app.common.enums import BoqItemType
+    from tests.factories import make_boq_item, make_boq_section
+
+    headers = _pm(db)
+    project, a, _ = _measured_setup(db)
+    section = make_boq_section(db, project, code="VO", title="Variations")
+    vo = make_boq_item(
+        db, section, description="Extra footing", unit="m3",
+        quantity=Decimal("10"), rate=Decimal("150"),
+        item_type=BoqItemType.variation, variation_ref="VO-001",
+    )
+    om = make_boq_item(
+        db, section, description="Omitted kerbs", unit="m",
+        quantity=Decimal("20"), rate=Decimal("50"),
+        item_type=BoqItemType.omission, variation_ref="VO-002",
+    )
+    val = _create(client, headers, project.id, "1").json()
+
+    ctx = client.get(f"/api/v1/valuations/{val['id']}/measurement", headers=headers).json()
+    # effective ceiling = 1,000,000 + 1,500 - 1,000
+    assert Decimal(ctx["effective_contract_value"]) == Decimal("1000500.00")
+    by_id = {
+        i["boq_item_id"]: i for s in ctx["sections"] for i in s["items"]
+    }
+    assert by_id[str(vo.id)]["item_type"] == "variation"
+    assert by_id[str(vo.id)]["variation_ref"] == "VO-001"
+    assert by_id[str(om.id)]["item_type"] == "omission"
+
+    # variations are measurable; omissions are not
+    res = client.put(
+        f"/api/v1/valuations/{val['id']}/measurement",
+        json={"lines": [
+            {"boq_item_id": str(a.id), "qty_to_date": "10"},
+            {"boq_item_id": str(vo.id), "qty_to_date": "4"},
+        ]},
+        headers=headers,
+    )
+    assert res.status_code == 200
+    assert Decimal(res.json()["gross_valuation"]) == Decimal("2100.00")  # 10*150 + 4*150
+    res = client.put(
+        f"/api/v1/valuations/{val['id']}/measurement",
+        json={"lines": [{"boq_item_id": str(om.id), "qty_to_date": "1"}]},
+        headers=headers,
+    )
+    assert res.status_code == 422
+
+
 def test_certificate_pdf_staff_endpoint(client, db):
     headers = _pm(db)
     project = make_project(db, contract_value=Decimal("100000"), retention_pct=Decimal("5"))

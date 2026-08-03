@@ -124,7 +124,12 @@ function ValuationsTab() {
               <SummaryCard
                 label="Certified gross"
                 value={money(summary.certified_gross)}
-                sub={`of ${money(summary.contract_value)} contract`}
+                sub={
+                  summary.effective_contract_value &&
+                  summary.effective_contract_value !== summary.contract_value
+                    ? `of ${money(summary.effective_contract_value)} adjusted contract`
+                    : `of ${money(summary.contract_value)} contract`
+                }
               />
               <SummaryCard
                 label="Invoiced to date"

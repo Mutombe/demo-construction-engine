@@ -71,9 +71,27 @@ def _lock_item(db: Session, item_id: uuid.UUID) -> StockItem:
     return item
 
 
+def _check_barcode_free(db: Session, barcode: str, exclude_id: uuid.UUID | None = None) -> None:
+    query = select(StockItem).where(StockItem.barcode == barcode)
+    if exclude_id is not None:
+        query = query.where(StockItem.id != exclude_id)
+    existing = db.scalar(query)
+    if existing is not None:
+        raise ConflictError(f"Barcode already assigned to {existing.code} — {existing.name}")
+
+
+def get_item_by_barcode(db: Session, barcode: str) -> StockItem:
+    item = db.scalar(select(StockItem).where(StockItem.barcode == barcode))
+    if item is None:
+        raise NotFoundError("No stock item carries this barcode")
+    return item
+
+
 def create_item(db: Session, data: StockItemCreate, created_by: uuid.UUID) -> StockItem:
     if db.scalar(select(StockItem).where(StockItem.code == data.code)):
         raise ConflictError("A stock item with this code already exists")
+    if data.barcode:
+        _check_barcode_free(db, data.barcode)
     item = StockItem(**data.model_dump(), created_by=created_by)
     db.add(item)
     db.flush()
@@ -89,6 +107,8 @@ def update_item(db: Session, item_id: uuid.UUID, data: StockItemUpdate) -> Stock
         and db.scalar(select(StockItem).where(StockItem.code == updates["code"]))
     ):
         raise ConflictError("A stock item with this code already exists")
+    if updates.get("barcode"):
+        _check_barcode_free(db, updates["barcode"], exclude_id=item.id)
     for field, value in updates.items():
         setattr(item, field, value)
     return item

@@ -27,6 +27,7 @@ class StockItem(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
     __tablename__ = "stock_items"
 
     code: Mapped[str] = mapped_column(String(40), unique=True)
+    barcode: Mapped[str | None] = mapped_column(String(64), unique=True, index=True)
     name: Mapped[str] = mapped_column(String(200))
     category: Mapped[str | None] = mapped_column(String(100))
     unit: Mapped[str] = mapped_column(String(20))

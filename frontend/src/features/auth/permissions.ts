@@ -28,6 +28,7 @@ export type Permission =
   | "payroll:read"
   | "payroll:write"
   | "timesheet:write"
+  | "media:write"
   | "users:manage"
   | "settings:manage";
 
@@ -58,6 +59,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "expense:approve",
     "inventory:write",
     "inventory:issue",
+    "media:write",
     "valuation:write",
     "ingestion:use",
     "ingestion:approve",
@@ -81,6 +83,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "expense:approve",
     "inventory:write",
     "inventory:issue",
+    "media:write",
     "valuation:write",
     "ingestion:use",
     "ingestion:approve",
@@ -88,8 +91,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "payroll:write",
     "timesheet:write",
   ],
-  site_manager: [...READ_ALL, "task:write", "cost:write", "site:write", "expense:submit", "inventory:issue", "ingestion:use", "timesheet:write"],
-  procurement_officer: [...READ_ALL, "procurement:write", "po:approve", "expense:submit", "inventory:write", "inventory:issue", "ingestion:use", "ingestion:approve"],
+  site_manager: [...READ_ALL, "media:write", "task:write", "cost:write", "site:write", "expense:submit", "inventory:issue", "ingestion:use", "timesheet:write"],
+  procurement_officer: [...READ_ALL, "media:write", "procurement:write", "po:approve", "expense:submit", "inventory:write", "inventory:issue", "ingestion:use", "ingestion:approve"],
   viewer: [...READ_ALL],
 };
 

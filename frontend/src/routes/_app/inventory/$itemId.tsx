@@ -61,6 +61,11 @@ function StockItemDetailPage() {
           {item.low_stock && <Badge variant="warning">Low stock</Badge>}
           {!item.is_active && <Badge variant="outline">Inactive</Badge>}
         </div>
+        {item.barcode && (
+          <div className="mt-1 font-mono text-xs text-muted-foreground">
+            Barcode {item.barcode}
+          </div>
+        )}
       </div>
 
       <div className="mb-5 grid grid-cols-2 gap-4 xl:grid-cols-4">

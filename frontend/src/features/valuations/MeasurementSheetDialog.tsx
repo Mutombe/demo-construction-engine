@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { toast } from "@/lib/toast";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -57,16 +58,24 @@ export function MeasurementSheetDialog({
     }
   }, [context]);
 
-  const gross = useMemo(() => {
+  const { gross, variationAmount } = useMemo(() => {
     let total = 0;
+    let variations = 0;
     for (const section of context?.sections ?? []) {
       for (const item of section.items) {
+        if (item.item_type === "omission") continue;
         const q = Number(qty[item.boq_item_id]) || 0;
-        total += q * Number(item.rate);
+        const amount = q * Number(item.rate);
+        total += amount;
+        if (item.item_type === "variation") variations += amount;
       }
     }
-    return total;
+    return { gross: total, variationAmount: variations };
   }, [qty, context]);
+
+  const ceiling = context?.effective_contract_value
+    ? Number(context.effective_contract_value)
+    : null;
 
   const retention = retentionPct ? (gross * Number(retentionPct)) / 100 : 0;
   const previous = Number(previousCertified ?? 0);
@@ -133,6 +142,40 @@ export function MeasurementSheetDialog({
                       </td>
                     </tr>
                     {section.items.map((item) => {
+                      if (item.item_type === "omission") {
+                        // Omitted scope is shown for context but never measured;
+                        // its value already reduces the certifiable ceiling.
+                        return (
+                          <tr key={item.boq_item_id} className="border-t bg-muted/20">
+                            <td className="px-3 py-1.5 font-mono text-xs text-muted-foreground line-through">
+                              {item.item_code}
+                            </td>
+                            <td
+                              className="max-w-64 truncate px-3 py-1.5 text-muted-foreground"
+                              title={item.description}
+                            >
+                              <Badge variant="outline" className="mr-1.5 px-1.5 text-[10px]">
+                                {item.variation_ref ?? "Omitted"}
+                              </Badge>
+                              <span className="line-through">{item.description}</span>
+                            </td>
+                            <td className="px-2 py-1.5 text-right tabular-nums text-muted-foreground">
+                              {Number(item.boq_quantity).toLocaleString()} {item.unit}
+                            </td>
+                            <td className="px-2 py-1.5 text-right tabular-nums text-muted-foreground">
+                              {moneyExact(item.rate)}
+                            </td>
+                            <td className="px-2 py-1.5 text-right text-muted-foreground">—</td>
+                            <td className="px-2 py-1.5 text-right text-xs text-muted-foreground">
+                              omitted
+                            </td>
+                            <td className="px-2 py-1.5" />
+                            <td className="px-3 py-1.5 text-right tabular-nums text-muted-foreground">
+                              − {moneyExact(Number(item.boq_quantity) * Number(item.rate))}
+                            </td>
+                          </tr>
+                        );
+                      }
                       const value = qty[item.boq_item_id] ?? "";
                       const q = Number(value) || 0;
                       const boqQty = Number(item.boq_quantity);
@@ -146,6 +189,14 @@ export function MeasurementSheetDialog({
                         >
                           <td className="px-3 py-1.5 font-mono text-xs">{item.item_code}</td>
                           <td className="max-w-64 truncate px-3 py-1.5" title={item.description}>
+                            {item.item_type === "variation" && (
+                              <Badge
+                                variant="outline"
+                                className="mr-1.5 border-primary/40 px-1.5 text-[10px] text-primary"
+                              >
+                                {item.variation_ref ?? "VO"}
+                              </Badge>
+                            )}
                             {item.description}
                           </td>
                           <td className="px-2 py-1.5 text-right tabular-nums text-muted-foreground">
@@ -204,6 +255,20 @@ export function MeasurementSheetDialog({
             <span className="text-muted-foreground">Gross measured to date</span>
             <span className="font-medium tabular-nums">{moneyExact(gross)}</span>
           </div>
+          {variationAmount > 0 && (
+            <div className="flex justify-between py-0.5 text-xs">
+              <span className="text-muted-foreground">of which variations</span>
+              <span className="tabular-nums text-muted-foreground">
+                {moneyExact(variationAmount)}
+              </span>
+            </div>
+          )}
+          {ceiling !== null && gross > ceiling && (
+            <div className="flex justify-between py-0.5 text-xs font-medium text-warning">
+              <span>Exceeds the adjusted contract value</span>
+              <span className="tabular-nums">max {moneyExact(ceiling)}</span>
+            </div>
+          )}
           <div className="flex justify-between py-0.5">
             <span className="text-muted-foreground">
               Less retention {retentionPct ? `(${Number(retentionPct)}%)` : "(none)"}

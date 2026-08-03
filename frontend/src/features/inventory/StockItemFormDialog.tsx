@@ -1,6 +1,8 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { Barcode } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { toast } from "@/lib/toast";
+import { BarcodeScannerDialog } from "@/features/inventory/BarcodeScannerDialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -55,6 +57,8 @@ export function StockItemFormDialog({
   const [category, setCategory] = useState("");
   const [unit, setUnit] = useState("");
   const [reorderLevel, setReorderLevel] = useState("0");
+  const [barcode, setBarcode] = useState("");
+  const [scanOpen, setScanOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -63,6 +67,7 @@ export function StockItemFormDialog({
       setCategory(item?.category ?? "");
       setUnit(item?.unit ?? "");
       setReorderLevel(String(item?.reorder_level ?? "0"));
+      setBarcode(item?.barcode ?? "");
     }
   }, [open, item]);
 
@@ -77,6 +82,7 @@ export function StockItemFormDialog({
       category: category || null,
       unit,
       reorder_level: reorderLevel || "0",
+      barcode: barcode.trim() || null,
     };
     // Optimistic: close now; row appears/patches instantly, rolls back on error.
     onOpenChange(false);
@@ -128,6 +134,26 @@ export function StockItemFormDialog({
               />
             </div>
           </div>
+          <div className="space-y-1.5">
+            <Label>Barcode</Label>
+            <div className="flex gap-2">
+              <Input
+                value={barcode}
+                onChange={(e) => setBarcode(e.target.value)}
+                placeholder="Scan or type — e.g. 6001234567890"
+                className="font-mono"
+                maxLength={64}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                title="Scan with camera"
+                onClick={() => setScanOpen(true)}
+              >
+                <Barcode /> Scan
+              </Button>
+            </div>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
@@ -137,6 +163,16 @@ export function StockItemFormDialog({
             </Button>
           </DialogFooter>
         </div>
+        <BarcodeScannerDialog
+          open={scanOpen}
+          onOpenChange={setScanOpen}
+          onDetected={(scanned) => {
+            setBarcode(scanned);
+            setScanOpen(false);
+          }}
+          title="Scan Item Barcode"
+          hint="The code fills the barcode field on this item."
+        />
       </DialogContent>
     </Dialog>
   );

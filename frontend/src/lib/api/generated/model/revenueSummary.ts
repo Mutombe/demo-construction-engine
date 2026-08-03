@@ -8,6 +8,11 @@
 export interface RevenueSummary {
   project_id: string;
   contract_value: string | null;
+  /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
+  variation_total: string;
+  /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
+  omission_total: string;
+  effective_contract_value: string | null;
   retention_pct: string | null;
   /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
   certified_gross: string;

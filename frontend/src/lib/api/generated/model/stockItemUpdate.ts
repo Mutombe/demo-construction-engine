@@ -6,6 +6,7 @@
  */
 
 export interface StockItemUpdate {
+  barcode?: string | null;
   code?: string | null;
   name?: string | null;
   category?: string | null;

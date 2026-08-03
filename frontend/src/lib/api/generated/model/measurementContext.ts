@@ -8,5 +8,6 @@ import type { MeasurementSection } from './measurementSection.ts';
 
 export interface MeasurementContext {
   valuation_id: string;
+  effective_contract_value: string | null;
   sections: MeasurementSection[];
 }

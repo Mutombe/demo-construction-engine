@@ -9,6 +9,7 @@ from app.common.enums import StockMovementType
 
 class StockItemBase(BaseModel):
     code: str = Field(min_length=1, max_length=40)
+    barcode: str | None = Field(default=None, max_length=64)
     name: str = Field(min_length=1, max_length=200)
     category: str | None = Field(default=None, max_length=100)
     unit: str = Field(min_length=1, max_length=20)
@@ -21,6 +22,7 @@ class StockItemCreate(StockItemBase):
 
 
 class StockItemUpdate(BaseModel):
+    barcode: str | None = Field(default=None, max_length=64)
     # qty_on_hand and unit_cost are deliberately absent — movements only
     code: str | None = Field(default=None, min_length=1, max_length=40)
     name: str | None = Field(default=None, min_length=1, max_length=200)

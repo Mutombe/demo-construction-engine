@@ -1,6 +1,6 @@
 import { keepPreviousData } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowLineDown, ArrowLineUp, DownloadSimple, MagnifyingGlass, PencilSimple, Plus, Wrench } from "@phosphor-icons/react";
+import { ArrowLineDown, ArrowLineUp, Barcode, DownloadSimple, MagnifyingGlass, PencilSimple, Plus, Wrench } from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "@/lib/toast";
 import { z } from "zod";
@@ -21,10 +21,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { usePermission } from "@/features/auth/hooks";
+import { BarcodeScannerDialog } from "@/features/inventory/BarcodeScannerDialog";
 import { MovementDialog, type MovementKind } from "@/features/inventory/MovementDialogs";
 import { StockItemFormDialog } from "@/features/inventory/StockItemFormDialog";
 import { downloadFile } from "@/lib/api/download";
-import { getGetStockItemQueryOptions, useListStockItems } from "@/lib/api/generated/endpoints";
+import {
+  getGetStockItemQueryOptions,
+  getStockItemByBarcode,
+  useListStockItems,
+} from "@/lib/api/generated/endpoints";
 import type { StockItemRead } from "@/lib/api/generated/model";
 import { moneyExact } from "@/lib/format";
 
@@ -49,6 +54,17 @@ function InventoryPage() {
   );
   const canWrite = usePermission("inventory:write");
   const canIssue = usePermission("inventory:issue");
+  const [scanOpen, setScanOpen] = useState(false);
+
+  const onScanned = async (code: string) => {
+    try {
+      const item = await getStockItemByBarcode(code);
+      setScanOpen(false);
+      void navigate({ to: "/inventory/$itemId", params: { itemId: item.id } });
+    } catch {
+      toast.error(`No stock item carries barcode ${code}`);
+    }
+  };
 
   const { data, isLoading } = useListStockItems(
     {
@@ -118,6 +134,9 @@ function InventoryPage() {
             }}
           />
         </div>
+        <Button variant="outline" onClick={() => setScanOpen(true)}>
+          <Barcode /> Scan
+        </Button>
         <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <input
             type="checkbox"
@@ -238,6 +257,13 @@ function InventoryPage() {
         />
       </div>
 
+      <BarcodeScannerDialog
+        open={scanOpen}
+        onOpenChange={setScanOpen}
+        onDetected={(code) => void onScanned(code)}
+        title="Find Item by Barcode"
+        hint="Scanning opens the matching stock item."
+      />
       <StockItemFormDialog open={itemDialog} onOpenChange={setItemDialog} item={editing} />
       <MovementDialog
         kind={movement?.kind ?? null}

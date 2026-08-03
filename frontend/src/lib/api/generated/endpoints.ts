@@ -27,6 +27,7 @@ import type {
   AdjustRequest,
   AiStatus,
   BodyUploadIngestionItem,
+  BodyUploadMedia,
   BoqItemCreate,
   BoqItemRead,
   BoqItemUpdate,
@@ -65,7 +66,9 @@ import type {
   ExportStockValuationParams,
   FinancialTrend,
   FinancialTrendParams,
+  FolderCounts,
   GanttPayload,
+  GetMediaFolderCountsParams,
   GoodsInRequest,
   HTTPValidationError,
   Healthz200,
@@ -79,6 +82,7 @@ import type {
   ListDiaryEntriesParams,
   ListExpenseClaimsParams,
   ListIngestionItemsParams,
+  ListMediaParams,
   ListNotificationsParams,
   ListPayRunsParams,
   ListProjectsParams,
@@ -97,12 +101,15 @@ import type {
   MeUpdate,
   MeasurementContext,
   MeasurementSet,
+  MediaRead,
+  MediaUpdate,
   NotificationRead,
   PageClientRead,
   PageCostEntryRead,
   PageDiaryEntryRead,
   PageExpenseClaimRead,
   PageIngestionItemRead,
+  PageMediaRead,
   PageNotificationRead,
   PagePayRunRead,
   PagePoRead,
@@ -7628,6 +7635,99 @@ export const useCreateStockItem = <TError = HTTPValidationError,
     }
 
 /**
+ * @summary Get Stock Item By Barcode
+ */
+export const getStockItemByBarcode = (
+    barcode: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<StockItemRead>(
+      {url: `/api/v1/stock-items/by-barcode/${barcode}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetStockItemByBarcodeQueryKey = (barcode: string,) => {
+    return [
+    `/api/v1/stock-items/by-barcode/${barcode}`
+    ] as const;
+    }
+
+
+export const getGetStockItemByBarcodeQueryOptions = <TData = Awaited<ReturnType<typeof getStockItemByBarcode>>, TError = HTTPValidationError>(barcode: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockItemByBarcode>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStockItemByBarcodeQueryKey(barcode);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStockItemByBarcode>>> = ({ signal }) => getStockItemByBarcode(barcode, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: barcode !== null && barcode !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStockItemByBarcode>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetStockItemByBarcodeQueryResult = NonNullable<Awaited<ReturnType<typeof getStockItemByBarcode>>>
+export type GetStockItemByBarcodeQueryError = HTTPValidationError
+
+
+export function useGetStockItemByBarcode<TData = Awaited<ReturnType<typeof getStockItemByBarcode>>, TError = HTTPValidationError>(
+ barcode: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockItemByBarcode>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStockItemByBarcode>>,
+          TError,
+          Awaited<ReturnType<typeof getStockItemByBarcode>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetStockItemByBarcode<TData = Awaited<ReturnType<typeof getStockItemByBarcode>>, TError = HTTPValidationError>(
+ barcode: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockItemByBarcode>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStockItemByBarcode>>,
+          TError,
+          Awaited<ReturnType<typeof getStockItemByBarcode>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetStockItemByBarcode<TData = Awaited<ReturnType<typeof getStockItemByBarcode>>, TError = HTTPValidationError>(
+ barcode: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockItemByBarcode>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Stock Item By Barcode
+ */
+
+export function useGetStockItemByBarcode<TData = Awaited<ReturnType<typeof getStockItemByBarcode>>, TError = HTTPValidationError>(
+ barcode: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockItemByBarcode>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetStockItemByBarcodeQueryOptions(barcode,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
  * @summary Get Stock Item
  */
 export const getStockItem = (
@@ -11047,6 +11147,584 @@ export const useMarkAllNotificationsRead = <TError = unknown,
         TContext
       > => {
       return useMutation(getMarkAllNotificationsReadMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Upload Media
+ */
+export const uploadMedia = (
+    bodyUploadMedia: BodyUploadMedia,
+ signal?: AbortSignal
+) => {
+
+      const formData = new FormData();
+formData.append(`file`, bodyUploadMedia.file);
+formData.append(`entity_type`, bodyUploadMedia.entity_type);
+formData.append(`entity_id`, bodyUploadMedia.entity_id);
+if(bodyUploadMedia.folder !== undefined) {
+ formData.append(`folder`, bodyUploadMedia.folder);
+ }
+if(bodyUploadMedia.caption !== undefined && bodyUploadMedia.caption !== null) {
+ formData.append(`caption`, bodyUploadMedia.caption);
+ }
+
+      return apiMutator<MediaRead>(
+      {url: `/api/v1/media`, method: 'POST',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData, signal
+    },
+      );
+    }
+
+
+
+
+export const getUploadMediaMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadMedia>>, TError,{data: BodyUploadMedia}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof uploadMedia>>, TError,{data: BodyUploadMedia}, TContext> => {
+
+const mutationKey = ['uploadMedia'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadMedia>>, {data: BodyUploadMedia}> = (props) => {
+          const {data} = props ?? {};
+
+          return  uploadMedia(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UploadMediaMutationResult = NonNullable<Awaited<ReturnType<typeof uploadMedia>>>
+    export type UploadMediaMutationBody = BodyUploadMedia
+    export type UploadMediaMutationError = HTTPValidationError
+
+    /**
+ * @summary Upload Media
+ */
+export const useUploadMedia = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadMedia>>, TError,{data: BodyUploadMedia}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof uploadMedia>>,
+        TError,
+        {data: BodyUploadMedia},
+        TContext
+      > => {
+      return useMutation(getUploadMediaMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary List Media
+ */
+export const listMedia = (
+    params?: ListMediaParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<PageMediaRead>(
+      {url: `/api/v1/media`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getListMediaQueryKey = (params?: ListMediaParams,) => {
+    return [
+    `/api/v1/media`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListMediaQueryOptions = <TData = Awaited<ReturnType<typeof listMedia>>, TError = HTTPValidationError>(params?: ListMediaParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMedia>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMediaQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMedia>>> = ({ signal }) => listMedia(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMedia>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListMediaQueryResult = NonNullable<Awaited<ReturnType<typeof listMedia>>>
+export type ListMediaQueryError = HTTPValidationError
+
+
+export function useListMedia<TData = Awaited<ReturnType<typeof listMedia>>, TError = HTTPValidationError>(
+ params: undefined |  ListMediaParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMedia>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMedia>>,
+          TError,
+          Awaited<ReturnType<typeof listMedia>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMedia<TData = Awaited<ReturnType<typeof listMedia>>, TError = HTTPValidationError>(
+ params?: ListMediaParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMedia>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMedia>>,
+          TError,
+          Awaited<ReturnType<typeof listMedia>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMedia<TData = Awaited<ReturnType<typeof listMedia>>, TError = HTTPValidationError>(
+ params?: ListMediaParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMedia>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Media
+ */
+
+export function useListMedia<TData = Awaited<ReturnType<typeof listMedia>>, TError = HTTPValidationError>(
+ params?: ListMediaParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMedia>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListMediaQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get Media Folder Counts
+ */
+export const getMediaFolderCounts = (
+    params: GetMediaFolderCountsParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<FolderCounts>(
+      {url: `/api/v1/media/folders`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getGetMediaFolderCountsQueryKey = (params?: GetMediaFolderCountsParams,) => {
+    return [
+    `/api/v1/media/folders`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetMediaFolderCountsQueryOptions = <TData = Awaited<ReturnType<typeof getMediaFolderCounts>>, TError = HTTPValidationError>(params: GetMediaFolderCountsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMediaFolderCounts>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMediaFolderCountsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMediaFolderCounts>>> = ({ signal }) => getMediaFolderCounts(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMediaFolderCounts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMediaFolderCountsQueryResult = NonNullable<Awaited<ReturnType<typeof getMediaFolderCounts>>>
+export type GetMediaFolderCountsQueryError = HTTPValidationError
+
+
+export function useGetMediaFolderCounts<TData = Awaited<ReturnType<typeof getMediaFolderCounts>>, TError = HTTPValidationError>(
+ params: GetMediaFolderCountsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMediaFolderCounts>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMediaFolderCounts>>,
+          TError,
+          Awaited<ReturnType<typeof getMediaFolderCounts>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMediaFolderCounts<TData = Awaited<ReturnType<typeof getMediaFolderCounts>>, TError = HTTPValidationError>(
+ params: GetMediaFolderCountsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMediaFolderCounts>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMediaFolderCounts>>,
+          TError,
+          Awaited<ReturnType<typeof getMediaFolderCounts>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMediaFolderCounts<TData = Awaited<ReturnType<typeof getMediaFolderCounts>>, TError = HTTPValidationError>(
+ params: GetMediaFolderCountsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMediaFolderCounts>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Media Folder Counts
+ */
+
+export function useGetMediaFolderCounts<TData = Awaited<ReturnType<typeof getMediaFolderCounts>>, TError = HTTPValidationError>(
+ params: GetMediaFolderCountsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMediaFolderCounts>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMediaFolderCountsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Download Media File
+ */
+export const downloadMediaFile = (
+    mediaId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<unknown>(
+      {url: `/api/v1/media/${mediaId}/file`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getDownloadMediaFileQueryKey = (mediaId: string,) => {
+    return [
+    `/api/v1/media/${mediaId}/file`
+    ] as const;
+    }
+
+
+export const getDownloadMediaFileQueryOptions = <TData = Awaited<ReturnType<typeof downloadMediaFile>>, TError = HTTPValidationError>(mediaId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadMediaFile>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDownloadMediaFileQueryKey(mediaId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadMediaFile>>> = ({ signal }) => downloadMediaFile(mediaId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: mediaId !== null && mediaId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof downloadMediaFile>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DownloadMediaFileQueryResult = NonNullable<Awaited<ReturnType<typeof downloadMediaFile>>>
+export type DownloadMediaFileQueryError = HTTPValidationError
+
+
+export function useDownloadMediaFile<TData = Awaited<ReturnType<typeof downloadMediaFile>>, TError = HTTPValidationError>(
+ mediaId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadMediaFile>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadMediaFile>>,
+          TError,
+          Awaited<ReturnType<typeof downloadMediaFile>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadMediaFile<TData = Awaited<ReturnType<typeof downloadMediaFile>>, TError = HTTPValidationError>(
+ mediaId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadMediaFile>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadMediaFile>>,
+          TError,
+          Awaited<ReturnType<typeof downloadMediaFile>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadMediaFile<TData = Awaited<ReturnType<typeof downloadMediaFile>>, TError = HTTPValidationError>(
+ mediaId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadMediaFile>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Download Media File
+ */
+
+export function useDownloadMediaFile<TData = Awaited<ReturnType<typeof downloadMediaFile>>, TError = HTTPValidationError>(
+ mediaId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadMediaFile>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getDownloadMediaFileQueryOptions(mediaId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Download Media Thumbnail
+ */
+export const downloadMediaThumbnail = (
+    mediaId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<unknown>(
+      {url: `/api/v1/media/${mediaId}/thumbnail`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getDownloadMediaThumbnailQueryKey = (mediaId: string,) => {
+    return [
+    `/api/v1/media/${mediaId}/thumbnail`
+    ] as const;
+    }
+
+
+export const getDownloadMediaThumbnailQueryOptions = <TData = Awaited<ReturnType<typeof downloadMediaThumbnail>>, TError = HTTPValidationError>(mediaId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadMediaThumbnail>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDownloadMediaThumbnailQueryKey(mediaId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadMediaThumbnail>>> = ({ signal }) => downloadMediaThumbnail(mediaId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: mediaId !== null && mediaId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof downloadMediaThumbnail>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DownloadMediaThumbnailQueryResult = NonNullable<Awaited<ReturnType<typeof downloadMediaThumbnail>>>
+export type DownloadMediaThumbnailQueryError = HTTPValidationError
+
+
+export function useDownloadMediaThumbnail<TData = Awaited<ReturnType<typeof downloadMediaThumbnail>>, TError = HTTPValidationError>(
+ mediaId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadMediaThumbnail>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadMediaThumbnail>>,
+          TError,
+          Awaited<ReturnType<typeof downloadMediaThumbnail>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadMediaThumbnail<TData = Awaited<ReturnType<typeof downloadMediaThumbnail>>, TError = HTTPValidationError>(
+ mediaId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadMediaThumbnail>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadMediaThumbnail>>,
+          TError,
+          Awaited<ReturnType<typeof downloadMediaThumbnail>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadMediaThumbnail<TData = Awaited<ReturnType<typeof downloadMediaThumbnail>>, TError = HTTPValidationError>(
+ mediaId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadMediaThumbnail>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Download Media Thumbnail
+ */
+
+export function useDownloadMediaThumbnail<TData = Awaited<ReturnType<typeof downloadMediaThumbnail>>, TError = HTTPValidationError>(
+ mediaId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadMediaThumbnail>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getDownloadMediaThumbnailQueryOptions(mediaId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Update Media
+ */
+export const updateMedia = (
+    mediaId: string,
+    mediaUpdate: MediaUpdate,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<MediaRead>(
+      {url: `/api/v1/media/${mediaId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: mediaUpdate, signal
+    },
+      );
+    }
+
+
+
+
+export const getUpdateMediaMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMedia>>, TError,{mediaId: string;data: MediaUpdate}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof updateMedia>>, TError,{mediaId: string;data: MediaUpdate}, TContext> => {
+
+const mutationKey = ['updateMedia'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMedia>>, {mediaId: string;data: MediaUpdate}> = (props) => {
+          const {mediaId,data} = props ?? {};
+
+          return  updateMedia(mediaId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateMediaMutationResult = NonNullable<Awaited<ReturnType<typeof updateMedia>>>
+    export type UpdateMediaMutationBody = MediaUpdate
+    export type UpdateMediaMutationError = HTTPValidationError
+
+    /**
+ * @summary Update Media
+ */
+export const useUpdateMedia = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMedia>>, TError,{mediaId: string;data: MediaUpdate}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateMedia>>,
+        TError,
+        {mediaId: string;data: MediaUpdate},
+        TContext
+      > => {
+      return useMutation(getUpdateMediaMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Delete Media
+ */
+export const deleteMedia = (
+    mediaId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<void>(
+      {url: `/api/v1/media/${mediaId}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getDeleteMediaMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMedia>>, TError,{mediaId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMedia>>, TError,{mediaId: string}, TContext> => {
+
+const mutationKey = ['deleteMedia'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMedia>>, {mediaId: string}> = (props) => {
+          const {mediaId} = props ?? {};
+
+          return  deleteMedia(mediaId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMediaMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMedia>>>
+
+    export type DeleteMediaMutationError = HTTPValidationError
+
+    /**
+ * @summary Delete Media
+ */
+export const useDeleteMedia = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMedia>>, TError,{mediaId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMedia>>,
+        TError,
+        {mediaId: string},
+        TContext
+      > => {
+      return useMutation(getDeleteMediaMutationOptions(options), queryClient);
     }
 
 /**

@@ -130,6 +130,15 @@ class IngestionChannel(StrEnum):
     upload = "upload"
 
 
+class MediaFolder(StrEnum):
+    drawings = "drawings"
+    contracts = "contracts"
+    permits = "permits"
+    photos = "photos"
+    reports = "reports"
+    other = "other"
+
+
 class PayBasis(StrEnum):
     hourly = "hourly"
     daily = "daily"

@@ -36,6 +36,7 @@ import { Route as AppProcurementRfqsRfqIdRouteImport } from './routes/_app/procu
 import { Route as AppProcurementSuppliersSupplierIdRouteImport } from './routes/_app/procurement/suppliers.$supplierId'
 import { Route as AppProjectsProjectIdIndexRouteImport } from './routes/_app/projects/$projectId/index'
 import { Route as AppProjectsProjectIdBoqRouteImport } from './routes/_app/projects/$projectId/boq'
+import { Route as AppProjectsProjectIdDocumentsRouteImport } from './routes/_app/projects/$projectId/documents'
 import { Route as AppProjectsProjectIdProcurementRouteImport } from './routes/_app/projects/$projectId/procurement'
 import { Route as AppProjectsProjectIdProgramRouteImport } from './routes/_app/projects/$projectId/program'
 import { Route as AppProjectsProjectIdSiteRouteImport } from './routes/_app/projects/$projectId/site'
@@ -180,6 +181,12 @@ const AppProjectsProjectIdBoqRoute = AppProjectsProjectIdBoqRouteImport.update({
   path: '/boq',
   getParentRoute: () => AppProjectsProjectIdRoute,
 } as any)
+const AppProjectsProjectIdDocumentsRoute =
+  AppProjectsProjectIdDocumentsRouteImport.update({
+    id: '/documents',
+    path: '/documents',
+    getParentRoute: () => AppProjectsProjectIdRoute,
+  } as any)
 const AppProjectsProjectIdProcurementRoute =
   AppProjectsProjectIdProcurementRouteImport.update({
     id: '/procurement',
@@ -237,6 +244,7 @@ export interface FileRoutesByFullPath {
   '/procurement/rfqs/$rfqId': typeof AppProcurementRfqsRfqIdRoute
   '/procurement/suppliers/$supplierId': typeof AppProcurementSuppliersSupplierIdRoute
   '/projects/$projectId/boq': typeof AppProjectsProjectIdBoqRoute
+  '/projects/$projectId/documents': typeof AppProjectsProjectIdDocumentsRoute
   '/projects/$projectId/procurement': typeof AppProjectsProjectIdProcurementRoute
   '/projects/$projectId/program': typeof AppProjectsProjectIdProgramRoute
   '/projects/$projectId/site': typeof AppProjectsProjectIdSiteRoute
@@ -269,6 +277,7 @@ export interface FileRoutesByTo {
   '/procurement/rfqs/$rfqId': typeof AppProcurementRfqsRfqIdRoute
   '/procurement/suppliers/$supplierId': typeof AppProcurementSuppliersSupplierIdRoute
   '/projects/$projectId/boq': typeof AppProjectsProjectIdBoqRoute
+  '/projects/$projectId/documents': typeof AppProjectsProjectIdDocumentsRoute
   '/projects/$projectId/procurement': typeof AppProjectsProjectIdProcurementRoute
   '/projects/$projectId/program': typeof AppProjectsProjectIdProgramRoute
   '/projects/$projectId/site': typeof AppProjectsProjectIdSiteRoute
@@ -304,6 +313,7 @@ export interface FileRoutesById {
   '/_app/procurement/rfqs/$rfqId': typeof AppProcurementRfqsRfqIdRoute
   '/_app/procurement/suppliers/$supplierId': typeof AppProcurementSuppliersSupplierIdRoute
   '/_app/projects/$projectId/boq': typeof AppProjectsProjectIdBoqRoute
+  '/_app/projects/$projectId/documents': typeof AppProjectsProjectIdDocumentsRoute
   '/_app/projects/$projectId/procurement': typeof AppProjectsProjectIdProcurementRoute
   '/_app/projects/$projectId/program': typeof AppProjectsProjectIdProgramRoute
   '/_app/projects/$projectId/site': typeof AppProjectsProjectIdSiteRoute
@@ -339,6 +349,7 @@ export interface FileRouteTypes {
     | '/procurement/rfqs/$rfqId'
     | '/procurement/suppliers/$supplierId'
     | '/projects/$projectId/boq'
+    | '/projects/$projectId/documents'
     | '/projects/$projectId/procurement'
     | '/projects/$projectId/program'
     | '/projects/$projectId/site'
@@ -371,6 +382,7 @@ export interface FileRouteTypes {
     | '/procurement/rfqs/$rfqId'
     | '/procurement/suppliers/$supplierId'
     | '/projects/$projectId/boq'
+    | '/projects/$projectId/documents'
     | '/projects/$projectId/procurement'
     | '/projects/$projectId/program'
     | '/projects/$projectId/site'
@@ -405,6 +417,7 @@ export interface FileRouteTypes {
     | '/_app/procurement/rfqs/$rfqId'
     | '/_app/procurement/suppliers/$supplierId'
     | '/_app/projects/$projectId/boq'
+    | '/_app/projects/$projectId/documents'
     | '/_app/projects/$projectId/procurement'
     | '/_app/projects/$projectId/program'
     | '/_app/projects/$projectId/site'
@@ -610,6 +623,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProjectsProjectIdBoqRouteImport
       parentRoute: typeof AppProjectsProjectIdRoute
     }
+    '/_app/projects/$projectId/documents': {
+      id: '/_app/projects/$projectId/documents'
+      path: '/documents'
+      fullPath: '/projects/$projectId/documents'
+      preLoaderRoute: typeof AppProjectsProjectIdDocumentsRouteImport
+      parentRoute: typeof AppProjectsProjectIdRoute
+    }
     '/_app/projects/$projectId/procurement': {
       id: '/_app/projects/$projectId/procurement'
       path: '/procurement'
@@ -665,6 +685,7 @@ const AppProcurementSuppliersRouteWithChildren =
 
 interface AppProjectsProjectIdRouteChildren {
   AppProjectsProjectIdBoqRoute: typeof AppProjectsProjectIdBoqRoute
+  AppProjectsProjectIdDocumentsRoute: typeof AppProjectsProjectIdDocumentsRoute
   AppProjectsProjectIdProcurementRoute: typeof AppProjectsProjectIdProcurementRoute
   AppProjectsProjectIdProgramRoute: typeof AppProjectsProjectIdProgramRoute
   AppProjectsProjectIdSiteRoute: typeof AppProjectsProjectIdSiteRoute
@@ -675,6 +696,7 @@ interface AppProjectsProjectIdRouteChildren {
 
 const AppProjectsProjectIdRouteChildren: AppProjectsProjectIdRouteChildren = {
   AppProjectsProjectIdBoqRoute: AppProjectsProjectIdBoqRoute,
+  AppProjectsProjectIdDocumentsRoute: AppProjectsProjectIdDocumentsRoute,
   AppProjectsProjectIdProcurementRoute: AppProjectsProjectIdProcurementRoute,
   AppProjectsProjectIdProgramRoute: AppProjectsProjectIdProgramRoute,
   AppProjectsProjectIdSiteRoute: AppProjectsProjectIdSiteRoute,

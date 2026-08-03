@@ -11,6 +11,7 @@ export interface StockItemRead {
      * @maxLength 40
      */
   code: string;
+  barcode?: string | null;
   /**
      * @minLength 1
      * @maxLength 200

@@ -14,6 +14,7 @@ from app.modules.dashboard.router import router as dashboard_router
 from app.modules.expenses.router import router as expenses_router
 from app.modules.ingestion.router import router as ingestion_router
 from app.modules.inventory.router import router as inventory_router
+from app.modules.media.router import router as media_router
 from app.modules.notifications.router import router as notifications_router
 from app.modules.payroll.router import router as payroll_router
 from app.modules.portal.router import links_router as portal_links_router
@@ -70,6 +71,7 @@ def create_app() -> FastAPI:
     protected.include_router(payroll_router)
     protected.include_router(portal_links_router)
     protected.include_router(notifications_router)
+    protected.include_router(media_router)
     protected.include_router(reports_router)
     protected.include_router(ingestion_router)
     protected.include_router(ai_router)

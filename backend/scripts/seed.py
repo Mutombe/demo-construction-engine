@@ -1127,6 +1127,18 @@ STOCK_ITEMS = [
     ("TIL-300", "Floor tile 300x300", "finishes", "m2", Decimal("80"), [("240", "8.90")]),
 ]
 
+# Valid EAN-13s so camera scanning and handheld scanners both resolve them
+STOCK_BARCODES = {
+    "CEM-425": "6001234500018",
+    "REB-Y12": "6001234500025",
+    "BRK-STD": "6001234500032",
+    "TIM-38": "6001234500049",
+    "DSL": "6001234500056",
+    "PNT-W": "6001234500063",
+    "PPE-HV": "6001234500070",
+    "TIL-300": "6001234500087",
+}
+
 
 def seed_inventory(db, users) -> None:
     from app.modules.inventory.models import StockItem
@@ -1143,7 +1155,12 @@ def seed_inventory(db, users) -> None:
         item = create_item(
             db,
             StockItemCreate(
-                code=code, name=name, category=category, unit=unit, reorder_level=reorder
+                code=code,
+                name=name,
+                category=category,
+                unit=unit,
+                reorder_level=reorder,
+                barcode=STOCK_BARCODES.get(code),
             ),
             proc.id,
         )

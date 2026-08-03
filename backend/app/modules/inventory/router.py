@@ -58,6 +58,12 @@ def create_stock_item(
     return service.item_read(service.create_item(db, body, user.id))
 
 
+# NOTE: declared before /stock-items/{item_id} so the path never hits the UUID route
+@router.get("/stock-items/by-barcode/{barcode}", response_model=StockItemRead)
+def get_stock_item_by_barcode(barcode: str, db: DbDep) -> StockItemRead:
+    return service.item_read(service.get_item_by_barcode(db, barcode))
+
+
 @router.get("/stock-items/{item_id}", response_model=StockItemRead)
 def get_stock_item(item_id: uuid.UUID, db: DbDep) -> StockItemRead:
     return service.item_read(service.get_item(db, item_id))

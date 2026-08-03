@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.common.enums import ValuationStatus
+from app.common.enums import BoqItemType, ValuationStatus
 
 
 class ValuationCreate(BaseModel):
@@ -86,6 +86,8 @@ class MeasurementItem(BaseModel):
     unit: str
     boq_quantity: Decimal
     rate: Decimal
+    item_type: BoqItemType
+    variation_ref: str | None
     previous_qty: Decimal
     current_qty: Decimal | None  # qty on this draft's sheet, if measured
 
@@ -98,12 +100,17 @@ class MeasurementSection(BaseModel):
 
 class MeasurementContext(BaseModel):
     valuation_id: uuid.UUID
+    # contract_value + variation items - omission items; the certifiable ceiling
+    effective_contract_value: Decimal | None
     sections: list[MeasurementSection]
 
 
 class RevenueSummary(BaseModel):
     project_id: uuid.UUID
     contract_value: Decimal | None
+    variation_total: Decimal
+    omission_total: Decimal
+    effective_contract_value: Decimal | None
     retention_pct: Decimal | None
     certified_gross: Decimal
     retention_held: Decimal
