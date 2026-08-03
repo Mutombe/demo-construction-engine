@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PageSkeleton } from "@/components/ui/skeleton";
+import { RichMarkdown } from "@/components/ui/markdown";
 import { ReceivePoDialog } from "@/features/procurement/ReceivePoDialog";
 import { downloadFile } from "@/lib/api/download";
 import { PoStatusBadge } from "@/features/procurement/StatusBadges";
@@ -226,9 +227,7 @@ function PoDetailPage() {
                 <CardTitle>Commercial Terms</CardTitle>
               </CardHeader>
               <CardContent>
-                <pre className="whitespace-pre-wrap font-sans text-sm text-muted-foreground">
-                  {po.terms}
-                </pre>
+                <RichMarkdown content={po.terms} variant="document" />
               </CardContent>
             </Card>
           )}

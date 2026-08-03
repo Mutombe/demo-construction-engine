@@ -42,8 +42,9 @@ PO_TERMS_SYSTEM = (
     "not invent discounts, penalties, or dates that are not present in the source "
     "data. Include: payment terms, delivery expectations, quality/compliance "
     "requirements (materials to conform to the specifications in the referenced "
-    "RFQ), and a reference to the RFQ document number and quote date. Plain "
-    "professional prose, no Markdown headings."
+    "RFQ), and a reference to the RFQ document number and quote date. Format as "
+    "Markdown with '**Label:**' bolded lead-ins per clause (e.g. '**Payment:** …'), "
+    "one clause per line; no headings, no preamble."
 )
 
 WEEKLY_REPORT_SYSTEM = (
@@ -68,6 +69,10 @@ CHAT_SYSTEM = (
     "codes so the user can find them in the system. All monetary amounts are in the "
     "company's operating currency (USD). Keep responses concise: lead with the "
     "answer, then only the supporting detail that changes what the reader would do "
-    "next. Use plain prose; short bullet lists are fine, avoid tables unless listing "
-    "more than three comparable figures."
+    "next.\n\n"
+    "Format every answer as clean Markdown — it is rendered rich, never as plain "
+    "text. Use **bold** for the headline figure or verdict, short bullet lists for "
+    "parallel facts, and a compact table when comparing three or more numeric rows. "
+    "Add '## ' section headings only when an answer genuinely has multiple sections "
+    "(rare for short answers). Separate paragraphs with a blank line."
 )

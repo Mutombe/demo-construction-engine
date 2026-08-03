@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { confirmDialog } from "@/components/ui/confirm";
+import { RichMarkdown } from "@/components/ui/markdown";
 import { Can } from "@/components/layout/Can";
 import { useAiStatus } from "@/features/ai/useAiStatus";
 import { useAcceptQuote, useCompareQuotes } from "@/lib/api/generated/endpoints";
@@ -201,7 +202,7 @@ export function QuoteCompare({
 
         {analysis && (
           <div className="space-y-3 rounded-md border bg-secondary/30 p-4">
-            <p className="text-sm">{analysis.summary}</p>
+            <RichMarkdown content={analysis.summary} variant="chat" />
             {analysis.risk_flags.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {analysis.risk_flags.map((flag, i) => (
@@ -216,9 +217,11 @@ export function QuoteCompare({
                 <ClaudeIcon className="h-4 w-4 text-claude" />
                 Recommendation: {analysis.recommendation.supplier_name}
               </div>
-              <p className="text-sm text-muted-foreground">
-                {analysis.recommendation.reasoning}
-              </p>
+              <RichMarkdown
+                content={analysis.recommendation.reasoning}
+                variant="chat"
+                className="text-muted-foreground"
+              />
             </div>
             {analysis.line_analysis.length > 0 && (
               <ul className="space-y-1 text-xs text-muted-foreground">

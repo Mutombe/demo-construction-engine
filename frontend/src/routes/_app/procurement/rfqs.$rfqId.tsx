@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PageSkeleton } from "@/components/ui/skeleton";
+import { RichMarkdown } from "@/components/ui/markdown";
 import { PoFromQuoteDialog } from "@/features/procurement/PoFromQuoteDialog";
 import { QuoteCompare } from "@/features/procurement/QuoteCompare";
 import { QuoteExtractDialog } from "@/features/procurement/QuoteExtractDialog";
@@ -158,9 +159,7 @@ function RfqDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <pre className="whitespace-pre-wrap font-sans text-sm text-muted-foreground">
-                  {rfq.body}
-                </pre>
+                <RichMarkdown content={rfq.body} variant="document" />
               </CardContent>
             </Card>
           )}

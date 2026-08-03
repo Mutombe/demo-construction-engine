@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RichMarkdown } from "@/components/ui/markdown";
 import { useAiStatus } from "@/features/ai/useAiStatus";
 import { useGenerateWeeklyReport } from "@/lib/api/generated/endpoints";
 import { fmtDate } from "@/lib/format";
@@ -117,7 +118,7 @@ export function WeeklyReportDialog({
                   sending
                 </p>
               )}
-              <pre className="whitespace-pre-wrap font-sans text-sm">{markdown}</pre>
+              <RichMarkdown content={markdown} variant="document" />
             </div>
           )}
         </div>
