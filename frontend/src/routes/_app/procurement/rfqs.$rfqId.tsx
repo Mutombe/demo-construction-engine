@@ -1,13 +1,14 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { FileText, Plus, Send, ShoppingCart } from "lucide-react";
+import { FileText, PaperPlaneTilt, Plus, ShoppingCart } from "@phosphor-icons/react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Can } from "@/components/layout/Can";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { confirmDialog } from "@/components/ui/confirm";
 import { EntityLink } from "@/components/ui/linked-row";
 import {
   Table,
@@ -52,7 +53,13 @@ function RfqDetailPage() {
   }
 
   const issue = async () => {
-    if (!window.confirm("Issue this RFQ? Lines become read-only once issued.")) return;
+    if (
+      !(await confirmDialog({
+        title: "Issue RFQ",
+        message: "Issue this RFQ? Lines become read-only once issued.",
+      }))
+    )
+      return;
     try {
       await issueMutation.mutateAsync({ rfqId });
       await queryClient.invalidateQueries();
@@ -92,7 +99,7 @@ function RfqDetailPage() {
           {rfq.status === "draft" && (
             <Can perm="procurement:write">
               <Button onClick={() => void issue()} disabled={issueMutation.isPending}>
-                <Send /> Issue RFQ
+                <PaperPlaneTilt /> Issue RFQ
               </Button>
             </Can>
           )}

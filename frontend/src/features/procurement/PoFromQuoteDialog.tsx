@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Sparkles } from "lucide-react";
+import { Sparkle } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -122,7 +122,7 @@ export function PoFromQuoteDialog({
                 title={aiAvailable ? undefined : "AI not configured — add ANTHROPIC_API_KEY"}
                 onClick={() => void draftTerms()}
               >
-                <Sparkles className="h-3.5 w-3.5" />
+                <Sparkle className="h-3.5 w-3.5" />
                 {draftMutation.isPending ? "Drafting…" : "Draft terms with AI"}
               </Button>
             </div>

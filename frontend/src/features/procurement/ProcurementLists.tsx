@@ -1,6 +1,9 @@
+import { keepPreviousData } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EntityLink } from "@/components/ui/linked-row";
+import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import { CardListSkeleton } from "@/components/ui/skeleton";
 import { PoStatusBadge, RfqStatusBadge } from "@/features/procurement/StatusBadges";
 import {
@@ -11,7 +14,12 @@ import {
 import { fmtDate, money } from "@/lib/format";
 
 export function RfqList({ projectId }: { projectId: string }) {
-  const { data, isLoading } = useListRfqs(projectId, { page_size: 50 });
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useListRfqs(
+    projectId,
+    { page, page_size: DEFAULT_PAGE_SIZE },
+    { query: { placeholderData: keepPreviousData } },
+  );
   return (
     <Card>
       <CardHeader>
@@ -43,13 +51,25 @@ export function RfqList({ projectId }: { projectId: string }) {
             <RfqStatusBadge status={rfq.status ?? "draft"} />
           </Link>
         ))}
+        <PaginationBar
+          className="flex items-center justify-between gap-3 px-1 pt-2 text-sm text-muted-foreground"
+          page={page}
+          pageSize={DEFAULT_PAGE_SIZE}
+          total={data?.total}
+          onPageChange={setPage}
+        />
       </CardContent>
     </Card>
   );
 }
 
 export function PoList({ projectId }: { projectId: string }) {
-  const { data, isLoading } = useListPurchaseOrders(projectId, { page_size: 50 });
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useListPurchaseOrders(
+    projectId,
+    { page, page_size: DEFAULT_PAGE_SIZE },
+    { query: { placeholderData: keepPreviousData } },
+  );
   return (
     <Card>
       <CardHeader>
@@ -86,6 +106,13 @@ export function PoList({ projectId }: { projectId: string }) {
             <PoStatusBadge status={po.status ?? "draft"} />
           </Link>
         ))}
+        <PaginationBar
+          className="flex items-center justify-between gap-3 px-1 pt-2 text-sm text-muted-foreground"
+          page={page}
+          pageSize={DEFAULT_PAGE_SIZE}
+          total={data?.total}
+          onPageChange={setPage}
+        />
       </CardContent>
     </Card>
   );

@@ -1,5 +1,5 @@
 import { Link, useRouter } from "@tanstack/react-router";
-import { ArrowLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, CaretRight } from "@phosphor-icons/react";
 import { Fragment } from "react";
 
 export interface Crumb {
@@ -44,7 +44,7 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
         const last = i === items.length - 1;
         return (
           <Fragment key={`${crumb.label}-${i}`}>
-            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+            <CaretRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
             {last || !crumb.to ? (
               <span
                 className={

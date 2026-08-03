@@ -1,5 +1,6 @@
+import { keepPreviousData } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Mail, MapPin, Pencil, Phone, UserRound } from "lucide-react";
+import { EnvelopeSimple, MapPin, PencilSimple, Phone, User } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Can } from "@/components/layout/Can";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ClickableRow } from "@/components/ui/linked-row";
+import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import { DetailSkeleton, TableSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -36,10 +38,11 @@ export const Route = createFileRoute("/_app/clients/$clientId")({
 function ClientDetailPage() {
   const { clientId } = Route.useParams();
   const { data: client } = useGetClient(clientId);
-  const { data: projects, isLoading: projectsLoading } = useListProjects({
-    client_id: clientId,
-    page_size: 100,
-  });
+  const [projectsPage, setProjectsPage] = useState(1);
+  const { data: projects, isLoading: projectsLoading } = useListProjects(
+    { client_id: clientId, page: projectsPage, page_size: DEFAULT_PAGE_SIZE },
+    { query: { placeholderData: keepPreviousData } },
+  );
   const [editOpen, setEditOpen] = useState(false);
 
   if (!client) {
@@ -60,7 +63,7 @@ function ClientDetailPage() {
           <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
             {client.contact_person && (
               <span className="inline-flex items-center gap-1">
-                <UserRound className="h-3.5 w-3.5" /> {client.contact_person}
+                <User className="h-3.5 w-3.5" /> {client.contact_person}
               </span>
             )}
             {client.email && (
@@ -68,7 +71,7 @@ function ClientDetailPage() {
                 href={`mailto:${client.email}`}
                 className="inline-flex items-center gap-1 hover:text-foreground"
               >
-                <Mail className="h-3.5 w-3.5" /> {client.email}
+                <EnvelopeSimple className="h-3.5 w-3.5" /> {client.email}
               </a>
             )}
             {client.phone && (
@@ -85,7 +88,7 @@ function ClientDetailPage() {
         </div>
         <Can perm="client:write">
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-            <Pencil /> Edit
+            <PencilSimple /> Edit
           </Button>
         </Can>
       </div>
@@ -95,8 +98,10 @@ function ClientDetailPage() {
           <CardHeader className="flex-row items-center justify-between space-y-0">
             <CardTitle>Projects</CardTitle>
             <span className="text-sm text-muted-foreground tabular-nums">
-              {projects?.total ?? 0} project{(projects?.total ?? 0) === 1 ? "" : "s"} ·{" "}
-              {money(contractTotal)} contracted
+              {projects?.total ?? 0} project{(projects?.total ?? 0) === 1 ? "" : "s"}
+              {projects && projects.total <= DEFAULT_PAGE_SIZE && (
+                <> · {money(contractTotal)} contracted</>
+              )}
             </span>
           </CardHeader>
           <CardContent className="p-0">
@@ -116,7 +121,7 @@ function ClientDetailPage() {
                   <TableRow>
                     <TableCell colSpan={5} className="p-0">
                       <EmptyState
-                        icon={<UserRound />}
+                        icon={<User />}
                         title="No projects for this client yet"
                         hint="Create a project and pick this client to see it here."
                       />
@@ -145,6 +150,12 @@ function ClientDetailPage() {
                 ))}
               </TableBody>
             </Table>
+            <PaginationBar
+              page={projectsPage}
+              pageSize={DEFAULT_PAGE_SIZE}
+              total={projects?.total}
+              onPageChange={setProjectsPage}
+            />
           </CardContent>
         </Card>
 

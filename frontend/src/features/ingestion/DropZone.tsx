@@ -1,4 +1,4 @@
-import { FileUp, Sparkles } from "lucide-react";
+import { Sparkle, UploadSimple } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
 import { useAiStatus } from "@/features/ai/useAiStatus";
 import { cn } from "@/lib/utils";
@@ -38,7 +38,7 @@ export function DropZone({ onFiles }: { onFiles: (files: File[]) => void }) {
     >
       {disabled ? (
         <>
-          <Sparkles className="h-8 w-8 text-muted-foreground" />
+          <Sparkle className="h-8 w-8 text-muted-foreground" />
           <div className="text-sm font-medium">AI features are not configured</div>
           <div className="text-xs text-muted-foreground">
             Set ANTHROPIC_API_KEY on the backend to enable the AI inbox.
@@ -46,7 +46,7 @@ export function DropZone({ onFiles }: { onFiles: (files: File[]) => void }) {
         </>
       ) : (
         <>
-          <FileUp className="h-8 w-8 text-primary" />
+          <UploadSimple className="h-8 w-8 text-primary" />
           <div className="text-sm font-medium">
             Drop invoices, receipts, delivery notes or quotes here
           </div>

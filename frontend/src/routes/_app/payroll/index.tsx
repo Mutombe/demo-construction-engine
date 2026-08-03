@@ -1,8 +1,8 @@
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Banknote, CalendarPlus, HardHat, Pencil, Plus } from "lucide-react";
+import { CalendarPlus, HardHat, Money, PencilSimple, Plus } from "@phosphor-icons/react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Can } from "@/components/layout/Can";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ClickableRow, EntityLink, RowActions } from "@/components/ui/linked-row";
+import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -128,18 +129,21 @@ function PayrollPage() {
   const [editingWorker, setEditingWorker] = useState<WorkerRead | null>(null);
   const [dayDialog, setDayDialog] = useState(false);
   const [runDialog, setRunDialog] = useState(false);
+  const [sheetsPage, setSheetsPage] = useState(1);
+  const [workersPage, setWorkersPage] = useState(1);
+  const [runsPage, setRunsPage] = useState(1);
 
-  const { data: workers, isLoading: workersLoading } = useListWorkers({
-    page_size: 200,
-    include_inactive: true,
-  });
+  const { data: workers, isLoading: workersLoading } = useListWorkers(
+    { page: workersPage, page_size: DEFAULT_PAGE_SIZE, include_inactive: true },
+    { query: { placeholderData: keepPreviousData } },
+  );
   const { data: timesheets, isLoading: sheetsLoading } = useListTimesheets(
-    { page_size: 50 },
+    { page: sheetsPage, page_size: DEFAULT_PAGE_SIZE },
     { query: { placeholderData: keepPreviousData } },
   );
   const { data: runs, isLoading: runsLoading } = useListPayRuns(
-    { page_size: 50 },
-    { query: { enabled: canAdmin } },
+    { page: runsPage, page_size: DEFAULT_PAGE_SIZE },
+    { query: { enabled: canAdmin, placeholderData: keepPreviousData } },
   );
 
   return (
@@ -156,7 +160,7 @@ function PayrollPage() {
             </Can>
             <Can perm="payroll:write">
               <Button onClick={() => setRunDialog(true)}>
-                <Banknote /> New pay run
+                <Money /> New pay run
               </Button>
             </Can>
           </div>
@@ -260,6 +264,12 @@ function PayrollPage() {
                     ))}
                   </TableBody>
                 </Table>
+                <PaginationBar
+                  page={sheetsPage}
+                  pageSize={DEFAULT_PAGE_SIZE}
+                  total={timesheets?.total}
+                  onPageChange={setSheetsPage}
+                />
               </CardContent>
             </Card>
           )}
@@ -338,7 +348,7 @@ function PayrollPage() {
                                 setWorkerDialog(true);
                               }}
                             >
-                              <Pencil />
+                              <PencilSimple />
                             </Button>
                           </RowActions>
                         )}
@@ -346,6 +356,12 @@ function PayrollPage() {
                     ))}
                   </TableBody>
                 </Table>
+                <PaginationBar
+                  page={workersPage}
+                  pageSize={DEFAULT_PAGE_SIZE}
+                  total={workers?.total}
+                  onPageChange={setWorkersPage}
+                />
               </CardContent>
             </Card>
           )}
@@ -372,12 +388,12 @@ function PayrollPage() {
             ) : (runs?.items.length ?? 0) === 0 ? (
               <Card>
                 <EmptyState
-                  icon={<Banknote />}
+                  icon={<Money />}
                   title="No pay runs yet"
                   hint="A pay run gathers all unpaid timesheets in a period, prices them and posts labour costs on approval."
                   action={
                     <Button size="sm" onClick={() => setRunDialog(true)}>
-                      <Banknote /> New pay run
+                      <Money /> New pay run
                     </Button>
                   }
                 />
@@ -428,6 +444,12 @@ function PayrollPage() {
                       ))}
                     </TableBody>
                   </Table>
+                  <PaginationBar
+                    page={runsPage}
+                    pageSize={DEFAULT_PAGE_SIZE}
+                    total={runs?.total}
+                    onPageChange={setRunsPage}
+                  />
                 </CardContent>
               </Card>
             )}

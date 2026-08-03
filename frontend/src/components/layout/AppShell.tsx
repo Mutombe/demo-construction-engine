@@ -1,21 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import {
-  Banknote,
-  Boxes,
-  Building2,
-  ChevronsLeft,
-  Contact,
-  ChevronsRight,
-  FileBarChart,
-  HardHat,
-  Inbox,
-  LayoutDashboard,
-  LogOut,
-  Receipt,
-  Settings,
-  ShoppingCart,
-  Sparkles,
-} from "lucide-react";
+import { AddressBook, Buildings, CaretDoubleLeft, CaretDoubleRight, ChartBar, Gear, HardHat, MapTrifold, Money, Package, Receipt, ShoppingCart, SignOut, Sparkle, SquaresFour, Tray } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -45,15 +29,16 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { to: "/", label: "Dashboard", icon: <LayoutDashboard /> },
-  { to: "/projects", label: "Projects", icon: <Building2 /> },
-  { to: "/clients", label: "Clients", icon: <Contact />, permission: "project:read" },
+  { to: "/", label: "Dashboard", icon: <SquaresFour /> },
+  { to: "/projects", label: "Projects", icon: <Buildings /> },
+  { to: "/map", label: "Site map", icon: <MapTrifold />, permission: "project:read" },
+  { to: "/clients", label: "Clients", icon: <AddressBook />, permission: "project:read" },
   { to: "/procurement", label: "Procurement", icon: <ShoppingCart />, permission: "procurement:read" },
   { to: "/expenses", label: "Expenses", icon: <Receipt />, permission: "expense:read" },
-  { to: "/inventory", label: "Inventory", icon: <Boxes />, permission: "inventory:read" },
-  { to: "/payroll", label: "Payroll", icon: <Banknote />, permission: "timesheet:write" },
-  { to: "/inbox", label: "AI Inbox", icon: <Inbox />, permission: "ingestion:use" },
-  { to: "/reports", label: "Reports", icon: <FileBarChart /> },
+  { to: "/inventory", label: "Inventory", icon: <Package />, permission: "inventory:read" },
+  { to: "/payroll", label: "Payroll", icon: <Money />, permission: "timesheet:write" },
+  { to: "/inbox", label: "AI Inbox", icon: <Tray />, permission: "ingestion:use" },
+  { to: "/reports", label: "Reports", icon: <ChartBar /> },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -136,7 +121,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 pathname.startsWith("/settings") && "bg-sidebar-accent font-medium",
               )}
             >
-              <Settings />
+              <Gear />
               {!collapsed && <span>Settings</span>}
             </Link>
           )}
@@ -144,7 +129,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             onClick={toggle}
             className="flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-sm text-sidebar-muted transition-colors hover:bg-sidebar-accent [&_svg]:size-4.5"
           >
-            {collapsed ? <ChevronsRight /> : <ChevronsLeft />}
+            {collapsed ? <CaretDoubleRight /> : <CaretDoubleLeft />}
             {!collapsed && <span>Collapse</span>}
           </button>
         </div>
@@ -160,7 +145,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               onClick={toggleChat}
               title="AI assistant"
             >
-              <Sparkles className="text-primary" /> Assistant
+              <Sparkle className="text-primary" /> Assistant
             </Button>
             <NotificationBell />
             {user && (
@@ -177,7 +162,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 .join("")}
             </div>
             <Button variant="ghost" size="icon" onClick={handleLogout} title="Sign out">
-              <LogOut />
+              <SignOut />
             </Button>
           </div>
         </header>

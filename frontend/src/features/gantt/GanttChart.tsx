@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Diamond } from "lucide-react";
+import { CaretDown, CaretRight, Diamond } from "@phosphor-icons/react";
 import { Fragment, useState } from "react";
 import type { GanttPayload } from "@/lib/api/generated/model";
 import { cn } from "@/lib/utils";
@@ -136,9 +136,9 @@ export function GanttChart({ payload }: { payload: GanttPayload }) {
                       className="flex min-w-0 items-center gap-1 text-left"
                     >
                       {collapsed.has(row.id) ? (
-                        <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+                        <CaretRight className="h-3.5 w-3.5 shrink-0" />
                       ) : (
-                        <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+                        <CaretDown className="h-3.5 w-3.5 shrink-0" />
                       )}
                       <span className="truncate">{row.name}</span>
                     </button>

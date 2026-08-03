@@ -139,6 +139,7 @@ import type {
   PortalValuation,
   ProjectCreate,
   ProjectListItem,
+  ProjectMapPin,
   ProjectRead,
   ProjectSummary,
   ProjectUpdate,
@@ -1506,6 +1507,99 @@ export const useCreateProject = <TError = HTTPValidationError,
       > => {
       return useMutation(getCreateProjectMutationOptions(options), queryClient);
     }
+
+/**
+ * @summary Get Project Map Pins
+ */
+export const getProjectMapPins = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<ProjectMapPin[]>(
+      {url: `/api/v1/projects/map`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetProjectMapPinsQueryKey = () => {
+    return [
+    `/api/v1/projects/map`
+    ] as const;
+    }
+
+
+export const getGetProjectMapPinsQueryOptions = <TData = Awaited<ReturnType<typeof getProjectMapPins>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectMapPins>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProjectMapPinsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProjectMapPins>>> = ({ signal }) => getProjectMapPins(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProjectMapPins>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetProjectMapPinsQueryResult = NonNullable<Awaited<ReturnType<typeof getProjectMapPins>>>
+export type GetProjectMapPinsQueryError = unknown
+
+
+export function useGetProjectMapPins<TData = Awaited<ReturnType<typeof getProjectMapPins>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectMapPins>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProjectMapPins>>,
+          TError,
+          Awaited<ReturnType<typeof getProjectMapPins>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProjectMapPins<TData = Awaited<ReturnType<typeof getProjectMapPins>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectMapPins>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProjectMapPins>>,
+          TError,
+          Awaited<ReturnType<typeof getProjectMapPins>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProjectMapPins<TData = Awaited<ReturnType<typeof getProjectMapPins>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectMapPins>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Project Map Pins
+ */
+
+export function useGetProjectMapPins<TData = Awaited<ReturnType<typeof getProjectMapPins>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectMapPins>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetProjectMapPinsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 /**
  * @summary Get Project

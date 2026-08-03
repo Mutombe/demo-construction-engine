@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FileText, Mail, Pencil, Phone, ShoppingCart, Tags } from "lucide-react";
+import { EnvelopeSimple, FileText, PencilSimple, Phone, ShoppingCart, Tag } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Can } from "@/components/layout/Can";
@@ -70,7 +70,7 @@ function SupplierDetailPage() {
                 href={`mailto:${supplier.email}`}
                 className="inline-flex items-center gap-1 hover:text-foreground"
               >
-                <Mail className="h-3.5 w-3.5" /> {supplier.email}
+                <EnvelopeSimple className="h-3.5 w-3.5" /> {supplier.email}
               </a>
             )}
             {supplier.phone && (
@@ -80,14 +80,14 @@ function SupplierDetailPage() {
             )}
             {supplier.categories && (
               <span className="inline-flex items-center gap-1">
-                <Tags className="h-3.5 w-3.5" /> {supplier.categories}
+                <Tag className="h-3.5 w-3.5" /> {supplier.categories}
               </span>
             )}
           </div>
         </div>
         <Can perm="procurement:write">
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-            <Pencil /> Edit
+            <PencilSimple /> Edit
           </Button>
         </Can>
       </div>

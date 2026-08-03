@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Download, FileSpreadsheet } from "lucide-react";
+import { DownloadSimple, FileXls } from "@phosphor-icons/react";
 import { useState, type ReactNode } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,10 +40,10 @@ function ExportButtons({
   return (
     <div className="flex gap-2">
       <Button variant="outline" size="sm" disabled={disabled || busy} onClick={() => void run("csv")}>
-        <Download /> CSV
+        <DownloadSimple /> CSV
       </Button>
       <Button size="sm" disabled={disabled || busy} onClick={() => void run("xlsx")}>
-        <FileSpreadsheet /> Excel
+        <FileXls /> Excel
       </Button>
     </div>
   );

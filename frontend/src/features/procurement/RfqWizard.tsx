@@ -1,8 +1,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Sparkles } from "lucide-react";
+import { Sparkle } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -220,7 +220,7 @@ export function RfqWizard({
                     title={aiAvailable ? undefined : "AI not configured — add ANTHROPIC_API_KEY"}
                     onClick={() => void draftWithAi()}
                   >
-                    <Sparkles className="h-3.5 w-3.5" />
+                    <Sparkle className="h-3.5 w-3.5" />
                     {generateMutation.isPending
                       ? "Drafting…"
                       : aiUsed

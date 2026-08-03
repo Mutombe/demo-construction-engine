@@ -1,19 +1,13 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import {
-  CheckCircle2,
-  ChevronDown,
-  ChevronRight,
-  Download,
-  RefreshCcw,
-  Trash2,
-} from "lucide-react";
+import { ArrowsClockwise, CaretDown, CaretRight, CheckCircle, DownloadSimple, Trash } from "@phosphor-icons/react";
 import { Fragment, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { confirmDialog } from "@/components/ui/confirm";
 import { EntityLink } from "@/components/ui/linked-row";
 import { StatCard } from "@/components/ui/stat-card";
 import { PageSkeleton } from "@/components/ui/skeleton";
@@ -65,10 +59,12 @@ function PayRunDetailPage() {
 
   const approve = async () => {
     if (
-      !window.confirm(
-        `Approve ${run.doc_number}? This posts labour costs of ` +
+      !(await confirmDialog({
+        title: "Approve pay run",
+        message:
+          `Approve ${run.doc_number}? This posts labour costs of ` +
           `${moneyExact(run.gross_total)} to the project ledgers and locks the timesheets.`,
-      )
+      }))
     )
       return;
     try {
@@ -91,7 +87,14 @@ function PayRunDetailPage() {
   };
 
   const remove = async () => {
-    if (!window.confirm(`Delete draft ${run.doc_number}?`)) return;
+    if (
+      !(await confirmDialog({
+        title: "Delete draft",
+        message: `Delete draft ${run.doc_number}?`,
+        tone: "danger",
+      }))
+    )
+      return;
     try {
       await deleteMutation.mutateAsync({ payRunId: runId });
       await queryClient.invalidateQueries();
@@ -131,7 +134,7 @@ function PayRunDetailPage() {
                 disabled={regenerateMutation.isPending}
                 onClick={() => void regenerate()}
               >
-                <RefreshCcw /> Regenerate
+                <ArrowsClockwise /> Regenerate
               </Button>
               <Button
                 variant="outline"
@@ -139,10 +142,10 @@ function PayRunDetailPage() {
                 disabled={deleteMutation.isPending}
                 onClick={() => void remove()}
               >
-                <Trash2 /> Delete
+                <Trash /> Delete
               </Button>
               <Button disabled={approveMutation.isPending} onClick={() => void approve()}>
-                <CheckCircle2 /> Approve &amp; post costs
+                <CheckCircle /> Approve &amp; post costs
               </Button>
             </>
           ) : (
@@ -155,7 +158,7 @@ function PayRunDetailPage() {
                 ).catch(() => toast.error("Download failed"))
               }
             >
-              <Download /> All payslips (PDF)
+              <DownloadSimple /> All payslips (PDF)
             </Button>
           )}
         </div>
@@ -197,9 +200,9 @@ function PayRunDetailPage() {
                     >
                       <TableCell className="text-muted-foreground">
                         {open ? (
-                          <ChevronDown className="h-4 w-4" />
+                          <CaretDown className="h-4 w-4" />
                         ) : (
-                          <ChevronRight className="h-4 w-4" />
+                          <CaretRight className="h-4 w-4" />
                         )}
                       </TableCell>
                       <TableCell>
@@ -257,7 +260,7 @@ function PayRunDetailPage() {
                               ).catch(() => toast.error("Download failed"));
                             }}
                           >
-                            <Download />
+                            <DownloadSimple />
                           </Button>
                         </TableCell>
                       )}

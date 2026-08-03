@@ -1,22 +1,16 @@
 import { keepPreviousData } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  ArrowDownToLine,
-  ArrowUpFromLine,
-  Download,
-  Pencil,
-  Plus,
-  Search,
-  Wrench,
-} from "lucide-react";
+import { ArrowLineDown, ArrowLineUp, DownloadSimple, MagnifyingGlass, PencilSimple, Plus, Wrench } from "@phosphor-icons/react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
+import { z } from "zod";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Can } from "@/components/layout/Can";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ClickableRow, RowActions } from "@/components/ui/linked-row";
+import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -34,11 +28,18 @@ import { getGetStockItemQueryOptions, useListStockItems } from "@/lib/api/genera
 import type { StockItemRead } from "@/lib/api/generated/model";
 import { moneyExact } from "@/lib/format";
 
+const searchSchema = z.object({
+  page: z.number().int().min(1).optional().default(1),
+});
+
 export const Route = createFileRoute("/_app/inventory/")({
+  validateSearch: searchSchema,
   component: InventoryPage,
 });
 
 function InventoryPage() {
+  const { page } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const [search, setSearch] = useState("");
   const [lowOnly, setLowOnly] = useState(false);
   const [itemDialog, setItemDialog] = useState(false);
@@ -53,7 +54,8 @@ function InventoryPage() {
     {
       search: search || undefined,
       low_stock_only: lowOnly || undefined,
-      page_size: 200,
+      page,
+      page_size: DEFAULT_PAGE_SIZE,
     },
     { query: { placeholderData: keepPreviousData } },
   );
@@ -69,7 +71,11 @@ function InventoryPage() {
         title="Inventory"
         description={
           data
-            ? `${data.total} item${data.total === 1 ? "" : "s"} · stock value ${moneyExact(totalValue ?? 0)}`
+            ? // Stock value is computed from the visible rows, so only show it while
+              // everything fits on one page — otherwise it would be page-scoped.
+              data.total <= DEFAULT_PAGE_SIZE
+              ? `${data.total} item${data.total === 1 ? "" : "s"} · stock value ${moneyExact(totalValue ?? 0)}`
+              : `${data.total} items`
             : undefined
         }
         actions={
@@ -83,7 +89,7 @@ function InventoryPage() {
                 ).catch(() => toast.error("Export failed"))
               }
             >
-              <Download /> Export
+              <DownloadSimple /> Export
             </Button>
             <Can perm="inventory:write">
               <Button
@@ -101,19 +107,25 @@ function InventoryPage() {
 
       <div className="mb-4 flex items-center gap-3">
         <div className="relative w-72">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <MagnifyingGlass className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search code, name or category…"
             className="pl-8"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              void navigate({ search: { page: 1 }, replace: true });
+            }}
           />
         </div>
         <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <input
             type="checkbox"
             checked={lowOnly}
-            onChange={(e) => setLowOnly(e.target.checked)}
+            onChange={(e) => {
+              setLowOnly(e.target.checked);
+              void navigate({ search: { page: 1 }, replace: true });
+            }}
           />
           Low stock only
         </label>
@@ -178,7 +190,7 @@ function InventoryPage() {
                           title="Goods in"
                           onClick={() => setMovement({ kind: "goods-in", item })}
                         >
-                          <ArrowDownToLine className="h-3.5 w-3.5" /> In
+                          <ArrowLineDown className="h-3.5 w-3.5" /> In
                         </Button>
                         <Button
                           variant="outline"
@@ -197,7 +209,7 @@ function InventoryPage() {
                             setItemDialog(true);
                           }}
                         >
-                          <Pencil className="h-3.5 w-3.5" />
+                          <PencilSimple className="h-3.5 w-3.5" />
                         </Button>
                       </>
                     )}
@@ -207,7 +219,7 @@ function InventoryPage() {
                         title="Issue to project"
                         onClick={() => setMovement({ kind: "issue", item })}
                       >
-                        <ArrowUpFromLine className="h-3.5 w-3.5" /> Issue
+                        <ArrowLineUp className="h-3.5 w-3.5" /> Issue
                       </Button>
                     )}
                   </div>
@@ -216,6 +228,14 @@ function InventoryPage() {
             ))}
           </TableBody>
         </Table>
+        <PaginationBar
+          page={page}
+          pageSize={DEFAULT_PAGE_SIZE}
+          total={data?.total}
+          onPageChange={(p) =>
+            void navigate({ search: (prev) => ({ ...prev, page: p }), replace: true })
+          }
+        />
       </div>
 
       <StockItemFormDialog open={itemDialog} onOpenChange={setItemDialog} item={editing} />

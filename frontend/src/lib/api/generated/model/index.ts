@@ -173,6 +173,7 @@ export * from './projectAllocation.ts';
 export * from './projectCreate.ts';
 export * from './projectHealth.ts';
 export * from './projectListItem.ts';
+export * from './projectMapPin.ts';
 export * from './projectRead.ts';
 export * from './projectStatus.ts';
 export * from './projectSummary.ts';

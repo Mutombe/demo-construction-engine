@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useRef, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { processIngestionItem, uploadIngestionItem } from "@/lib/api/generated/endpoints";
 import type { IngestionItemRead } from "@/lib/api/generated/model";
 import { ACCEPTED_TYPES, MAX_UPLOAD_BYTES } from "@/features/ingestion/types";

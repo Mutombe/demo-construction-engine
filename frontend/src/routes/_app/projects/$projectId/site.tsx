@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, FileText, Plus, RotateCcw, Sparkles } from "lucide-react";
+import { ArrowCounterClockwise, CheckCircle, FileText, Plus, Sparkle } from "@phosphor-icons/react";
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
+import { toast } from "@/lib/toast";
 import { Can } from "@/components/layout/Can";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -36,12 +37,18 @@ function SiteTab() {
   const { projectId } = Route.useParams();
   const queryClient = useQueryClient();
   const canWrite = usePermission("site:write");
-  const { data: diary, isLoading: diaryLoading } = useListDiaryEntries(projectId, {
-    page_size: 30,
-  });
-  const { data: issues, isLoading: issuesLoading } = useListSiteIssues(projectId, {
-    page_size: 50,
-  });
+  const [diaryPage, setDiaryPage] = useState(1);
+  const [issuesPage, setIssuesPage] = useState(1);
+  const { data: diary, isLoading: diaryLoading } = useListDiaryEntries(
+    projectId,
+    { page: diaryPage, page_size: DEFAULT_PAGE_SIZE },
+    { query: { placeholderData: keepPreviousData } },
+  );
+  const { data: issues, isLoading: issuesLoading } = useListSiteIssues(
+    projectId,
+    { page: issuesPage, page_size: DEFAULT_PAGE_SIZE },
+    { query: { placeholderData: keepPreviousData } },
+  );
   const reopenMutation = useReopenSiteIssue();
 
   const [diaryDialog, setDiaryDialog] = useState(false);
@@ -64,7 +71,7 @@ function SiteTab() {
       <div className="flex justify-end gap-2">
         <Can perm="site:write">
           <Button variant="outline" onClick={() => setReportDialog(true)}>
-            <Sparkles className="text-primary" /> Draft weekly report
+            <Sparkle className="text-primary" /> Draft weekly report
           </Button>
           <Button
             variant="outline"
@@ -137,6 +144,12 @@ function SiteTab() {
               ))}
             </TableBody>
           </Table>
+          <PaginationBar
+            page={diaryPage}
+            pageSize={DEFAULT_PAGE_SIZE}
+            total={diary?.total}
+            onPageChange={setDiaryPage}
+          />
         </CardContent>
       </Card>
 
@@ -195,7 +208,7 @@ function SiteTab() {
                           variant="outline"
                           onClick={() => setResolvingId(issue.id)}
                         >
-                          <CheckCircle2 className="h-3.5 w-3.5" /> Resolve
+                          <CheckCircle className="h-3.5 w-3.5" /> Resolve
                         </Button>
                       ) : (
                         <Button
@@ -203,7 +216,7 @@ function SiteTab() {
                           variant="ghost"
                           onClick={() => void reopen(issue.id)}
                         >
-                          <RotateCcw className="h-3.5 w-3.5" /> Reopen
+                          <ArrowCounterClockwise className="h-3.5 w-3.5" /> Reopen
                         </Button>
                       )}
                     </TableCell>
@@ -212,6 +225,12 @@ function SiteTab() {
               ))}
             </TableBody>
           </Table>
+          <PaginationBar
+            page={issuesPage}
+            pageSize={DEFAULT_PAGE_SIZE}
+            total={issues?.total}
+            onPageChange={setIssuesPage}
+          />
         </CardContent>
       </Card>
 

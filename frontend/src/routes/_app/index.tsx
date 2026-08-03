@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { AlertTriangle, Building2, CalendarClock, Landmark, Wallet } from "lucide-react";
+import { Bank, Buildings, CalendarDots, Wallet, Warning } from "@phosphor-icons/react";
 import {
   Bar,
   BarChart,
@@ -99,7 +99,7 @@ function DashboardPage() {
       <PageHeader title="Dashboard" description="Portfolio health across all live projects" />
 
       <div className="mb-5 grid grid-cols-2 gap-4 xl:grid-cols-5">
-        <KpiCard label="Active projects" value={overview.active_projects} icon={<Building2 />} />
+        <KpiCard label="Active projects" value={overview.active_projects} icon={<Buildings />} />
         <KpiCard
           label="Contract value"
           value={money(overview.portfolio_contract_value)}
@@ -108,18 +108,18 @@ function DashboardPage() {
         <KpiCard
           label="Spend vs budget"
           value={`${money(overview.portfolio_actual)} / ${money(overview.portfolio_budget)}`}
-          icon={<CalendarClock />}
+          icon={<CalendarDots />}
         />
         <KpiCard
           label="Cash position"
           value={money(trend?.totals.portfolio_outstanding)}
-          icon={<Landmark />}
+          icon={<Bank />}
           sub={`${money(trend?.totals.portfolio_paid)} received of ${money(trend?.totals.portfolio_invoiced)} invoiced`}
         />
         <KpiCard
           label="Overdue tasks"
           value={overview.overdue_tasks}
-          icon={<AlertTriangle />}
+          icon={<Warning />}
           tone={overview.overdue_tasks > 0 ? "danger" : "default"}
         />
       </div>

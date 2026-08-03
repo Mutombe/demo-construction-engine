@@ -1,4 +1,4 @@
-import { AlertTriangle, Check, FileText, Loader2, RotateCcw } from "lucide-react";
+import { ArrowCounterClockwise, Check, CircleNotch, FileText, Warning } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { IngestionStatusBadge } from "@/features/ingestion/StatusBadge";
@@ -78,7 +78,7 @@ export function IngestionCard({
             <span className="truncate text-sm font-medium">{card.filename}</span>
             {busy ? (
               <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <CircleNotch className="h-3.5 w-3.5 animate-spin" />
                 {card.phase === "processing" ? "Extracting…" : "Uploading…"}
               </span>
             ) : (
@@ -99,7 +99,7 @@ export function IngestionCard({
           )}
           {card.duplicateIds.length > 0 && (
             <div className="flex items-center gap-1 text-xs text-amber-600">
-              <AlertTriangle className="h-3 w-3" /> Identical file uploaded before — check the
+              <Warning className="h-3 w-3" /> Identical file uploaded before — check the
               history below.
             </div>
           )}
@@ -109,7 +109,7 @@ export function IngestionCard({
           <div className="flex gap-2 pt-0.5">
             {(card.phase === "error" || item?.status === "failed") && card.itemId && (
               <Button size="sm" variant="outline" onClick={() => onRetry(card.localId)}>
-                <RotateCcw /> Retry
+                <ArrowCounterClockwise /> Retry
               </Button>
             )}
             {item &&

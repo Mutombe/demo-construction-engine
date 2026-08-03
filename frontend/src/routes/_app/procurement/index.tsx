@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { Users } from "lucide-react";
+import { UsersThree } from "@phosphor-icons/react";
 import { z } from "zod";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Select } from "@/components/ui/select";
@@ -30,7 +30,7 @@ function ProcurementPage() {
             to="/procurement/suppliers"
             className="inline-flex h-9 items-center gap-2 rounded-md border border-input bg-card px-4 text-sm font-medium transition-colors hover:bg-accent"
           >
-            <Users className="h-4 w-4" /> Suppliers
+            <UsersThree className="h-4 w-4" /> Suppliers
           </Link>
         }
       />

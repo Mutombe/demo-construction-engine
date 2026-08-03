@@ -1,8 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
+import { CaretDown, CaretRight, Plus, Trash } from "@phosphor-icons/react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Badge } from "@/components/ui/badge";
+import { confirmDialog } from "@/components/ui/confirm";
 import { usePermission } from "@/features/auth/hooks";
 import {
   useCreateItem,
@@ -82,7 +83,14 @@ export function BoqSheet({ projectId, tree }: { projectId: string; tree: BoqTree
   };
 
   const removeItem = async (item: BoqItemRead) => {
-    if (!window.confirm(`Delete item ${item.item_code}?`)) return;
+    if (
+      !(await confirmDialog({
+        title: "Delete item",
+        message: `Delete item ${item.item_code}?`,
+        tone: "danger",
+      }))
+    )
+      return;
     try {
       await deleteItem.mutateAsync({ itemId: item.id });
       await invalidate();
@@ -134,9 +142,9 @@ export function BoqSheet({ projectId, tree }: { projectId: string; tree: BoqTree
             >
               <div className="flex items-center gap-1.5 text-sm font-semibold">
                 {isCollapsed ? (
-                  <ChevronRight className="h-4 w-4" />
+                  <CaretRight className="h-4 w-4" />
                 ) : (
-                  <ChevronDown className="h-4 w-4" />
+                  <CaretDown className="h-4 w-4" />
                 )}
                 {section.code} — {section.title}
                 <span className="ml-2 text-xs font-normal text-muted-foreground">
@@ -241,7 +249,7 @@ export function BoqSheet({ projectId, tree }: { projectId: string; tree: BoqTree
                         className="flex items-center justify-center text-muted-foreground hover:text-destructive"
                         title="Delete item"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash className="h-3.5 w-3.5" />
                       </button>
                     )}
                   </div>

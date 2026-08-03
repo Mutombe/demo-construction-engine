@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Download } from "lucide-react";
-import { toast } from "sonner";
+import { DownloadSimple } from "@phosphor-icons/react";
+import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import { BoqSheet } from "@/features/boq/BoqSheet";
@@ -28,10 +28,10 @@ function BoqTab() {
     <div>
       <div className="mb-3 flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={() => void exportCost("csv")}>
-          <Download /> Cost report CSV
+          <DownloadSimple /> Cost report CSV
         </Button>
         <Button variant="outline" size="sm" onClick={() => void exportCost("xlsx")}>
-          <Download /> Cost report Excel
+          <DownloadSimple /> Cost report Excel
         </Button>
       </div>
       <BoqSheet projectId={projectId} tree={data} />

@@ -1465,6 +1465,23 @@ def seed_measurement(db, users) -> None:
         set_measurement(db, draft.id, MeasurementSet(lines=lines))
 
 
+PROJECT_COORDS = {
+    "PRJ-2026-001": (Decimal("-17.783200"), Decimal("31.088900")),  # Riverside Drive, Harare
+    "PRJ-2026-002": (Decimal("-18.944600"), Decimal("32.623100")),  # Feruka, Mutare
+    "PRJ-2026-003": (Decimal("-17.828800"), Decimal("31.052900")),  # Harare CBD
+}
+
+
+def seed_coordinates(db) -> None:
+    """Idempotent pin backfill so the site map has markers."""
+    for code, (lat, lng) in PROJECT_COORDS.items():
+        project = db.scalar(select(Project).where(Project.code == code))
+        if project is not None and project.latitude is None:
+            project.latitude = lat
+            project.longitude = lng
+    db.flush()
+
+
 def main() -> None:
     if settings.environment == "production":
         print("Refusing to seed a production environment.")
@@ -1486,6 +1503,7 @@ def main() -> None:
         seed_purchase_orders(db, users)
         seed_payroll(db, users)
         seed_measurement(db, users)
+        seed_coordinates(db)
         portal_link = seed_portal_link(db, users)
         db.commit()
         print("Seed complete.")

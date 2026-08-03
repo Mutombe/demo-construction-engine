@@ -1,12 +1,15 @@
+import { keepPreviousData } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Building2, Pencil, Plus } from "lucide-react";
+import { Buildings, PencilSimple, Plus } from "@phosphor-icons/react";
 import { useState } from "react";
+import { z } from "zod";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Can } from "@/components/layout/Can";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ClickableRow, RowActions } from "@/components/ui/linked-row";
+import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -20,12 +23,22 @@ import { ClientFormDialog } from "@/features/clients/ClientFormDialog";
 import { getGetClientQueryOptions, useListClients } from "@/lib/api/generated/endpoints";
 import type { ClientRead } from "@/lib/api/generated/model";
 
+const searchSchema = z.object({
+  page: z.number().int().min(1).optional().default(1),
+});
+
 export const Route = createFileRoute("/_app/clients/")({
+  validateSearch: searchSchema,
   component: ClientsPage,
 });
 
 function ClientsPage() {
-  const { data, isLoading } = useListClients({ page_size: 100 });
+  const { page } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const { data, isLoading } = useListClients(
+    { page, page_size: DEFAULT_PAGE_SIZE },
+    { query: { placeholderData: keepPreviousData } },
+  );
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<ClientRead | null>(null);
 
@@ -65,7 +78,7 @@ function ClientsPage() {
                 <TableRow>
                   <TableCell colSpan={5} className="p-0">
                     <EmptyState
-                      icon={<Building2 />}
+                      icon={<Buildings />}
                       title="No clients yet"
                       hint="Add the companies you build for; projects, valuations and portal links all hang off a client."
                     />
@@ -96,7 +109,7 @@ function ClientsPage() {
                           setDialogOpen(true);
                         }}
                       >
-                        <Pencil />
+                        <PencilSimple />
                       </Button>
                     </Can>
                   </RowActions>
@@ -104,6 +117,14 @@ function ClientsPage() {
               ))}
             </TableBody>
           </Table>
+          <PaginationBar
+            page={page}
+            pageSize={DEFAULT_PAGE_SIZE}
+            total={data?.total}
+            onPageChange={(p) =>
+              void navigate({ search: (prev) => ({ ...prev, page: p }), replace: true })
+            }
+          />
         </CardContent>
       </Card>
       <ClientFormDialog open={dialogOpen} onOpenChange={setDialogOpen} client={editing} />

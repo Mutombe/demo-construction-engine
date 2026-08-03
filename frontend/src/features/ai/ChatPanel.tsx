@@ -1,5 +1,5 @@
 import { useRouterState } from "@tanstack/react-router";
-import { CircleStop, RotateCcw, Search, Send, Sparkles, X } from "lucide-react";
+import { ArrowCounterClockwise, MagnifyingGlass, PaperPlaneTilt, Sparkle, StopCircle, X } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,7 +41,7 @@ export function ChatPanel() {
     <div className="fixed inset-y-0 right-0 z-50 flex w-[400px] flex-col border-l bg-card shadow-xl">
       <div className="flex h-14 shrink-0 items-center justify-between border-b px-4">
         <div className="flex items-center gap-2 font-semibold">
-          <Sparkles className="h-4 w-4 text-primary" /> Assistant
+          <Sparkle className="h-4 w-4 text-primary" /> Assistant
         </div>
         <div className="flex items-center gap-1">
           <Button
@@ -51,7 +51,7 @@ export function ChatPanel() {
             onClick={clear}
             disabled={isStreaming}
           >
-            <RotateCcw />
+            <ArrowCounterClockwise />
           </Button>
           <Button variant="ghost" size="icon" onClick={() => setOpen(false)}>
             <X />
@@ -106,7 +106,7 @@ export function ChatPanel() {
                         a.isError && "text-destructive",
                       )}
                     >
-                      <Search className="h-2.5 w-2.5" />
+                      <MagnifyingGlass className="h-2.5 w-2.5" />
                       {a.name.replaceAll("_", " ")}
                     </span>
                   ))}
@@ -143,11 +143,11 @@ export function ChatPanel() {
           />
           {isStreaming ? (
             <Button variant="outline" size="icon" onClick={stop} title="Stop">
-              <CircleStop />
+              <StopCircle />
             </Button>
           ) : (
             <Button size="icon" onClick={submit} disabled={!aiAvailable || !input.trim()}>
-              <Send />
+              <PaperPlaneTilt />
             </Button>
           )}
         </div>

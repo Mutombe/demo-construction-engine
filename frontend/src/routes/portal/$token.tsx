@@ -1,17 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  ArrowLeft,
-  Building2,
-  Check,
-  CircleDashed,
-  Download,
-  FileText,
-  HardHat,
-  Loader2,
-  MapPin,
-  ShieldAlert,
-} from "lucide-react";
+import { ArrowLeft, Buildings, Check, CircleDashed, CircleNotch, DownloadSimple, FileText, HardHat, MapPin, ShieldWarning } from "@phosphor-icons/react";
 import { useState } from "react";
 import {
   downloadCertificate,
@@ -135,7 +124,7 @@ function PortalPage() {
     return (
       <PortalShell>
         <div className="flex flex-col items-center gap-3 py-24 text-muted-foreground">
-          <Loader2 className="h-6 w-6 animate-spin" />
+          <CircleNotch className="h-6 w-6 animate-spin" />
           Opening your portal…
         </div>
       </PortalShell>
@@ -148,7 +137,7 @@ function PortalPage() {
       <PortalShell>
         <div className="fade-up mx-auto max-w-md rounded-xl border bg-card p-8 text-center shadow-sm">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-            <ShieldAlert className="h-6 w-6" />
+            <ShieldWarning className="h-6 w-6" />
           </div>
           <h1 className="text-lg font-semibold">This link isn't active</h1>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -258,7 +247,7 @@ function ProjectView({
   if (!project) {
     return (
       <div className="flex justify-center py-24 text-muted-foreground">
-        <Loader2 className="h-6 w-6 animate-spin" />
+        <CircleNotch className="h-6 w-6 animate-spin" />
       </div>
     );
   }
@@ -291,7 +280,7 @@ function ProjectView({
           </p>
           <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted-foreground">
             <span>
-              <Building2 className="mr-1 inline h-3 w-3" />
+              <Buildings className="mr-1 inline h-3 w-3" />
               {STATUS_LABEL[project.status] ?? project.status}
             </span>
             {project.planned_end && <span>Target completion {fmtDate(project.planned_end)}</span>}
@@ -412,9 +401,9 @@ function ProjectView({
                   onClick={() => void download(valuation)}
                 >
                   {downloading === valuation.id ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <CircleNotch className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <Download className="h-3.5 w-3.5" />
+                    <DownloadSimple className="h-3.5 w-3.5" />
                   )}
                   Certificate
                 </button>

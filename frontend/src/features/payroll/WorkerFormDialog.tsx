@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -224,7 +224,7 @@ export function WorkerFormDialog({
                         .catch((err) => toast.error(errDetail(err)))
                     }
                   >
-                    <Trash2 />
+                    <Trash />
                   </Button>
                 </div>
               ))}

@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Pencil, Plus, Search } from "lucide-react";
+import { MagnifyingGlass, PencilSimple, Plus } from "@phosphor-icons/react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
+import { z } from "zod";
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Can } from "@/components/layout/Can";
@@ -9,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ClickableRow, RowActions } from "@/components/ui/linked-row";
+import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -27,18 +29,25 @@ import {
 } from "@/lib/api/generated/endpoints";
 import type { SupplierRead } from "@/lib/api/generated/model";
 
+const searchSchema = z.object({
+  page: z.number().int().min(1).optional().default(1),
+});
+
 export const Route = createFileRoute("/_app/procurement/suppliers")({
+  validateSearch: searchSchema,
   component: SuppliersPage,
 });
 
 function SuppliersPage() {
+  const { page } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<SupplierRead | null>(null);
   const queryClient = useQueryClient();
   const canWrite = usePermission("procurement:write");
   const { data, isLoading } = useListSuppliers(
-    { search: search || undefined, page_size: 100 },
+    { search: search || undefined, page, page_size: DEFAULT_PAGE_SIZE },
     { query: { placeholderData: keepPreviousData } },
   );
   const updateMutation = useUpdateSupplier();
@@ -75,12 +84,15 @@ function SuppliersPage() {
       />
 
       <div className="relative mb-4 w-72">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <MagnifyingGlass className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Search name or category…"
           className="pl-8"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            void navigate({ search: { page: 1 }, replace: true });
+          }}
         />
       </div>
 
@@ -145,7 +157,7 @@ function SuppliersPage() {
                           setDialogOpen(true);
                         }}
                       >
-                        <Pencil className="h-3.5 w-3.5" />
+                        <PencilSimple className="h-3.5 w-3.5" />
                       </Button>
                       <Button
                         variant="outline"
@@ -161,6 +173,14 @@ function SuppliersPage() {
             ))}
           </TableBody>
         </Table>
+        <PaginationBar
+          page={page}
+          pageSize={DEFAULT_PAGE_SIZE}
+          total={data?.total}
+          onPageChange={(p) =>
+            void navigate({ search: (prev) => ({ ...prev, page: p }), replace: true })
+          }
+        />
       </div>
 
       <SupplierFormDialog open={dialogOpen} onOpenChange={setDialogOpen} supplier={editing} />

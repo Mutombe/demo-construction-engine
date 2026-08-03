@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Sparkles } from "lucide-react";
+import { Sparkle, Warning } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -224,7 +224,7 @@ export function QuoteExtractDialog({
                 title={aiAvailable ? undefined : "AI not configured — add ANTHROPIC_API_KEY"}
                 onClick={() => void extract()}
               >
-                <Sparkles className="h-3.5 w-3.5" />
+                <Sparkle className="h-3.5 w-3.5" />
                 {extractMutation.isPending ? "Extracting…" : "Extract with AI"}
               </Button>
             </div>
@@ -292,7 +292,7 @@ export function QuoteExtractDialog({
                   <div className="flex items-center justify-end gap-1">
                     {(line.unit_mismatch || line.quantity_mismatch) && (
                       <span title="Unit or quantity differs from the RFQ line">
-                        <AlertTriangle className="h-3.5 w-3.5 text-warning" />
+                        <Warning className="h-3.5 w-3.5 text-warning" />
                       </span>
                     )}
                     {confidenceBadge(line)}

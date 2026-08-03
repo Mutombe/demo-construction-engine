@@ -14,6 +14,7 @@ from app.modules.projects.schemas import (
     PhaseUpdate,
     ProjectCreate,
     ProjectListItem,
+    ProjectMapPin,
     ProjectRead,
     ProjectSummary,
     ProjectUpdate,
@@ -49,6 +50,12 @@ def list_projects(
         page=params.page,
         page_size=params.page_size,
     )
+
+
+# NOTE: declared before /projects/{project_id} so "map" never hits the UUID route
+@router.get("/projects/map", response_model=list[ProjectMapPin])
+def get_project_map_pins(db: DbDep) -> list[ProjectMapPin]:
+    return service.map_pins(db)
 
 
 @router.post("/projects", response_model=ProjectRead, status_code=201)

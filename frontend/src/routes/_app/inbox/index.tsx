@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
+import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import { Select } from "@/components/ui/select";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import {
@@ -28,6 +29,7 @@ export const Route = createFileRoute("/_app/inbox/")({
   // ?item=<id> deep-links straight into the review panel — shareable/bookmarkable
   validateSearch: (search: Record<string, unknown>) => ({
     item: typeof search.item === "string" ? search.item : undefined,
+    page: typeof search.page === "number" && search.page >= 1 ? search.page : 1,
   }),
 });
 
@@ -43,12 +45,12 @@ const STATUS_FILTERS: { value: string; label: string }[] = [
 function InboxPage() {
   const [projectHint, setProjectHint] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const { item: reviewId } = Route.useSearch();
+  const { item: reviewId, page } = Route.useSearch();
   const navigate = useNavigate();
   const setReviewId = (id: string | null) =>
     void navigate({
       to: "/inbox",
-      search: { item: id ?? undefined },
+      search: { item: id ?? undefined, page },
       replace: reviewId != null && id != null,
     });
 
@@ -56,7 +58,8 @@ function InboxPage() {
   const { cards, addFiles, retry, refreshCard } = useUploadPump(projectHint || undefined);
   const { data: history, isLoading } = useListIngestionItems(
     {
-      page_size: 50,
+      page,
+      page_size: DEFAULT_PAGE_SIZE,
       status: (statusFilter || undefined) as IngestionStatus | undefined,
     },
     { query: { placeholderData: keepPreviousData } },
@@ -112,7 +115,14 @@ function InboxPage() {
               <Select
                 className="w-44"
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  void navigate({
+                    to: "/inbox",
+                    search: { item: reviewId, page: 1 },
+                    replace: true,
+                  });
+                }}
               >
                 {STATUS_FILTERS.map((f) => (
                   <option key={f.value} value={f.value}>
@@ -170,6 +180,18 @@ function InboxPage() {
                 })}
               </TableBody>
             </Table>
+            <PaginationBar
+              page={page}
+              pageSize={DEFAULT_PAGE_SIZE}
+              total={history?.total}
+              onPageChange={(p) =>
+                void navigate({
+                  to: "/inbox",
+                  search: { item: reviewId, page: p },
+                  replace: true,
+                })
+              }
+            />
           </CardContent>
         </Card>
       </div>

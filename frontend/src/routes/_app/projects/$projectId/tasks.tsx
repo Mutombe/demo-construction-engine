@@ -1,10 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Diamond, Pencil, Plus, Trash2 } from "lucide-react";
+import { Diamond, PencilSimple, Plus, Trash } from "@phosphor-icons/react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Can } from "@/components/layout/Can";
 import { Button } from "@/components/ui/button";
+import { confirmDialog } from "@/components/ui/confirm";
 import { Progress } from "@/components/ui/progress";
 import { Select } from "@/components/ui/select";
 import { TableSkeleton } from "@/components/ui/skeleton";
@@ -55,7 +56,14 @@ function TasksTab() {
   };
 
   const handleDelete = async (task: TaskListItem) => {
-    if (!window.confirm(`Delete task "${task.name}"? This also removes its dependencies.`)) return;
+    if (
+      !(await confirmDialog({
+        title: "Delete task",
+        message: `Delete task "${task.name}"? This also removes its dependencies.`,
+        tone: "danger",
+      }))
+    )
+      return;
     try {
       await deleteMutation.mutateAsync({ taskId: task.id });
       await queryClient.invalidateQueries();
@@ -168,7 +176,7 @@ function TasksTab() {
                             setDialogOpen(true);
                           }}
                         >
-                          <Pencil className="h-3.5 w-3.5" />
+                          <PencilSimple className="h-3.5 w-3.5" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -176,7 +184,7 @@ function TasksTab() {
                           className="h-7 w-7 text-destructive"
                           onClick={() => void handleDelete(task)}
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     </TableCell>

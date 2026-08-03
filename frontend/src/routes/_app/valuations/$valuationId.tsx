@@ -1,12 +1,13 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Ban, CheckCircle2, Download, Send } from "lucide-react";
-import { toast } from "sonner";
+import { CheckCircle, DownloadSimple, PaperPlaneTilt, Prohibit } from "@phosphor-icons/react";
+import { toast } from "@/lib/toast";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Can } from "@/components/layout/Can";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { confirmDialog } from "@/components/ui/confirm";
 import { EntityLink } from "@/components/ui/linked-row";
 import { DetailSkeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/ui/stat-card";
@@ -50,8 +51,14 @@ function ValuationDetailPage() {
     return <DetailSkeleton />;
   }
 
-  const act = async (fn: () => Promise<unknown>, confirmMsg: string, successMsg: string) => {
-    if (!window.confirm(confirmMsg)) return;
+  const act = async (
+    fn: () => Promise<unknown>,
+    confirmTitle: string,
+    confirmMsg: string,
+    successMsg: string,
+    tone: "default" | "danger" = "default",
+  ) => {
+    if (!(await confirmDialog({ title: confirmTitle, message: confirmMsg, tone }))) return;
     try {
       await fn();
       await queryClient.invalidateQueries({ queryKey: ["/api/v1/valuations"] });
@@ -112,7 +119,7 @@ function ValuationDetailPage() {
                 ).catch(() => toast.error("Download failed"))
               }
             >
-              <Download /> Certificate
+              <DownloadSimple /> Certificate
             </Button>
           )}
           <Can perm="valuation:write">
@@ -122,12 +129,13 @@ function ValuationDetailPage() {
                 onClick={() =>
                   void act(
                     () => issueMutation.mutateAsync({ valuationId, data: {} }),
+                    "Issue valuation",
                     `Issue ${valuation.doc_number} to the client for ${moneyExact(valuation.net_certified)} net?`,
                     "Valuation issued",
                   )
                 }
               >
-                <Send /> Issue
+                <PaperPlaneTilt /> Issue
               </Button>
             )}
             {valuation.status === "issued" && (
@@ -137,12 +145,13 @@ function ValuationDetailPage() {
                   onClick={() =>
                     void act(
                       () => payMutation.mutateAsync({ valuationId, data: {} }),
+                      "Record payment",
                       `Record full payment of ${moneyExact(valuation.net_certified)}?`,
                       "Payment recorded",
                     )
                   }
                 >
-                  <CheckCircle2 /> Mark paid
+                  <CheckCircle /> Mark paid
                 </Button>
                 <Button
                   variant="outline"
@@ -151,8 +160,10 @@ function ValuationDetailPage() {
                   onClick={() =>
                     void act(
                       () => cancelMutation.mutateAsync({ valuationId }),
+                      "Cancel valuation",
                       `Cancel ${valuation.doc_number}? Only the latest certificate can be cancelled.`,
                       "Valuation cancelled",
+                      "danger",
                     ).then(() =>
                       navigate({
                         to: "/projects/$projectId/valuations",
@@ -161,7 +172,7 @@ function ValuationDetailPage() {
                     )
                   }
                 >
-                  <Ban /> Cancel
+                  <Prohibit /> Cancel
                 </Button>
               </>
             )}

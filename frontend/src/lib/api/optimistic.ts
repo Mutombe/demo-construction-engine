@@ -15,7 +15,7 @@
  */
 
 import type { QueryClient, UseMutationOptions } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { errDetail } from "@/lib/api/errors";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

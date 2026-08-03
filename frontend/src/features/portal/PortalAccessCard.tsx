@@ -1,9 +1,10 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Copy, Globe, Link2, ShieldOff } from "lucide-react";
+import { Copy, Globe, LinkSimple, ShieldSlash } from "@phosphor-icons/react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { confirmDialog } from "@/components/ui/confirm";
 import { Input } from "@/components/ui/input";
 import {
   useCreatePortalLink,
@@ -53,7 +54,14 @@ export function PortalAccessCard({
   };
 
   const revoke = async (linkId: string) => {
-    if (!window.confirm("Revoke this link? Anyone using it loses access immediately.")) return;
+    if (
+      !(await confirmDialog({
+        title: "Revoke link",
+        message: "Revoke this link? Anyone using it loses access immediately.",
+        tone: "danger",
+      }))
+    )
+      return;
     try {
       await revokeMutation.mutateAsync({ linkId });
       await queryClient.invalidateQueries();
@@ -106,7 +114,7 @@ export function PortalAccessCard({
           <ul className="space-y-1.5">
             {active.map((link) => (
               <li key={link.id} className="flex items-center gap-2 text-sm">
-                <Link2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                <LinkSimple className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 <span className="min-w-0 flex-1 truncate">{link.label}</span>
                 <span className="shrink-0 text-xs text-muted-foreground">
                   {link.last_used_at
@@ -122,7 +130,7 @@ export function PortalAccessCard({
                   disabled={revokeMutation.isPending}
                   onClick={() => void revoke(link.id)}
                 >
-                  <ShieldOff />
+                  <ShieldSlash />
                 </Button>
               </li>
             ))}

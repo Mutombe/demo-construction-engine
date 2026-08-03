@@ -108,3 +108,19 @@ class PhaseRead(PhaseBase):
 
 class PhaseReorder(BaseModel):
     phase_ids: list[uuid.UUID]
+
+
+class ProjectMapPin(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    code: str
+    name: str
+    status: ProjectStatus
+    city: str | None
+    site_address: str | None
+    latitude: Decimal
+    longitude: Decimal
+    contract_value: Decimal | None
+    client_name: str | None = None
+    progress_pct: float = 0.0

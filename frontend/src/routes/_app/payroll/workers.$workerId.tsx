@@ -1,5 +1,6 @@
+import { keepPreviousData } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { CalendarDays, HardHat, Pencil, Phone } from "lucide-react";
+import { CalendarBlank, HardHat, PencilSimple, Phone } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Can } from "@/components/layout/Can";
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EntityLink } from "@/components/ui/linked-row";
+import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import { DetailSkeleton, TableSkeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/ui/stat-card";
 import {
@@ -36,10 +38,11 @@ export const Route = createFileRoute("/_app/payroll/workers/$workerId")({
 function WorkerDetailPage() {
   const { workerId } = Route.useParams();
   const { data: worker } = useGetWorker(workerId);
-  const { data: timesheets, isLoading: sheetsLoading } = useListTimesheets({
-    worker_id: workerId,
-    page_size: 30,
-  });
+  const [page, setPage] = useState(1);
+  const { data: timesheets, isLoading: sheetsLoading } = useListTimesheets(
+    { worker_id: workerId, page, page_size: DEFAULT_PAGE_SIZE },
+    { query: { placeholderData: keepPreviousData } },
+  );
   const [editOpen, setEditOpen] = useState(false);
 
   if (!worker) {
@@ -80,7 +83,7 @@ function WorkerDetailPage() {
         </div>
         <Can perm="payroll:write">
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-            <Pencil /> Edit worker
+            <PencilSimple /> Edit worker
           </Button>
         </Can>
       </div>
@@ -93,9 +96,9 @@ function WorkerDetailPage() {
         />
         <StatCard
           label="Unpaid time"
-          value={`${unpaidQty} ${unit}`}
+          value={`${timesheets && timesheets.total > DEFAULT_PAGE_SIZE ? "~" : ""}${unpaidQty} ${unit}`}
           sub="awaiting the next pay run"
-          icon={<CalendarDays />}
+          icon={<CalendarBlank />}
         />
         <StatCard
           label="Recurring items"
@@ -130,7 +133,7 @@ function WorkerDetailPage() {
                 <TableRow>
                   <TableCell colSpan={5} className="p-0">
                     <EmptyState
-                      icon={<CalendarDays />}
+                      icon={<CalendarBlank />}
                       title="No timesheets yet"
                       hint="Record a site day on the Payroll page to capture this worker's time."
                     />
@@ -173,6 +176,12 @@ function WorkerDetailPage() {
               ))}
             </TableBody>
           </Table>
+          <PaginationBar
+            page={page}
+            pageSize={DEFAULT_PAGE_SIZE}
+            total={timesheets?.total}
+            onPageChange={setPage}
+          />
         </CardContent>
       </Card>
 

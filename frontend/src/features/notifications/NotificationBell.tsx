@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Bell, CheckCheck, Inbox } from "lucide-react";
+import { Bell, Checks, Tray } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dropdown } from "@/components/ui/dropdown";
@@ -117,14 +117,14 @@ export function NotificationBell() {
             className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
             onClick={() => void markAll.mutateAsync().catch(() => undefined)}
           >
-            <CheckCheck className="h-3.5 w-3.5" /> Mark all read
+            <Checks className="h-3.5 w-3.5" /> Mark all read
           </button>
         )}
       </div>
       <div className="max-h-96 overflow-y-auto">
         {(list?.items.length ?? 0) === 0 ? (
           <EmptyState
-            icon={<Inbox />}
+            icon={<Tray />}
             title="You're all caught up"
             hint="Approvals, certificates and pay runs that need your attention will land here."
             className="py-8"

@@ -1,11 +1,12 @@
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, Plus, X } from "lucide-react";
+import { Check, Plus, X } from "@phosphor-icons/react";
 import { useState } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Can } from "@/components/layout/Can";
 import { Button } from "@/components/ui/button";
+import { confirmDialog } from "@/components/ui/confirm";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ClickableRow, EntityLink, RowActions } from "@/components/ui/linked-row";
+import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import { Select } from "@/components/ui/select";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import {
@@ -42,6 +44,7 @@ import { fmtDate, moneyExact } from "@/lib/format";
 const searchSchema = z.object({
   status: z.enum(["pending", "approved", "rejected", "cancelled"]).optional(),
   mine: z.boolean().optional(),
+  page: z.number().int().min(1).optional().default(1),
 });
 
 export const Route = createFileRoute("/_app/expenses/")({
@@ -63,7 +66,8 @@ function ExpensesPage() {
     {
       status: search.status,
       mine: search.mine || undefined,
-      page_size: 100,
+      page: search.page,
+      page_size: DEFAULT_PAGE_SIZE,
     },
     { query: { placeholderData: keepPreviousData } },
   );
@@ -107,8 +111,15 @@ function ExpensesPage() {
       .catch(() => undefined);
   };
 
-  const cancel = (claimId: string) => {
-    if (!window.confirm("Cancel this claim?")) return;
+  const cancel = async (claimId: string) => {
+    if (
+      !(await confirmDialog({
+        title: "Cancel claim",
+        message: "Cancel this claim?",
+        tone: "danger",
+      }))
+    )
+      return;
     void cancelMutation.mutateAsync({ claimId }).catch(() => undefined);
   };
 
@@ -135,6 +146,7 @@ function ExpensesPage() {
               search: (prev) => ({
                 ...prev,
                 status: (e.target.value || undefined) as typeof search.status,
+                page: 1, // filters reset paging
               }),
               replace: true,
             })
@@ -152,7 +164,7 @@ function ExpensesPage() {
             checked={search.mine ?? false}
             onChange={(e) =>
               void navigate({
-                search: (prev) => ({ ...prev, mine: e.target.checked || undefined }),
+                search: (prev) => ({ ...prev, mine: e.target.checked || undefined, page: 1 }),
                 replace: true,
               })
             }
@@ -271,6 +283,14 @@ function ExpensesPage() {
             })}
           </TableBody>
         </Table>
+        <PaginationBar
+          page={search.page}
+          pageSize={DEFAULT_PAGE_SIZE}
+          total={data?.total}
+          onPageChange={(page) =>
+            void navigate({ search: (prev) => ({ ...prev, page }), replace: true })
+          }
+        />
       </div>
 
       <ExpenseFormDialog open={dialogOpen} onOpenChange={setDialogOpen} />

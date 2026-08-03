@@ -1,6 +1,6 @@
 import { keepPreviousData } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Search } from "lucide-react";
+import { MagnifyingGlass, Plus } from "@phosphor-icons/react";
 import { useState } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/layout/AppShell";
@@ -77,7 +77,7 @@ function ProjectsPage() {
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <MagnifyingGlass className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search name or code…"
             className="w-64 pl-8"

@@ -1,8 +1,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { AlertTriangle, CheckCircle2, ExternalLink, XCircle } from "lucide-react";
+import { ArrowSquareOut, CheckCircle, Warning, XCircle } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Can } from "@/components/layout/Can";
 import { Button } from "@/components/ui/button";
 import {
@@ -289,7 +289,7 @@ export function ReviewPanel({
                 <div className="space-y-1 rounded-md border border-amber-300 bg-amber-500/10 p-2.5">
                   {action.problems.map((p) => (
                     <div key={p} className="flex items-start gap-1.5 text-xs text-amber-700">
-                      <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" /> {p}
+                      <Warning className="mt-0.5 h-3 w-3 shrink-0" /> {p}
                     </div>
                   ))}
                 </div>
@@ -326,7 +326,7 @@ export function ReviewPanel({
 
               {action?.lineage?.posted_type && (
                 <div className="flex items-center gap-1.5 rounded-md border border-emerald-300 bg-emerald-500/10 p-2.5 text-xs text-emerald-700">
-                  <ExternalLink className="h-3 w-3" />
+                  <ArrowSquareOut className="h-3 w-3" />
                   <LineageLink item={item} action={action} />
                 </div>
               )}
@@ -392,7 +392,7 @@ export function ReviewPanel({
                     }
                     onClick={() => void approve()}
                   >
-                    <CheckCircle2 /> Approve &amp; post
+                    <CheckCircle /> Approve &amp; post
                   </Button>
                 </Can>
               </>

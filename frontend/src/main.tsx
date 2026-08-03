@@ -2,8 +2,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { Toaster } from "sonner";
+import { ConfirmHost } from "@/components/ui/confirm";
 import { restoreSession } from "@/features/auth/api";
+import { Toaster } from "@/lib/toast";
 import { routeTree } from "./routeTree.gen";
 import "./index.css";
 
@@ -34,7 +35,8 @@ async function boot() {
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
-        <Toaster richColors position="top-right" />
+        <Toaster />
+        <ConfirmHost />
       </QueryClientProvider>
     </StrictMode>,
   );

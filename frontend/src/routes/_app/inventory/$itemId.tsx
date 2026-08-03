@@ -1,8 +1,11 @@
+import { keepPreviousData } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EntityLink } from "@/components/ui/linked-row";
+import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import {
   Table,
   TableBody,
@@ -35,9 +38,12 @@ const MovementTypeBadge = makeBadge({
 function StockItemDetailPage() {
   const { itemId } = Route.useParams();
   const { data: item } = useGetStockItem(itemId);
-  const { data: movements, isLoading: movementsLoading } = useListStockMovements(itemId, {
-    page_size: 100,
-  });
+  const [movementsPage, setMovementsPage] = useState(1);
+  const { data: movements, isLoading: movementsLoading } = useListStockMovements(
+    itemId,
+    { page: movementsPage, page_size: DEFAULT_PAGE_SIZE },
+    { query: { placeholderData: keepPreviousData } },
+  );
 
   if (!item) {
     return <PageSkeleton rows={4} />;
@@ -152,6 +158,12 @@ function StockItemDetailPage() {
             ))}
           </TableBody>
         </Table>
+        <PaginationBar
+          page={movementsPage}
+          pageSize={DEFAULT_PAGE_SIZE}
+          total={movements?.total}
+          onPageChange={setMovementsPage}
+        />
       </div>
     </div>
   );

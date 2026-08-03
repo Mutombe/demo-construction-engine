@@ -1,10 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, Sparkles } from "lucide-react";
+import { Check, Sparkle } from "@phosphor-icons/react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { confirmDialog } from "@/components/ui/confirm";
 import { Can } from "@/components/layout/Can";
 import { useAiStatus } from "@/features/ai/useAiStatus";
 import { useAcceptQuote, useCompareQuotes } from "@/lib/api/generated/endpoints";
@@ -42,9 +43,11 @@ export function QuoteCompare({
 
   const accept = async (quoteId: string) => {
     if (
-      !window.confirm(
-        "Accept this quote? All other quotes on this RFQ will be rejected and the RFQ closed.",
-      )
+      !(await confirmDialog({
+        title: "Accept quote",
+        message:
+          "Accept this quote? All other quotes on this RFQ will be rejected and the RFQ closed.",
+      }))
     )
       return;
     try {
@@ -74,7 +77,7 @@ export function QuoteCompare({
           title={aiAvailable ? undefined : "AI not configured — add ANTHROPIC_API_KEY"}
           onClick={() => void analyze()}
         >
-          <Sparkles className="h-3.5 w-3.5" />
+          <Sparkle className="h-3.5 w-3.5" />
           {compareMutation.isPending ? "Analyzing…" : "Analyze & recommend"}
         </Button>
       </CardHeader>
@@ -209,7 +212,7 @@ export function QuoteCompare({
             )}
             <div className="rounded-md border bg-card p-3">
               <div className="mb-1 flex items-center gap-2 text-sm font-semibold">
-                <Sparkles className="h-4 w-4 text-primary" />
+                <Sparkle className="h-4 w-4 text-primary" />
                 Recommendation: {analysis.recommendation.supplier_name}
               </div>
               <p className="text-sm text-muted-foreground">

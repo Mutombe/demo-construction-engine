@@ -1,8 +1,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Ban, Check, CircleDot, X } from "lucide-react";
+import { Check, Prohibit, RadioButton, X } from "@phosphor-icons/react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Can } from "@/components/layout/Can";
 import { Button } from "@/components/ui/button";
@@ -110,7 +110,7 @@ function ExpenseClaimDetailPage() {
                 void act(() => cancelMutation.mutateAsync({ claimId }), "Claim cancelled")
               }
             >
-              <Ban /> Cancel claim
+              <Prohibit /> Cancel claim
             </Button>
           )}
         </div>
@@ -180,7 +180,7 @@ function ExpenseClaimDetailPage() {
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <div className="flex items-start gap-2">
-              <CircleDot className="mt-0.5 h-4 w-4 text-primary" />
+              <RadioButton className="mt-0.5 h-4 w-4 text-primary" />
               <div>
                 <div className="font-medium">Submitted</div>
                 <div className="text-xs text-muted-foreground">

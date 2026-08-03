@@ -1,13 +1,15 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Ban, CheckCircle2, Download, Pencil, Plus, Ruler, Send, Trash2 } from "lucide-react";
+import { CheckCircle, DownloadSimple, PaperPlaneTilt, PencilSimple, Plus, Prohibit, Ruler, Trash } from "@phosphor-icons/react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Can } from "@/components/layout/Can";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { confirmDialog } from "@/components/ui/confirm";
 import { ClickableRow, RowActions } from "@/components/ui/linked-row";
+import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import { StatRowSkeleton, TableSkeleton } from "@/components/ui/skeleton";
 import { downloadFile } from "@/lib/api/download";
 import { MeasurementSheetDialog } from "@/features/valuations/MeasurementSheetDialog";
@@ -56,9 +58,12 @@ function ValuationsTab() {
   const queryClient = useQueryClient();
   const { data: project } = useGetProject(projectId);
   const { data: summary } = useGetRevenueSummary(projectId);
-  const { data: valuations, isLoading: valuationsLoading } = useListValuations(projectId, {
-    page_size: 50,
-  });
+  const [page, setPage] = useState(1);
+  const { data: valuations, isLoading: valuationsLoading } = useListValuations(
+    projectId,
+    { page, page_size: DEFAULT_PAGE_SIZE },
+    { query: { placeholderData: keepPreviousData } },
+  );
 
   const listPrefix = `/api/v1/projects/${projectId}/valuations`;
   const statusOptions = (status: string, successToast: string) =>
@@ -94,8 +99,14 @@ function ValuationsTab() {
 
   // Success/error toasts + rollback live in the mutation options now; the
   // legacy third argument is accepted and ignored.
-  const act = (fn: () => Promise<unknown>, confirmMsg: string, _successMsg?: string) => {
-    if (!window.confirm(confirmMsg)) return;
+  const act = async (
+    fn: () => Promise<unknown>,
+    confirmTitle: string,
+    confirmMsg: string,
+    _successMsg?: string,
+    tone: "default" | "danger" = "default",
+  ) => {
+    if (!(await confirmDialog({ title: confirmTitle, message: confirmMsg, tone }))) return;
     void fn().catch(() => undefined);
   };
 
@@ -232,7 +243,7 @@ function ValuationsTab() {
                                 setFormOpen(true);
                               }}
                             >
-                              <Pencil />
+                              <PencilSimple />
                             </Button>
                             <Button
                               variant="ghost"
@@ -243,12 +254,13 @@ function ValuationsTab() {
                                 void act(
                                   () =>
                                     issueMutation.mutateAsync({ valuationId: v.id, data: {} }),
+                                  "Issue valuation",
                                   `Issue ${v.doc_number} to the client for ${moneyExact(v.net_certified)} net?`,
                                   "Valuation issued",
                                 )
                               }
                             >
-                              <Send />
+                              <PaperPlaneTilt />
                             </Button>
                             <Button
                               variant="ghost"
@@ -259,12 +271,14 @@ function ValuationsTab() {
                               onClick={() =>
                                 void act(
                                   () => deleteMutation.mutateAsync({ valuationId: v.id }),
+                                  "Delete draft",
                                   `Delete draft ${v.doc_number}?`,
                                   "Draft deleted",
+                                  "danger",
                                 )
                               }
                             >
-                              <Trash2 />
+                              <Trash />
                             </Button>
                           </>
                         )}
@@ -280,7 +294,7 @@ function ValuationsTab() {
                               ).catch(() => toast.error("Download failed"))
                             }
                           >
-                            <Download />
+                            <DownloadSimple />
                           </Button>
                         )}
                         {v.status === "issued" && (
@@ -293,12 +307,13 @@ function ValuationsTab() {
                               onClick={() =>
                                 void act(
                                   () => payMutation.mutateAsync({ valuationId: v.id, data: {} }),
+                                  "Record payment",
                                   `Record full payment of ${moneyExact(v.net_certified)} for ${v.doc_number}?`,
                                   "Payment recorded",
                                 )
                               }
                             >
-                              <CheckCircle2 />
+                              <CheckCircle />
                             </Button>
                             <Button
                               variant="ghost"
@@ -309,12 +324,14 @@ function ValuationsTab() {
                               onClick={() =>
                                 void act(
                                   () => cancelMutation.mutateAsync({ valuationId: v.id }),
+                                  "Cancel valuation",
                                   `Cancel ${v.doc_number}? Only the latest certificate can be cancelled.`,
                                   "Valuation cancelled",
+                                  "danger",
                                 )
                               }
                             >
-                              <Ban />
+                              <Prohibit />
                             </Button>
                           </>
                         )}
@@ -325,6 +342,12 @@ function ValuationsTab() {
               ))}
             </TableBody>
           </Table>
+          <PaginationBar
+            page={page}
+            pageSize={DEFAULT_PAGE_SIZE}
+            total={valuations?.total}
+            onPageChange={setPage}
+          />
         </CardContent>
       </Card>
 

@@ -1,5 +1,5 @@
 import { Link, Outlet, createFileRoute, useRouterState } from "@tanstack/react-router";
-import { Pencil } from "lucide-react";
+import { PencilSimple } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Can } from "@/components/layout/Can";
@@ -100,7 +100,7 @@ function ProjectDetailLayout() {
             )}
             <Can perm="project:write">
               <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-                <Pencil /> Edit
+                <PencilSimple /> Edit
               </Button>
             </Can>
           </div>

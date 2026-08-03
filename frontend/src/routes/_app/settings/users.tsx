@@ -1,10 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { Plus } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { z } from "zod";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import { Select } from "@/components/ui/select";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import {
@@ -37,7 +38,12 @@ import {
 } from "@/lib/api/generated/endpoints";
 import { fmtDate, ROLE_LABELS } from "@/lib/format";
 
+const searchSchema = z.object({
+  page: z.number().int().min(1).optional().default(1),
+});
+
 export const Route = createFileRoute("/_app/settings/users")({
+  validateSearch: searchSchema,
   beforeLoad: () => {
     const user = useAuthStore.getState().user;
     if (!can(user?.role, "users:manage")) throw redirect({ to: "/" });
@@ -56,8 +62,13 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 function UsersPage() {
+  const { page } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const queryClient = useQueryClient();
-  const { data, isLoading } = useListUsers({ page_size: 100 });
+  const { data, isLoading } = useListUsers(
+    { page, page_size: DEFAULT_PAGE_SIZE },
+    { query: { placeholderData: keepPreviousData } },
+  );
   const createMutation = useCreateUser();
   const updateMutation = useUpdateUser();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -176,6 +187,14 @@ function UsersPage() {
             ))}
           </TableBody>
         </Table>
+        <PaginationBar
+          page={page}
+          pageSize={DEFAULT_PAGE_SIZE}
+          total={data?.total}
+          onPageChange={(p) =>
+            void navigate({ search: (prev) => ({ ...prev, page: p }), replace: true })
+          }
+        />
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

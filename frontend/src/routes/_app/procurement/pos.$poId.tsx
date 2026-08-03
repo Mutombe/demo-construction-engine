@@ -1,13 +1,14 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { Ban, Download, PackageCheck, Send } from "lucide-react";
+import { DownloadSimple, Package, PaperPlaneTilt, Prohibit } from "@phosphor-icons/react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Can } from "@/components/layout/Can";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { confirmDialog } from "@/components/ui/confirm";
 import { EntityLink } from "@/components/ui/linked-row";
 import {
   Table,
@@ -58,10 +59,12 @@ function PoDetailPage() {
 
   const act = async (
     fn: () => Promise<unknown>,
+    confirmTitle: string,
     confirmMsg: string,
     successMsg: string,
+    tone: "default" | "danger" = "default",
   ) => {
-    if (!window.confirm(confirmMsg)) return;
+    if (!(await confirmDialog({ title: confirmTitle, message: confirmMsg, tone }))) return;
     try {
       await fn();
       await queryClient.invalidateQueries();
@@ -119,7 +122,7 @@ function PoDetailPage() {
               )
             }
           >
-            <Download /> PDF
+            <DownloadSimple /> PDF
           </Button>
           {po.status === "draft" && (
             <Can perm="po:approve">
@@ -128,19 +131,20 @@ function PoDetailPage() {
                 onClick={() =>
                   void act(
                     () => issueMutation.mutateAsync({ poId }),
+                    "Issue purchase order",
                     "Issue this purchase order to the supplier?",
                     "PO issued",
                   )
                 }
               >
-                <Send /> Issue
+                <PaperPlaneTilt /> Issue
               </Button>
             </Can>
           )}
           {po.status === "issued" && (
             <Can perm="po:approve">
               <Button onClick={() => setReceiveOpen(true)}>
-                <PackageCheck /> Receive
+                <Package /> Receive
               </Button>
             </Can>
           )}
@@ -153,12 +157,14 @@ function PoDetailPage() {
                 onClick={() =>
                   void act(
                     () => cancelMutation.mutateAsync({ poId }),
+                    "Cancel purchase order",
                     "Cancel this purchase order?",
                     "PO cancelled",
+                    "danger",
                   )
                 }
               >
-                <Ban /> Cancel
+                <Prohibit /> Cancel
               </Button>
             </Can>
           )}

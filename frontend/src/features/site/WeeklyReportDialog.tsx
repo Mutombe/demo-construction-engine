@@ -1,6 +1,6 @@
-import { Copy, Sparkles } from "lucide-react";
+import { Copy, Sparkle } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -92,7 +92,7 @@ export function WeeklyReportDialog({
               title={aiAvailable ? undefined : "AI not configured — add ANTHROPIC_API_KEY"}
               onClick={() => void generate()}
             >
-              <Sparkles />
+              <Sparkle />
               {generateMutation.isPending ? "Writing report…" : markdown ? "Regenerate" : "Generate"}
             </Button>
             {markdown && (

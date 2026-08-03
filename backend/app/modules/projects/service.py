@@ -14,6 +14,7 @@ from app.modules.projects.schemas import (
     PhaseCreate,
     PhaseUpdate,
     ProjectCreate,
+    ProjectMapPin,
     ProjectSummary,
     ProjectUpdate,
 )
@@ -274,3 +275,20 @@ def reorder_phases(db: Session, project_id: uuid.UUID, phase_ids: list[uuid.UUID
         by_id[pid].sequence = i + 1
     db.flush()
     return list_phases(db, project_id)
+
+
+def map_pins(db: Session) -> list[ProjectMapPin]:
+    """Every project with a fixed pin (lat/long set), for the site map."""
+    projects = db.scalars(
+        select(Project)
+        .options(joinedload(Project.client))
+        .where(Project.latitude.is_not(None), Project.longitude.is_not(None))
+        .order_by(Project.created_at.desc())
+    )
+    pins = []
+    for project in projects:
+        pin = ProjectMapPin.model_validate(project)
+        pin.client_name = project.client.name if project.client else None
+        pin.progress_pct = project_progress_pct(db, project.id)
+        pins.append(pin)
+    return pins
