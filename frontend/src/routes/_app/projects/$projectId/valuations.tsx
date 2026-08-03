@@ -7,6 +7,8 @@ import { Can } from "@/components/layout/Can";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ClickableRow, RowActions } from "@/components/ui/linked-row";
+import { StatRowSkeleton, TableSkeleton } from "@/components/ui/skeleton";
 import { downloadFile } from "@/lib/api/download";
 import { MeasurementSheetDialog } from "@/features/valuations/MeasurementSheetDialog";
 import {
@@ -20,6 +22,7 @@ import {
 import { ValuationFormDialog } from "@/features/valuations/ValuationFormDialog";
 import { ValuationStatusBadge } from "@/features/valuations/StatusBadge";
 import {
+  getGetValuationQueryOptions,
   useCancelValuation,
   useDeleteValuation,
   useGetProject,
@@ -29,18 +32,12 @@ import {
   usePayValuation,
 } from "@/lib/api/generated/endpoints";
 import type { ValuationRead } from "@/lib/api/generated/model";
+import { optimistic, patchRow, removeRow } from "@/lib/api/optimistic";
 import { fmtDate, money, moneyExact } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/projects/$projectId/valuations")({
   component: ValuationsTab,
 });
-
-function errDetail(err: unknown): string {
-  return (
-    (err as { response?: { data?: { error?: { detail?: string } } } })?.response?.data?.error
-      ?.detail ?? "Something went wrong"
-  );
-}
 
 function SummaryCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
@@ -59,26 +56,47 @@ function ValuationsTab() {
   const queryClient = useQueryClient();
   const { data: project } = useGetProject(projectId);
   const { data: summary } = useGetRevenueSummary(projectId);
-  const { data: valuations } = useListValuations(projectId, { page_size: 50 });
+  const { data: valuations, isLoading: valuationsLoading } = useListValuations(projectId, {
+    page_size: 50,
+  });
 
-  const issueMutation = useIssueValuation();
-  const payMutation = usePayValuation();
-  const cancelMutation = useCancelValuation();
-  const deleteMutation = useDeleteValuation();
+  const listPrefix = `/api/v1/projects/${projectId}/valuations`;
+  const statusOptions = (status: string, successToast: string) =>
+    optimistic(queryClient, {
+      prefixes: [listPrefix],
+      invalidate: ["/api/v1/projects", "/api/v1/valuations"],
+      successToast,
+      apply: (old, vars: { valuationId: string }) =>
+        patchRow(vars.valuationId, { status })(old),
+    });
+  // Status transitions apply in place instantly; rollback + toast on failure.
+  const issueMutation = useIssueValuation({
+    mutation: statusOptions("issued", "Valuation issued"),
+  });
+  const payMutation = usePayValuation({
+    mutation: statusOptions("paid", "Payment recorded"),
+  });
+  const cancelMutation = useCancelValuation({
+    mutation: statusOptions("cancelled", "Valuation cancelled"),
+  });
+  const deleteMutation = useDeleteValuation({
+    mutation: optimistic(queryClient, {
+      prefixes: [listPrefix],
+      invalidate: ["/api/v1/projects", "/api/v1/valuations"],
+      successToast: "Draft deleted",
+      apply: (old, vars: { valuationId: string }) => removeRow(vars.valuationId)(old),
+    }),
+  });
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<ValuationRead | undefined>(undefined);
   const [measuring, setMeasuring] = useState<ValuationRead | null>(null);
 
-  const act = async (fn: () => Promise<unknown>, confirmMsg: string, successMsg: string) => {
+  // Success/error toasts + rollback live in the mutation options now; the
+  // legacy third argument is accepted and ignored.
+  const act = (fn: () => Promise<unknown>, confirmMsg: string, _successMsg?: string) => {
     if (!window.confirm(confirmMsg)) return;
-    try {
-      await fn();
-      await queryClient.invalidateQueries();
-      toast.success(successMsg);
-    } catch (err) {
-      toast.error(errDetail(err));
-    }
+    void fn().catch(() => undefined);
   };
 
   const items = valuations?.items ?? [];
@@ -88,26 +106,32 @@ function ValuationsTab() {
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div className="grid flex-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <SummaryCard
-            label="Certified gross"
-            value={money(summary?.certified_gross)}
-            sub={`of ${money(summary?.contract_value)} contract`}
-          />
-          <SummaryCard
-            label="Invoiced to date"
-            value={money(summary?.invoiced_to_date)}
-            sub={`${summary?.valuation_count ?? 0} valuation${(summary?.valuation_count ?? 0) === 1 ? "" : "s"}`}
-          />
-          <SummaryCard
-            label="Retention held"
-            value={money(summary?.retention_held)}
-            sub={summary?.retention_pct ? `${Number(summary.retention_pct)}% retention` : "no retention"}
-          />
-          <SummaryCard
-            label="Outstanding"
-            value={money(summary?.outstanding)}
-            sub={`${money(summary?.paid_to_date)} paid`}
-          />
+          {!summary ? (
+            <StatRowSkeleton count={4} />
+          ) : (
+            <>
+              <SummaryCard
+                label="Certified gross"
+                value={money(summary.certified_gross)}
+                sub={`of ${money(summary.contract_value)} contract`}
+              />
+              <SummaryCard
+                label="Invoiced to date"
+                value={money(summary.invoiced_to_date)}
+                sub={`${summary.valuation_count ?? 0} valuation${(summary.valuation_count ?? 0) === 1 ? "" : "s"}`}
+              />
+              <SummaryCard
+                label="Retention held"
+                value={money(summary.retention_held)}
+                sub={summary.retention_pct ? `${Number(summary.retention_pct)}% retention` : "no retention"}
+              />
+              <SummaryCard
+                label="Outstanding"
+                value={money(summary.outstanding)}
+                sub={`${money(summary.paid_to_date)} paid`}
+              />
+            </>
+          )}
         </div>
         <Can perm="valuation:write">
           <Button
@@ -141,7 +165,8 @@ function ValuationsTab() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.length === 0 && (
+              {valuationsLoading && !valuations && <TableSkeleton columns={10} rows={5} />}
+              {!valuationsLoading && items.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={10} className="py-10 text-center text-muted-foreground">
                     No valuations yet — create the first progress valuation to invoice the client.
@@ -149,7 +174,12 @@ function ValuationsTab() {
                 </TableRow>
               )}
               {items.map((v) => (
-                <TableRow key={v.id}>
+                <ClickableRow
+                  key={v.id}
+                  to="/valuations/$valuationId"
+                  params={{ valuationId: v.id }}
+                  prefetch={() => getGetValuationQueryOptions(v.id)}
+                >
                   <TableCell className="font-medium">V{v.valuation_number}</TableCell>
                   <TableCell className="font-mono text-xs">
                     {v.doc_number}
@@ -180,7 +210,7 @@ function ValuationsTab() {
                     {v.paid_date && <> · paid {fmtDate(v.paid_date)}</>}
                     {!v.issued_date && !v.paid_date && "—"}
                   </TableCell>
-                  <TableCell>
+                  <RowActions>
                     <Can perm="valuation:write">
                       <div className="flex justify-end gap-1">
                         {v.status === "draft" && (
@@ -290,8 +320,8 @@ function ValuationsTab() {
                         )}
                       </div>
                     </Can>
-                  </TableCell>
-                </TableRow>
+                  </RowActions>
+                </ClickableRow>
               ))}
             </TableBody>
           </Table>

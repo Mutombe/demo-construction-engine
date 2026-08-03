@@ -1,12 +1,14 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowLeft, Ban, Download, PackageCheck, Send } from "lucide-react";
+import { Ban, Download, PackageCheck, Send } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Can } from "@/components/layout/Can";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EntityLink } from "@/components/ui/linked-row";
 import {
   Table,
   TableBody,
@@ -20,6 +22,8 @@ import { ReceivePoDialog } from "@/features/procurement/ReceivePoDialog";
 import { downloadFile } from "@/lib/api/download";
 import { PoStatusBadge } from "@/features/procurement/StatusBadges";
 import {
+  getGetPurchaseOrderQueryOptions,
+  getGetSupplierActivityQueryOptions,
   useCancelPurchaseOrder,
   useGetPurchaseOrder,
   useIssuePurchaseOrder,
@@ -28,6 +32,8 @@ import { fmtDate, moneyExact } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/procurement/pos/$poId")({
   component: PoDetailPage,
+  loader: ({ context: { queryClient }, params }) =>
+    queryClient.ensureQueryData(getGetPurchaseOrderQueryOptions(params.poId)),
 });
 
 function errDetail(err: unknown): string {
@@ -67,12 +73,9 @@ function PoDetailPage() {
 
   return (
     <div>
-      <Link
-        to="/procurement"
-        className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" /> Procurement
-      </Link>
+      <Breadcrumbs
+        items={[{ label: "Procurement", to: "/procurement" }, { label: po.doc_number }]}
+      />
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2.5">
@@ -86,8 +89,23 @@ function PoDetailPage() {
             {po.ai_generated && <Badge variant="secondary">AI terms</Badge>}
           </div>
           <div className="mt-1 text-sm text-muted-foreground">
-            {po.supplier_name} · {po.project_code} {po.project_name} · ordered{" "}
-            {fmtDate(po.order_date)}
+            <EntityLink
+              to="/procurement/suppliers/$supplierId"
+              params={{ supplierId: po.supplier_id }}
+              prefetch={() => getGetSupplierActivityQueryOptions(po.supplier_id)}
+              className="text-sm font-normal"
+            >
+              {po.supplier_name}
+            </EntityLink>{" "}
+            ·{" "}
+            <EntityLink
+              to="/projects/$projectId"
+              params={{ projectId: po.project_id }}
+              className="text-sm font-normal"
+            >
+              {po.project_code} {po.project_name}
+            </EntityLink>{" "}
+            · ordered {fmtDate(po.order_date)}
             {po.expected_delivery && <> · expected {fmtDate(po.expected_delivery)}</>}
             {po.received_date && <> · received {fmtDate(po.received_date)}</>}
           </div>
@@ -223,10 +241,12 @@ function PoDetailPage() {
               <CardContent className="p-4 text-sm text-muted-foreground">
                 {po.received_to === "store" ? (
                   <>
-                    ✅ Delivered {fmtDate(po.received_date)} into the store — stock booked at PO
-                    prices with GRN reference{" "}
-                    <span className="font-mono">{po.doc_number}</span>. Project cost posts when the
-                    stock is issued.
+                    ✅ Delivered {fmtDate(po.received_date)} into the store —{" "}
+                    <Link to="/inventory" className="underline">
+                      stock booked at PO prices
+                    </Link>{" "}
+                    with GRN reference <span className="font-mono">{po.doc_number}</span>. Project
+                    cost posts when the stock is issued.
                   </>
                 ) : (
                   <>

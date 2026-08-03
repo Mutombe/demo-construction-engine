@@ -17,14 +17,9 @@ import {
   useUpdateValuation,
 } from "@/lib/api/generated/endpoints";
 import type { RevenueSummary, ValuationRead } from "@/lib/api/generated/model";
+import { errDetail } from "@/lib/api/errors";
+import { addRow, optimistic, tempId } from "@/lib/api/optimistic";
 import { moneyExact } from "@/lib/format";
-
-function errDetail(err: unknown): string {
-  return (
-    (err as { response?: { data?: { error?: { detail?: string } } } })?.response?.data?.error
-      ?.detail ?? "Something went wrong"
-  );
-}
 
 export function ValuationFormDialog({
   open,
@@ -42,7 +37,34 @@ export function ValuationFormDialog({
   valuation?: ValuationRead;
 }) {
   const queryClient = useQueryClient();
-  const createMutation = useCreateValuation();
+  const listPrefix = `/api/v1/projects/${projectId}/valuations`;
+  const createMutation = useCreateValuation({
+    mutation: optimistic(queryClient, {
+      prefixes: [listPrefix],
+      invalidate: ["/api/v1/projects", "/api/v1/valuations"],
+      successToast: "Draft valuation created",
+      apply: (old, vars: { projectId: string; data: Record<string, unknown> }) => {
+        const grossNum = Number(vars.data.gross_valuation) || 0;
+        const retention = retentionPct ? (grossNum * Number(retentionPct)) / 100 : 0;
+        const previous = Number(summary?.invoiced_to_date ?? 0);
+        return addRow(() => ({
+          id: tempId(),
+          project_id: vars.projectId,
+          doc_number: "INV-…",
+          valuation_number: (summary?.valuation_count ?? 0) + 1,
+          status: "draft",
+          retention_amount: String(retention),
+          previous_certified: String(previous),
+          net_certified: String(grossNum - retention - previous),
+          issued_date: null,
+          paid_date: null,
+          is_measured: false,
+          created_at: new Date().toISOString(),
+          ...vars.data,
+        }))(old);
+      },
+    }),
+  });
   const updateMutation = useUpdateValuation();
 
   const [periodEnd, setPeriodEnd] = useState("");
@@ -71,25 +93,30 @@ export function ValuationFormDialog({
       toast.error("Period end and gross valuation are required");
       return;
     }
-    try {
-      if (valuation) {
+    if (valuation) {
+      // Edits recompute server-side figures; keep the confirmed round-trip.
+      try {
         await updateMutation.mutateAsync({
           valuationId: valuation.id,
           data: { period_end: periodEnd, gross_valuation: gross, notes: notes || null },
         });
+        await queryClient.invalidateQueries({ queryKey: ["/api/v1/projects"] });
+        await queryClient.invalidateQueries({ queryKey: ["/api/v1/valuations"] });
         toast.success("Valuation updated");
-      } else {
-        await createMutation.mutateAsync({
-          projectId,
-          data: { period_end: periodEnd, gross_valuation: gross, notes: notes || null },
-        });
-        toast.success("Draft valuation created");
+        onOpenChange(false);
+      } catch (err) {
+        toast.error(errDetail(err));
       }
-      await queryClient.invalidateQueries();
-      onOpenChange(false);
-    } catch (err) {
-      toast.error(errDetail(err));
+      return;
     }
+    // Optimistic create: close now, placeholder row settles or rolls back.
+    onOpenChange(false);
+    void createMutation
+      .mutateAsync({
+        projectId,
+        data: { period_end: periodEnd, gross_valuation: gross, notes: notes || null },
+      })
+      .catch(() => undefined);
   };
 
   const pending = createMutation.isPending || updateMutation.isPending;

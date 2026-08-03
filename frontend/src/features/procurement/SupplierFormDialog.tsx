@@ -2,7 +2,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateSupplier, useUpdateSupplier } from "@/lib/api/generated/endpoints";
 import type { SupplierRead } from "@/lib/api/generated/model";
+import { addRow, optimistic, patchRow, tempId } from "@/lib/api/optimistic";
 
 const schema = z.object({
   name: z.string().min(1, "Required"),
@@ -40,8 +40,27 @@ export function SupplierFormDialog({
   supplier?: SupplierRead | null;
 }) {
   const queryClient = useQueryClient();
-  const createMutation = useCreateSupplier();
-  const updateMutation = useUpdateSupplier();
+  const createMutation = useCreateSupplier({
+    mutation: optimistic(queryClient, {
+      prefixes: ["/api/v1/suppliers"],
+      successToast: "Supplier created",
+      apply: (old, vars: { data: Record<string, unknown> }) =>
+        addRow(() => ({
+          id: tempId(),
+          is_active: true,
+          created_at: new Date().toISOString(),
+          ...vars.data,
+        }))(old),
+    }),
+  });
+  const updateMutation = useUpdateSupplier({
+    mutation: optimistic(queryClient, {
+      prefixes: ["/api/v1/suppliers"],
+      successToast: "Supplier updated",
+      apply: (old, vars: { supplierId: string; data: Record<string, unknown> }) =>
+        patchRow(vars.supplierId, vars.data)(old),
+    }),
+  });
   const {
     register,
     handleSubmit,
@@ -64,7 +83,7 @@ export function SupplierFormDialog({
     }
   }, [open, supplier, reset]);
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = (values: FormValues) => {
     const payload = {
       name: values.name,
       contact_name: values.contact_name || null,
@@ -75,22 +94,13 @@ export function SupplierFormDialog({
       categories: values.categories || null,
       notes: values.notes || null,
     };
-    try {
-      if (supplier) {
-        await updateMutation.mutateAsync({ supplierId: supplier.id, data: payload });
-        toast.success("Supplier updated");
-      } else {
-        await createMutation.mutateAsync({ data: payload });
-        toast.success("Supplier created");
-      }
-      await queryClient.invalidateQueries();
-      onOpenChange(false);
-    } catch (err: unknown) {
-      const detail =
-        (err as { response?: { data?: { error?: { detail?: string } } } })?.response?.data
-          ?.error?.detail ?? "Something went wrong";
-      toast.error(detail);
-    }
+    // Optimistic: close now; the row appears/patches instantly and rolls back
+    // with an error toast if the server rejects (e.g. duplicate name).
+    onOpenChange(false);
+    const action = supplier
+      ? updateMutation.mutateAsync({ supplierId: supplier.id, data: payload })
+      : createMutation.mutateAsync({ data: payload });
+    void action.catch(() => undefined);
   };
 
   const busy = createMutation.isPending || updateMutation.isPending;

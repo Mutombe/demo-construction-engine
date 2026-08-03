@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Can } from "@/components/layout/Can";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TableSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -35,8 +36,12 @@ function SiteTab() {
   const { projectId } = Route.useParams();
   const queryClient = useQueryClient();
   const canWrite = usePermission("site:write");
-  const { data: diary } = useListDiaryEntries(projectId, { page_size: 30 });
-  const { data: issues } = useListSiteIssues(projectId, { page_size: 50 });
+  const { data: diary, isLoading: diaryLoading } = useListDiaryEntries(projectId, {
+    page_size: 30,
+  });
+  const { data: issues, isLoading: issuesLoading } = useListSiteIssues(projectId, {
+    page_size: 50,
+  });
   const reopenMutation = useReopenSiteIssue();
 
   const [diaryDialog, setDiaryDialog] = useState(false);
@@ -94,7 +99,8 @@ function SiteTab() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {!diary?.items.length && (
+              {diaryLoading && !diary && <TableSkeleton columns={5} rows={4} />}
+              {!diaryLoading && !diary?.items.length && (
                 <TableRow>
                   <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
                     No diary entries yet.
@@ -151,7 +157,10 @@ function SiteTab() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {!issues?.items.length && (
+              {issuesLoading && !issues && (
+                <TableSkeleton columns={canWrite ? 6 : 5} rows={4} />
+              )}
+              {!issuesLoading && !issues?.items.length && (
                 <TableRow>
                   <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
                     No issues raised. 🎉

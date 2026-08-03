@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { Can } from "@/components/layout/Can";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EntityLink } from "@/components/ui/linked-row";
 import { PortalAccessCard } from "@/features/portal/PortalAccessCard";
 import { WorkStatusBadge } from "@/features/projects/StatusBadge";
 import {
@@ -36,8 +37,15 @@ function OverviewTab() {
   return (
     <div className="grid gap-4 xl:grid-cols-3">
       <Card>
-        <CardHeader>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
           <CardTitle>Phases</CardTitle>
+          <Link
+            to="/projects/$projectId/program"
+            params={{ projectId }}
+            className="text-xs text-primary hover:underline"
+          >
+            View program →
+          </Link>
         </CardHeader>
         <CardContent className="space-y-2">
           {!phases?.length && <p className="text-sm text-muted-foreground">No phases yet.</p>}
@@ -105,10 +113,17 @@ function OverviewTab() {
 
       <div className="space-y-4">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex-row items-center justify-between space-y-0">
             <CardTitle className={cn(overdue?.length && "text-destructive")}>
               Overdue tasks {overdue?.length ? `(${overdue.length})` : ""}
             </CardTitle>
+            <Link
+              to="/projects/$projectId/tasks"
+              params={{ projectId }}
+              className="text-xs text-primary hover:underline"
+            >
+              View tasks →
+            </Link>
           </CardHeader>
           <CardContent className="space-y-2">
             {!overdue?.length && (
@@ -139,7 +154,19 @@ function OverviewTab() {
             {costs?.items.map((entry) => (
               <div key={entry.id} className="flex items-center justify-between gap-2 text-sm">
                 <span className="truncate text-muted-foreground">
-                  {fmtDate(entry.entry_date)} · {entry.description ?? entry.boq_item_code ?? "—"}
+                  {fmtDate(entry.entry_date)} ·{" "}
+                  {entry.description ??
+                    (entry.boq_item_code ? (
+                      <EntityLink
+                        to="/projects/$projectId/boq"
+                        params={{ projectId }}
+                        className="font-mono text-xs font-normal"
+                      >
+                        {entry.boq_item_code}
+                      </EntityLink>
+                    ) : (
+                      "—"
+                    ))}
                 </span>
                 <span className="shrink-0 font-medium">{money(entry.amount)}</span>
               </div>

@@ -13,7 +13,10 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as PortalTokenRouteImport } from './routes/portal/$token'
+import { Route as AppClientsIndexRouteImport } from './routes/_app/clients/index'
+import { Route as AppClientsClientIdRouteImport } from './routes/_app/clients/$clientId'
 import { Route as AppExpensesIndexRouteImport } from './routes/_app/expenses/index'
+import { Route as AppExpensesClaimIdRouteImport } from './routes/_app/expenses/$claimId'
 import { Route as AppInboxIndexRouteImport } from './routes/_app/inbox/index'
 import { Route as AppInventoryIndexRouteImport } from './routes/_app/inventory/index'
 import { Route as AppInventoryItemIdRouteImport } from './routes/_app/inventory/$itemId'
@@ -24,9 +27,12 @@ import { Route as AppProjectsIndexRouteImport } from './routes/_app/projects/ind
 import { Route as AppProjectsProjectIdRouteImport } from './routes/_app/projects/$projectId'
 import { Route as AppReportsIndexRouteImport } from './routes/_app/reports/index'
 import { Route as AppSettingsUsersRouteImport } from './routes/_app/settings/users'
+import { Route as AppValuationsValuationIdRouteImport } from './routes/_app/valuations/$valuationId'
 import { Route as AppPayrollRunsRunIdRouteImport } from './routes/_app/payroll/runs.$runId'
+import { Route as AppPayrollWorkersWorkerIdRouteImport } from './routes/_app/payroll/workers.$workerId'
 import { Route as AppProcurementPosPoIdRouteImport } from './routes/_app/procurement/pos.$poId'
 import { Route as AppProcurementRfqsRfqIdRouteImport } from './routes/_app/procurement/rfqs.$rfqId'
+import { Route as AppProcurementSuppliersSupplierIdRouteImport } from './routes/_app/procurement/suppliers.$supplierId'
 import { Route as AppProjectsProjectIdIndexRouteImport } from './routes/_app/projects/$projectId/index'
 import { Route as AppProjectsProjectIdBoqRouteImport } from './routes/_app/projects/$projectId/boq'
 import { Route as AppProjectsProjectIdProcurementRouteImport } from './routes/_app/projects/$projectId/procurement'
@@ -54,9 +60,24 @@ const PortalTokenRoute = PortalTokenRouteImport.update({
   path: '/portal/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppClientsIndexRoute = AppClientsIndexRouteImport.update({
+  id: '/clients/',
+  path: '/clients/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppClientsClientIdRoute = AppClientsClientIdRouteImport.update({
+  id: '/clients/$clientId',
+  path: '/clients/$clientId',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppExpensesIndexRoute = AppExpensesIndexRouteImport.update({
   id: '/expenses/',
   path: '/expenses/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppExpensesClaimIdRoute = AppExpensesClaimIdRouteImport.update({
+  id: '/expenses/$claimId',
+  path: '/expenses/$claimId',
   getParentRoute: () => AppRoute,
 } as any)
 const AppInboxIndexRoute = AppInboxIndexRouteImport.update({
@@ -109,11 +130,23 @@ const AppSettingsUsersRoute = AppSettingsUsersRouteImport.update({
   path: '/settings/users',
   getParentRoute: () => AppRoute,
 } as any)
+const AppValuationsValuationIdRoute =
+  AppValuationsValuationIdRouteImport.update({
+    id: '/valuations/$valuationId',
+    path: '/valuations/$valuationId',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppPayrollRunsRunIdRoute = AppPayrollRunsRunIdRouteImport.update({
   id: '/payroll/runs/$runId',
   path: '/payroll/runs/$runId',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPayrollWorkersWorkerIdRoute =
+  AppPayrollWorkersWorkerIdRouteImport.update({
+    id: '/payroll/workers/$workerId',
+    path: '/payroll/workers/$workerId',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppProcurementPosPoIdRoute = AppProcurementPosPoIdRouteImport.update({
   id: '/procurement/pos/$poId',
   path: '/procurement/pos/$poId',
@@ -124,6 +157,12 @@ const AppProcurementRfqsRfqIdRoute = AppProcurementRfqsRfqIdRouteImport.update({
   path: '/procurement/rfqs/$rfqId',
   getParentRoute: () => AppRoute,
 } as any)
+const AppProcurementSuppliersSupplierIdRoute =
+  AppProcurementSuppliersSupplierIdRouteImport.update({
+    id: '/$supplierId',
+    path: '/$supplierId',
+    getParentRoute: () => AppProcurementSuppliersRoute,
+  } as any)
 const AppProjectsProjectIdIndexRoute =
   AppProjectsProjectIdIndexRouteImport.update({
     id: '/',
@@ -170,10 +209,14 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
   '/portal/$token': typeof PortalTokenRoute
+  '/clients/$clientId': typeof AppClientsClientIdRoute
+  '/expenses/$claimId': typeof AppExpensesClaimIdRoute
   '/inventory/$itemId': typeof AppInventoryItemIdRoute
-  '/procurement/suppliers': typeof AppProcurementSuppliersRoute
+  '/procurement/suppliers': typeof AppProcurementSuppliersRouteWithChildren
   '/projects/$projectId': typeof AppProjectsProjectIdRouteWithChildren
   '/settings/users': typeof AppSettingsUsersRoute
+  '/valuations/$valuationId': typeof AppValuationsValuationIdRoute
+  '/clients/': typeof AppClientsIndexRoute
   '/expenses/': typeof AppExpensesIndexRoute
   '/inbox/': typeof AppInboxIndexRoute
   '/inventory/': typeof AppInventoryIndexRoute
@@ -182,8 +225,10 @@ export interface FileRoutesByFullPath {
   '/projects/': typeof AppProjectsIndexRoute
   '/reports/': typeof AppReportsIndexRoute
   '/payroll/runs/$runId': typeof AppPayrollRunsRunIdRoute
+  '/payroll/workers/$workerId': typeof AppPayrollWorkersWorkerIdRoute
   '/procurement/pos/$poId': typeof AppProcurementPosPoIdRoute
   '/procurement/rfqs/$rfqId': typeof AppProcurementRfqsRfqIdRoute
+  '/procurement/suppliers/$supplierId': typeof AppProcurementSuppliersSupplierIdRoute
   '/projects/$projectId/boq': typeof AppProjectsProjectIdBoqRoute
   '/projects/$projectId/procurement': typeof AppProjectsProjectIdProcurementRoute
   '/projects/$projectId/program': typeof AppProjectsProjectIdProgramRoute
@@ -196,9 +241,13 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/portal/$token': typeof PortalTokenRoute
   '/': typeof AppIndexRoute
+  '/clients/$clientId': typeof AppClientsClientIdRoute
+  '/expenses/$claimId': typeof AppExpensesClaimIdRoute
   '/inventory/$itemId': typeof AppInventoryItemIdRoute
-  '/procurement/suppliers': typeof AppProcurementSuppliersRoute
+  '/procurement/suppliers': typeof AppProcurementSuppliersRouteWithChildren
   '/settings/users': typeof AppSettingsUsersRoute
+  '/valuations/$valuationId': typeof AppValuationsValuationIdRoute
+  '/clients': typeof AppClientsIndexRoute
   '/expenses': typeof AppExpensesIndexRoute
   '/inbox': typeof AppInboxIndexRoute
   '/inventory': typeof AppInventoryIndexRoute
@@ -207,8 +256,10 @@ export interface FileRoutesByTo {
   '/projects': typeof AppProjectsIndexRoute
   '/reports': typeof AppReportsIndexRoute
   '/payroll/runs/$runId': typeof AppPayrollRunsRunIdRoute
+  '/payroll/workers/$workerId': typeof AppPayrollWorkersWorkerIdRoute
   '/procurement/pos/$poId': typeof AppProcurementPosPoIdRoute
   '/procurement/rfqs/$rfqId': typeof AppProcurementRfqsRfqIdRoute
+  '/procurement/suppliers/$supplierId': typeof AppProcurementSuppliersSupplierIdRoute
   '/projects/$projectId/boq': typeof AppProjectsProjectIdBoqRoute
   '/projects/$projectId/procurement': typeof AppProjectsProjectIdProcurementRoute
   '/projects/$projectId/program': typeof AppProjectsProjectIdProgramRoute
@@ -223,10 +274,14 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/portal/$token': typeof PortalTokenRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/clients/$clientId': typeof AppClientsClientIdRoute
+  '/_app/expenses/$claimId': typeof AppExpensesClaimIdRoute
   '/_app/inventory/$itemId': typeof AppInventoryItemIdRoute
-  '/_app/procurement/suppliers': typeof AppProcurementSuppliersRoute
+  '/_app/procurement/suppliers': typeof AppProcurementSuppliersRouteWithChildren
   '/_app/projects/$projectId': typeof AppProjectsProjectIdRouteWithChildren
   '/_app/settings/users': typeof AppSettingsUsersRoute
+  '/_app/valuations/$valuationId': typeof AppValuationsValuationIdRoute
+  '/_app/clients/': typeof AppClientsIndexRoute
   '/_app/expenses/': typeof AppExpensesIndexRoute
   '/_app/inbox/': typeof AppInboxIndexRoute
   '/_app/inventory/': typeof AppInventoryIndexRoute
@@ -235,8 +290,10 @@ export interface FileRoutesById {
   '/_app/projects/': typeof AppProjectsIndexRoute
   '/_app/reports/': typeof AppReportsIndexRoute
   '/_app/payroll/runs/$runId': typeof AppPayrollRunsRunIdRoute
+  '/_app/payroll/workers/$workerId': typeof AppPayrollWorkersWorkerIdRoute
   '/_app/procurement/pos/$poId': typeof AppProcurementPosPoIdRoute
   '/_app/procurement/rfqs/$rfqId': typeof AppProcurementRfqsRfqIdRoute
+  '/_app/procurement/suppliers/$supplierId': typeof AppProcurementSuppliersSupplierIdRoute
   '/_app/projects/$projectId/boq': typeof AppProjectsProjectIdBoqRoute
   '/_app/projects/$projectId/procurement': typeof AppProjectsProjectIdProcurementRoute
   '/_app/projects/$projectId/program': typeof AppProjectsProjectIdProgramRoute
@@ -251,10 +308,14 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/portal/$token'
+    | '/clients/$clientId'
+    | '/expenses/$claimId'
     | '/inventory/$itemId'
     | '/procurement/suppliers'
     | '/projects/$projectId'
     | '/settings/users'
+    | '/valuations/$valuationId'
+    | '/clients/'
     | '/expenses/'
     | '/inbox/'
     | '/inventory/'
@@ -263,8 +324,10 @@ export interface FileRouteTypes {
     | '/projects/'
     | '/reports/'
     | '/payroll/runs/$runId'
+    | '/payroll/workers/$workerId'
     | '/procurement/pos/$poId'
     | '/procurement/rfqs/$rfqId'
+    | '/procurement/suppliers/$supplierId'
     | '/projects/$projectId/boq'
     | '/projects/$projectId/procurement'
     | '/projects/$projectId/program'
@@ -277,9 +340,13 @@ export interface FileRouteTypes {
     | '/login'
     | '/portal/$token'
     | '/'
+    | '/clients/$clientId'
+    | '/expenses/$claimId'
     | '/inventory/$itemId'
     | '/procurement/suppliers'
     | '/settings/users'
+    | '/valuations/$valuationId'
+    | '/clients'
     | '/expenses'
     | '/inbox'
     | '/inventory'
@@ -288,8 +355,10 @@ export interface FileRouteTypes {
     | '/projects'
     | '/reports'
     | '/payroll/runs/$runId'
+    | '/payroll/workers/$workerId'
     | '/procurement/pos/$poId'
     | '/procurement/rfqs/$rfqId'
+    | '/procurement/suppliers/$supplierId'
     | '/projects/$projectId/boq'
     | '/projects/$projectId/procurement'
     | '/projects/$projectId/program'
@@ -303,10 +372,14 @@ export interface FileRouteTypes {
     | '/login'
     | '/portal/$token'
     | '/_app/'
+    | '/_app/clients/$clientId'
+    | '/_app/expenses/$claimId'
     | '/_app/inventory/$itemId'
     | '/_app/procurement/suppliers'
     | '/_app/projects/$projectId'
     | '/_app/settings/users'
+    | '/_app/valuations/$valuationId'
+    | '/_app/clients/'
     | '/_app/expenses/'
     | '/_app/inbox/'
     | '/_app/inventory/'
@@ -315,8 +388,10 @@ export interface FileRouteTypes {
     | '/_app/projects/'
     | '/_app/reports/'
     | '/_app/payroll/runs/$runId'
+    | '/_app/payroll/workers/$workerId'
     | '/_app/procurement/pos/$poId'
     | '/_app/procurement/rfqs/$rfqId'
+    | '/_app/procurement/suppliers/$supplierId'
     | '/_app/projects/$projectId/boq'
     | '/_app/projects/$projectId/procurement'
     | '/_app/projects/$projectId/program'
@@ -362,11 +437,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/clients/': {
+      id: '/_app/clients/'
+      path: '/clients'
+      fullPath: '/clients/'
+      preLoaderRoute: typeof AppClientsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/clients/$clientId': {
+      id: '/_app/clients/$clientId'
+      path: '/clients/$clientId'
+      fullPath: '/clients/$clientId'
+      preLoaderRoute: typeof AppClientsClientIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/expenses/': {
       id: '/_app/expenses/'
       path: '/expenses'
       fullPath: '/expenses/'
       preLoaderRoute: typeof AppExpensesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/expenses/$claimId': {
+      id: '/_app/expenses/$claimId'
+      path: '/expenses/$claimId'
+      fullPath: '/expenses/$claimId'
+      preLoaderRoute: typeof AppExpensesClaimIdRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/inbox/': {
@@ -439,11 +535,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsUsersRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/valuations/$valuationId': {
+      id: '/_app/valuations/$valuationId'
+      path: '/valuations/$valuationId'
+      fullPath: '/valuations/$valuationId'
+      preLoaderRoute: typeof AppValuationsValuationIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/payroll/runs/$runId': {
       id: '/_app/payroll/runs/$runId'
       path: '/payroll/runs/$runId'
       fullPath: '/payroll/runs/$runId'
       preLoaderRoute: typeof AppPayrollRunsRunIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/payroll/workers/$workerId': {
+      id: '/_app/payroll/workers/$workerId'
+      path: '/payroll/workers/$workerId'
+      fullPath: '/payroll/workers/$workerId'
+      preLoaderRoute: typeof AppPayrollWorkersWorkerIdRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/procurement/pos/$poId': {
@@ -459,6 +569,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/procurement/rfqs/$rfqId'
       preLoaderRoute: typeof AppProcurementRfqsRfqIdRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/_app/procurement/suppliers/$supplierId': {
+      id: '/_app/procurement/suppliers/$supplierId'
+      path: '/$supplierId'
+      fullPath: '/procurement/suppliers/$supplierId'
+      preLoaderRoute: typeof AppProcurementSuppliersSupplierIdRouteImport
+      parentRoute: typeof AppProcurementSuppliersRoute
     }
     '/_app/projects/$projectId/': {
       id: '/_app/projects/$projectId/'
@@ -512,6 +629,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppProcurementSuppliersRouteChildren {
+  AppProcurementSuppliersSupplierIdRoute: typeof AppProcurementSuppliersSupplierIdRoute
+}
+
+const AppProcurementSuppliersRouteChildren: AppProcurementSuppliersRouteChildren =
+  {
+    AppProcurementSuppliersSupplierIdRoute:
+      AppProcurementSuppliersSupplierIdRoute,
+  }
+
+const AppProcurementSuppliersRouteWithChildren =
+  AppProcurementSuppliersRoute._addFileChildren(
+    AppProcurementSuppliersRouteChildren,
+  )
+
 interface AppProjectsProjectIdRouteChildren {
   AppProjectsProjectIdBoqRoute: typeof AppProjectsProjectIdBoqRoute
   AppProjectsProjectIdProcurementRoute: typeof AppProjectsProjectIdProcurementRoute
@@ -537,10 +669,14 @@ const AppProjectsProjectIdRouteWithChildren =
 
 interface AppRouteChildren {
   AppIndexRoute: typeof AppIndexRoute
+  AppClientsClientIdRoute: typeof AppClientsClientIdRoute
+  AppExpensesClaimIdRoute: typeof AppExpensesClaimIdRoute
   AppInventoryItemIdRoute: typeof AppInventoryItemIdRoute
-  AppProcurementSuppliersRoute: typeof AppProcurementSuppliersRoute
+  AppProcurementSuppliersRoute: typeof AppProcurementSuppliersRouteWithChildren
   AppProjectsProjectIdRoute: typeof AppProjectsProjectIdRouteWithChildren
   AppSettingsUsersRoute: typeof AppSettingsUsersRoute
+  AppValuationsValuationIdRoute: typeof AppValuationsValuationIdRoute
+  AppClientsIndexRoute: typeof AppClientsIndexRoute
   AppExpensesIndexRoute: typeof AppExpensesIndexRoute
   AppInboxIndexRoute: typeof AppInboxIndexRoute
   AppInventoryIndexRoute: typeof AppInventoryIndexRoute
@@ -549,16 +685,21 @@ interface AppRouteChildren {
   AppProjectsIndexRoute: typeof AppProjectsIndexRoute
   AppReportsIndexRoute: typeof AppReportsIndexRoute
   AppPayrollRunsRunIdRoute: typeof AppPayrollRunsRunIdRoute
+  AppPayrollWorkersWorkerIdRoute: typeof AppPayrollWorkersWorkerIdRoute
   AppProcurementPosPoIdRoute: typeof AppProcurementPosPoIdRoute
   AppProcurementRfqsRfqIdRoute: typeof AppProcurementRfqsRfqIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppIndexRoute: AppIndexRoute,
+  AppClientsClientIdRoute: AppClientsClientIdRoute,
+  AppExpensesClaimIdRoute: AppExpensesClaimIdRoute,
   AppInventoryItemIdRoute: AppInventoryItemIdRoute,
-  AppProcurementSuppliersRoute: AppProcurementSuppliersRoute,
+  AppProcurementSuppliersRoute: AppProcurementSuppliersRouteWithChildren,
   AppProjectsProjectIdRoute: AppProjectsProjectIdRouteWithChildren,
   AppSettingsUsersRoute: AppSettingsUsersRoute,
+  AppValuationsValuationIdRoute: AppValuationsValuationIdRoute,
+  AppClientsIndexRoute: AppClientsIndexRoute,
   AppExpensesIndexRoute: AppExpensesIndexRoute,
   AppInboxIndexRoute: AppInboxIndexRoute,
   AppInventoryIndexRoute: AppInventoryIndexRoute,
@@ -567,6 +708,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppProjectsIndexRoute: AppProjectsIndexRoute,
   AppReportsIndexRoute: AppReportsIndexRoute,
   AppPayrollRunsRunIdRoute: AppPayrollRunsRunIdRoute,
+  AppPayrollWorkersWorkerIdRoute: AppPayrollWorkersWorkerIdRoute,
   AppProcurementPosPoIdRoute: AppProcurementPosPoIdRoute,
   AppProcurementRfqsRfqIdRoute: AppProcurementRfqsRfqIdRoute,
 }

@@ -1,5 +1,5 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
 import { Banknote, CalendarPlus, HardHat, Pencil, Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -18,6 +18,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ClickableRow, EntityLink, RowActions } from "@/components/ui/linked-row";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -32,12 +33,15 @@ import { usePermission } from "@/features/auth/hooks";
 import { DayEntryDialog } from "@/features/payroll/DayEntryDialog";
 import { WorkerFormDialog } from "@/features/payroll/WorkerFormDialog";
 import {
+  getGetPayRunQueryOptions,
+  getGetWorkerQueryOptions,
   useCreatePayRun,
   useListPayRuns,
   useListTimesheets,
   useListWorkers,
 } from "@/lib/api/generated/endpoints";
 import type { WorkerRead } from "@/lib/api/generated/model";
+import { isOptimistic } from "@/lib/api/optimistic";
 import { fmtDate, moneyExact } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/payroll/")({
@@ -129,7 +133,10 @@ function PayrollPage() {
     page_size: 200,
     include_inactive: true,
   });
-  const { data: timesheets, isLoading: sheetsLoading } = useListTimesheets({ page_size: 50 });
+  const { data: timesheets, isLoading: sheetsLoading } = useListTimesheets(
+    { page_size: 50 },
+    { query: { placeholderData: keepPreviousData } },
+  );
   const { data: runs, isLoading: runsLoading } = useListPayRuns(
     { page_size: 50 },
     { query: { enabled: canAdmin } },
@@ -197,15 +204,36 @@ function PayrollPage() {
                   </TableHeader>
                   <TableBody>
                     {timesheets?.items.map((sheet) => (
-                      <TableRow key={sheet.id} className="transition-colors">
+                      <TableRow
+                        key={sheet.id}
+                        className={
+                          isOptimistic(sheet) ? "row-creating transition-colors" : "transition-colors"
+                        }
+                      >
                         <TableCell>{fmtDate(sheet.work_date)}</TableCell>
                         <TableCell>
-                          <div className="font-medium">{sheet.worker_name}</div>
+                          <div>
+                            <EntityLink
+                              to="/payroll/workers/$workerId"
+                              params={{ workerId: sheet.worker_id }}
+                              prefetch={() => getGetWorkerQueryOptions(sheet.worker_id)}
+                            >
+                              {sheet.worker_name}
+                            </EntityLink>
+                          </div>
                           <div className="text-xs text-muted-foreground">
                             {sheet.worker_trade}
                           </div>
                         </TableCell>
-                        <TableCell className="font-mono text-xs">{sheet.project_code}</TableCell>
+                        <TableCell>
+                          <EntityLink
+                            to="/projects/$projectId"
+                            params={{ projectId: sheet.project_id }}
+                            className="font-mono text-xs font-normal"
+                          >
+                            {sheet.project_code}
+                          </EntityLink>
+                        </TableCell>
                         <TableCell className="text-right tabular-nums">
                           {Number(sheet.quantity)}{" "}
                           <span className="text-xs text-muted-foreground">
@@ -217,7 +245,13 @@ function PayrollPage() {
                         </TableCell>
                         <TableCell>
                           {sheet.pay_run_id ? (
-                            <Badge variant="success">Paid</Badge>
+                            <EntityLink
+                              to="/payroll/runs/$runId"
+                              params={{ runId: sheet.pay_run_id }}
+                              prefetch={() => getGetPayRunQueryOptions(sheet.pay_run_id!)}
+                            >
+                              <Badge variant="success">Paid</Badge>
+                            </EntityLink>
                           ) : (
                             <Badge variant="secondary">Unpaid</Badge>
                           )}
@@ -266,7 +300,12 @@ function PayrollPage() {
                   </TableHeader>
                   <TableBody>
                     {workers?.items.map((worker) => (
-                      <TableRow key={worker.id} className="transition-colors">
+                      <ClickableRow
+                        key={worker.id}
+                        to="/payroll/workers/$workerId"
+                        params={{ workerId: worker.id }}
+                        prefetch={() => getGetWorkerQueryOptions(worker.id)}
+                      >
                         <TableCell className="font-medium">{worker.full_name}</TableCell>
                         <TableCell className="text-muted-foreground">{worker.trade}</TableCell>
                         <TableCell className="text-xs">
@@ -289,7 +328,7 @@ function PayrollPage() {
                           )}
                         </TableCell>
                         {canAdmin && (
-                          <TableCell>
+                          <RowActions>
                             <Button
                               variant="ghost"
                               size="icon"
@@ -301,9 +340,9 @@ function PayrollPage() {
                             >
                               <Pencil />
                             </Button>
-                          </TableCell>
+                          </RowActions>
                         )}
-                      </TableRow>
+                      </ClickableRow>
                     ))}
                   </TableBody>
                 </Table>
@@ -355,12 +394,16 @@ function PayrollPage() {
                         <TableHead className="text-right">Workers</TableHead>
                         <TableHead className="text-right">Gross</TableHead>
                         <TableHead className="text-right">Net</TableHead>
-                        <TableHead className="w-16" />
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {runs?.items.map((run) => (
-                        <TableRow key={run.id} className="transition-colors">
+                        <ClickableRow
+                          key={run.id}
+                          to="/payroll/runs/$runId"
+                          params={{ runId: run.id }}
+                          prefetch={() => getGetPayRunQueryOptions(run.id)}
+                        >
                           <TableCell className="font-mono text-xs">{run.doc_number}</TableCell>
                           <TableCell className="text-sm">
                             {fmtDate(run.period_start)} → {fmtDate(run.period_end)}
@@ -381,16 +424,7 @@ function PayrollPage() {
                           <TableCell className="text-right tabular-nums">
                             {moneyExact(run.net_total)}
                           </TableCell>
-                          <TableCell className="text-right">
-                            <Link
-                              to="/payroll/runs/$runId"
-                              params={{ runId: run.id }}
-                              className="text-xs font-medium text-primary hover:underline"
-                            >
-                              Open
-                            </Link>
-                          </TableCell>
-                        </TableRow>
+                        </ClickableRow>
                       ))}
                     </TableBody>
                   </Table>

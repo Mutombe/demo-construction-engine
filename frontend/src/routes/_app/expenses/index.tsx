@@ -1,8 +1,7 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Check, Plus, X } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { z } from "zod";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Can } from "@/components/layout/Can";
@@ -14,7 +13,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ClickableRow, EntityLink, RowActions } from "@/components/ui/linked-row";
 import { Select } from "@/components/ui/select";
+import { TableSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -29,11 +30,13 @@ import { usePermission } from "@/features/auth/hooks";
 import { ExpenseFormDialog } from "@/features/expenses/ExpenseFormDialog";
 import { ExpenseStatusBadge } from "@/features/expenses/StatusBadges";
 import {
+  getGetExpenseClaimQueryOptions,
   useApproveExpenseClaim,
   useCancelExpenseClaim,
   useListExpenseClaims,
   useRejectExpenseClaim,
 } from "@/lib/api/generated/endpoints";
+import { isOptimistic, optimistic, patchRow } from "@/lib/api/optimistic";
 import { fmtDate, moneyExact } from "@/lib/format";
 
 const searchSchema = z.object({
@@ -46,13 +49,6 @@ export const Route = createFileRoute("/_app/expenses/")({
   component: ExpensesPage,
 });
 
-function errDetail(err: unknown): string {
-  return (
-    (err as { response?: { data?: { error?: { detail?: string } } } })?.response?.data?.error
-      ?.detail ?? "Something went wrong"
-  );
-}
-
 function ExpensesPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
@@ -63,49 +59,57 @@ function ExpensesPage() {
   const [rejecting, setRejecting] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
-  const { data, isLoading } = useListExpenseClaims({
-    status: search.status,
-    mine: search.mine || undefined,
-    page_size: 100,
+  const { data, isLoading } = useListExpenseClaims(
+    {
+      status: search.status,
+      mine: search.mine || undefined,
+      page_size: 100,
+    },
+    { query: { placeholderData: keepPreviousData } },
+  );
+  // Decisions apply in place instantly and roll back with a toast on failure.
+  const approveMutation = useApproveExpenseClaim({
+    mutation: optimistic(queryClient, {
+      prefixes: ["/api/v1/expenses"],
+      invalidate: ["/api/v1/expenses", "/api/v1/projects", "/api/v1/dashboard"],
+      successToast: "Claim approved — cost posted to the project budget",
+      apply: (old, vars: { claimId: string }) =>
+        patchRow(vars.claimId, { status: "approved" })(old),
+    }),
   });
-  const approveMutation = useApproveExpenseClaim();
-  const rejectMutation = useRejectExpenseClaim();
-  const cancelMutation = useCancelExpenseClaim();
+  const rejectMutation = useRejectExpenseClaim({
+    mutation: optimistic(queryClient, {
+      prefixes: ["/api/v1/expenses"],
+      successToast: "Claim rejected",
+      apply: (old, vars: { claimId: string }) =>
+        patchRow(vars.claimId, { status: "rejected" })(old),
+    }),
+  });
+  const cancelMutation = useCancelExpenseClaim({
+    mutation: optimistic(queryClient, {
+      prefixes: ["/api/v1/expenses"],
+      successToast: "Claim cancelled",
+      apply: (old, vars: { claimId: string }) =>
+        patchRow(vars.claimId, { status: "cancelled" })(old),
+    }),
+  });
 
-  const approve = async (claimId: string) => {
-    try {
-      await approveMutation.mutateAsync({ claimId });
-      await queryClient.invalidateQueries();
-      toast.success("Claim approved — cost posted to the project budget");
-    } catch (err) {
-      toast.error(errDetail(err));
-    }
+  const approve = (claimId: string) => {
+    void approveMutation.mutateAsync({ claimId }).catch(() => undefined);
   };
 
-  const reject = async () => {
+  const reject = () => {
     if (!rejecting || !rejectReason.trim()) return;
-    try {
-      await rejectMutation.mutateAsync({
-        claimId: rejecting,
-        data: { reason: rejectReason },
-      });
-      await queryClient.invalidateQueries();
-      toast.success("Claim rejected");
-      setRejecting(null);
-      setRejectReason("");
-    } catch (err) {
-      toast.error(errDetail(err));
-    }
+    setRejecting(null);
+    setRejectReason("");
+    void rejectMutation
+      .mutateAsync({ claimId: rejecting, data: { reason: rejectReason } })
+      .catch(() => undefined);
   };
 
-  const cancel = async (claimId: string) => {
+  const cancel = (claimId: string) => {
     if (!window.confirm("Cancel this claim?")) return;
-    try {
-      await cancelMutation.mutateAsync({ claimId });
-      await queryClient.invalidateQueries();
-    } catch (err) {
-      toast.error(errDetail(err));
-    }
+    void cancelMutation.mutateAsync({ claimId }).catch(() => undefined);
   };
 
   return (
@@ -171,13 +175,7 @@ function ExpensesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading && (
-              <TableRow>
-                <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
-                  Loading…
-                </TableCell>
-              </TableRow>
-            )}
+            {isLoading && !data && <TableSkeleton columns={7} rows={6} />}
             {!isLoading && !data?.items.length && (
               <TableRow>
                 <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
@@ -187,8 +185,16 @@ function ExpensesPage() {
             )}
             {data?.items.map((claim) => {
               const isOwn = claim.created_by === currentUser?.id;
+              const ghost = isOptimistic(claim);
               return (
-                <TableRow key={claim.id}>
+                <ClickableRow
+                  key={claim.id}
+                  to="/expenses/$claimId"
+                  params={{ claimId: claim.id }}
+                  prefetch={() => getGetExpenseClaimQueryOptions(claim.id)}
+                  disabled={ghost}
+                  className={ghost ? "row-creating" : undefined}
+                >
                   <TableCell>
                     <div className="font-mono text-xs text-muted-foreground">
                       {claim.doc_number}
@@ -199,7 +205,15 @@ function ExpensesPage() {
                       {claim.receipt_ref && <> · receipt {claim.receipt_ref}</>}
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm">{claim.project_code}</TableCell>
+                  <TableCell className="text-sm">
+                    <EntityLink
+                      to="/projects/$projectId"
+                      params={{ projectId: claim.project_id }}
+                      className="font-mono text-xs font-normal"
+                    >
+                      {claim.project_code}
+                    </EntityLink>
+                  </TableCell>
                   <TableCell className="text-sm">{claim.claimant_name ?? "—"}</TableCell>
                   <TableCell className="text-sm capitalize">{claim.category}</TableCell>
                   <TableCell className="text-right font-medium tabular-nums">
@@ -213,8 +227,11 @@ function ExpensesPage() {
                       </div>
                     )}
                   </TableCell>
-                  <TableCell>
-                    {claim.status === "pending" && (
+                  <RowActions>
+                    {ghost && (
+                      <span className="text-xs italic text-muted-foreground">Creating…</span>
+                    )}
+                    {!ghost && claim.status === "pending" && (
                       <div className="flex justify-end gap-1.5">
                         {canApprove && (
                           <>
@@ -248,8 +265,8 @@ function ExpensesPage() {
                         )}
                       </div>
                     )}
-                  </TableCell>
-                </TableRow>
+                  </RowActions>
+                </ClickableRow>
               );
             })}
           </TableBody>

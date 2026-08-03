@@ -1,4 +1,5 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { keepPreviousData } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
@@ -15,6 +16,8 @@ import { Can } from "@/components/layout/Can";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ClickableRow, RowActions } from "@/components/ui/linked-row";
+import { TableSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -27,7 +30,7 @@ import { usePermission } from "@/features/auth/hooks";
 import { MovementDialog, type MovementKind } from "@/features/inventory/MovementDialogs";
 import { StockItemFormDialog } from "@/features/inventory/StockItemFormDialog";
 import { downloadFile } from "@/lib/api/download";
-import { useListStockItems } from "@/lib/api/generated/endpoints";
+import { getGetStockItemQueryOptions, useListStockItems } from "@/lib/api/generated/endpoints";
 import type { StockItemRead } from "@/lib/api/generated/model";
 import { moneyExact } from "@/lib/format";
 
@@ -46,11 +49,14 @@ function InventoryPage() {
   const canWrite = usePermission("inventory:write");
   const canIssue = usePermission("inventory:issue");
 
-  const { data, isLoading } = useListStockItems({
-    search: search || undefined,
-    low_stock_only: lowOnly || undefined,
-    page_size: 200,
-  });
+  const { data, isLoading } = useListStockItems(
+    {
+      search: search || undefined,
+      low_stock_only: lowOnly || undefined,
+      page_size: 200,
+    },
+    { query: { placeholderData: keepPreviousData } },
+  );
 
   const totalValue = data?.items.reduce(
     (sum, item) => sum + Number(item.qty_on_hand) * Number(item.unit_cost),
@@ -126,13 +132,7 @@ function InventoryPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading && (
-              <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                  Loading…
-                </TableCell>
-              </TableRow>
-            )}
+            {isLoading && !data && <TableSkeleton columns={6} rows={6} />}
             {!isLoading && !data?.items.length && (
               <TableRow>
                 <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
@@ -141,15 +141,14 @@ function InventoryPage() {
               </TableRow>
             )}
             {data?.items.map((item) => (
-              <TableRow key={item.id}>
+              <ClickableRow
+                key={item.id}
+                to="/inventory/$itemId"
+                params={{ itemId: item.id }}
+                prefetch={() => getGetStockItemQueryOptions(item.id)}
+              >
                 <TableCell>
-                  <Link
-                    to="/inventory/$itemId"
-                    params={{ itemId: item.id }}
-                    className="font-medium text-primary hover:underline"
-                  >
-                    {item.name}
-                  </Link>
+                  <span className="font-medium">{item.name}</span>
                   <div className="font-mono text-xs text-muted-foreground">{item.code}</div>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
@@ -169,7 +168,7 @@ function InventoryPage() {
                 <TableCell className="text-right font-medium tabular-nums">
                   {moneyExact(Number(item.qty_on_hand) * Number(item.unit_cost))}
                 </TableCell>
-                <TableCell>
+                <RowActions>
                   <div className="flex justify-end gap-1">
                     {canWrite && (
                       <>
@@ -212,8 +211,8 @@ function InventoryPage() {
                       </Button>
                     )}
                   </div>
-                </TableCell>
-              </TableRow>
+                </RowActions>
+              </ClickableRow>
             ))}
           </TableBody>
         </Table>

@@ -13,20 +13,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/features/auth/hooks";
 import {
   useCreateExpenseClaim,
   useGetBoq,
   useListProjects,
 } from "@/lib/api/generated/endpoints";
+import { addRow, optimistic, tempId } from "@/lib/api/optimistic";
 
 const CATEGORIES = ["materials", "transport", "fuel", "accommodation", "meals", "tools", "other"];
-
-function errDetail(err: unknown): string {
-  return (
-    (err as { response?: { data?: { error?: { detail?: string } } } })?.response?.data?.error
-      ?.detail ?? "Something went wrong"
-  );
-}
 
 export function ExpenseFormDialog({
   open,
@@ -38,8 +33,36 @@ export function ExpenseFormDialog({
   defaultProjectId?: string;
 }) {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const { data: projects } = useListProjects({ page_size: 100 }, { query: { enabled: open } });
-  const createMutation = useCreateExpenseClaim();
+  // Optimistic create: the dialog closes instantly and a shimmering placeholder
+  // row appears at the top of the list; it settles (or rolls back) when the
+  // server answers.
+  const createMutation = useCreateExpenseClaim({
+    mutation: optimistic(queryClient, {
+      prefixes: ["/api/v1/expenses"],
+      successToast: "Expense claim submitted for approval",
+      apply: (old, vars: { projectId: string; data: Record<string, unknown> }) => {
+        const project = projects?.items.find((p) => p.id === vars.projectId);
+        return addRow(() => ({
+          id: tempId(),
+          doc_number: "EXP-…",
+          status: "pending",
+          project_id: vars.projectId,
+          project_code: project?.code,
+          project_name: project?.name,
+          claimant_name: user?.full_name,
+          created_by: user?.id ?? null,
+          approved_by: null,
+          decided_at: null,
+          rejection_reason: null,
+          cost_entry_id: null,
+          created_at: new Date().toISOString(),
+          ...vars.data,
+        }))(old);
+      },
+    }),
+  });
 
   const [projectId, setProjectId] = useState("");
   const [boqItemId, setBoqItemId] = useState("");
@@ -63,13 +86,15 @@ export function ExpenseFormDialog({
     }
   }, [open, defaultProjectId]);
 
-  const save = async () => {
+  const save = () => {
     if (!projectId || !amount || !description.trim()) {
       toast.error("Project, amount and description are required");
       return;
     }
-    try {
-      await createMutation.mutateAsync({
+    // Fire-and-reconcile: close now, the optimistic handlers do the rest.
+    onOpenChange(false);
+    void createMutation
+      .mutateAsync({
         projectId,
         data: {
           category: category as never,
@@ -79,13 +104,8 @@ export function ExpenseFormDialog({
           receipt_ref: receiptRef || null,
           boq_item_id: boqItemId || null,
         },
-      });
-      await queryClient.invalidateQueries();
-      toast.success("Expense claim submitted for approval");
-      onOpenChange(false);
-    } catch (err) {
-      toast.error(errDetail(err));
-    }
+      })
+      .catch(() => undefined); // error toast + rollback handled by the helper
   };
 
   return (
@@ -168,9 +188,7 @@ export function ExpenseFormDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button disabled={createMutation.isPending} onClick={() => void save()}>
-              {createMutation.isPending ? "Submitting…" : "Submit claim"}
-            </Button>
+            <Button onClick={save}>Submit claim</Button>
           </DialogFooter>
         </div>
       </DialogContent>

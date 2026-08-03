@@ -1,12 +1,14 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, FileText, Plus, Send, ShoppingCart } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { FileText, Plus, Send, ShoppingCart } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Can } from "@/components/layout/Can";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EntityLink } from "@/components/ui/linked-row";
 import {
   Table,
   TableBody,
@@ -21,6 +23,8 @@ import { QuoteCompare } from "@/features/procurement/QuoteCompare";
 import { QuoteExtractDialog } from "@/features/procurement/QuoteExtractDialog";
 import { QuoteStatusBadge, RfqStatusBadge } from "@/features/procurement/StatusBadges";
 import {
+  getGetRfqQueryOptions,
+  getGetSupplierActivityQueryOptions,
   useGetRfq,
   useIssueRfq,
   useListQuotes,
@@ -29,6 +33,8 @@ import { fmtDate, moneyExact } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/procurement/rfqs/$rfqId")({
   component: RfqDetailPage,
+  loader: ({ context: { queryClient }, params }) =>
+    queryClient.ensureQueryData(getGetRfqQueryOptions(params.rfqId)),
 });
 
 function RfqDetailPage() {
@@ -60,12 +66,9 @@ function RfqDetailPage() {
 
   return (
     <div>
-      <Link
-        to="/procurement"
-        className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" /> Procurement
-      </Link>
+      <Breadcrumbs
+        items={[{ label: "Procurement", to: "/procurement" }, { label: rfq.doc_number }]}
+      />
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2.5">
@@ -74,7 +77,14 @@ function RfqDetailPage() {
             {rfq.ai_generated && <Badge variant="secondary">AI drafted</Badge>}
           </div>
           <div className="mt-1 text-sm text-muted-foreground">
-            {rfq.doc_number} · {rfq.project_code} {rfq.project_name}
+            {rfq.doc_number} ·{" "}
+            <EntityLink
+              to="/projects/$projectId/procurement"
+              params={{ projectId: rfq.project_id }}
+              className="text-sm font-normal"
+            >
+              {rfq.project_code} {rfq.project_name}
+            </EntityLink>
             {rfq.due_date && <> · quotes due {fmtDate(rfq.due_date)}</>}
           </div>
         </div>
@@ -166,7 +176,13 @@ function RfqDetailPage() {
                 <div key={quote.id} className="rounded-md border p-3">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{quote.supplier_name}</span>
+                      <EntityLink
+                        to="/procurement/suppliers/$supplierId"
+                        params={{ supplierId: quote.supplier_id }}
+                        prefetch={() => getGetSupplierActivityQueryOptions(quote.supplier_id)}
+                      >
+                        {quote.supplier_name}
+                      </EntityLink>
                       <QuoteStatusBadge status={quote.status ?? "received"} />
                       {quote.ai_extracted && <Badge variant="secondary">AI extracted</Badge>}
                     </div>

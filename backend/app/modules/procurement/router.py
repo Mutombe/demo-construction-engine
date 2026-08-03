@@ -21,6 +21,7 @@ from app.modules.procurement.schemas import (
     RfqItemsReplace,
     RfqRead,
     RfqUpdate,
+    SupplierActivity,
     SupplierCreate,
     SupplierRead,
     SupplierUpdate,
@@ -77,6 +78,11 @@ def create_supplier(body: SupplierCreate, db: DbDep, user=Depends(proc_user)) ->
 @router.get("/suppliers/{supplier_id}", response_model=SupplierRead)
 def get_supplier(supplier_id: uuid.UUID, db: DbDep) -> SupplierRead:
     return SupplierRead.model_validate(service.get_supplier(db, supplier_id))
+
+
+@router.get("/suppliers/{supplier_id}/activity", response_model=SupplierActivity)
+def get_supplier_activity(supplier_id: uuid.UUID, db: DbDep) -> SupplierActivity:
+    return service.supplier_activity(db, supplier_id)
 
 
 @router.patch("/suppliers/{supplier_id}", response_model=SupplierRead, dependencies=[proc_write])

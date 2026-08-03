@@ -488,3 +488,37 @@ def test_po_pdf_download(client, db):
     assert res.status_code == 200
     assert res.headers["content-type"] == "application/pdf"
     assert res.content.startswith(b"%PDF")
+
+
+def test_supplier_activity_hub(client, db):
+    headers = _proc(db)
+    project = make_project(db)
+    section = make_boq_section(db, project)
+    boq_item = make_boq_item(db, section)
+    rfq = make_rfq(db, project, [boq_item])
+    supplier = make_supplier(db, name="Activity Supplies")
+    make_quote(db, rfq, supplier)
+    _issued_po_for_supplier(client, db, headers, project, supplier)
+
+    res = client.get(f"/api/v1/suppliers/{supplier.id}/activity", headers=headers)
+    assert res.status_code == 200
+    body = res.json()
+    assert body["supplier"]["name"] == "Activity Supplies"
+    assert body["totals"]["po_count"] == 1
+    assert body["totals"]["quote_count"] == 1
+    assert Decimal(body["totals"]["po_value"]) > 0
+    assert body["purchase_orders"][0]["project_code"] == project.code
+    assert body["quotes"][0]["rfq_doc_number"] == rfq.doc_number
+
+
+def _issued_po_for_supplier(client, db, headers, project, supplier):
+    po = client.post(
+        f"/api/v1/projects/{project.id}/purchase-orders",
+        json={
+            "supplier_id": str(supplier.id),
+            "items": [{"description": "Widget", "quantity": "10", "unit_price": "5"}],
+        },
+        headers=headers,
+    ).json()
+    client.post(f"/api/v1/purchase-orders/{po['id']}/issue", headers=headers)
+    return po

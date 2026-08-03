@@ -17,6 +17,9 @@ const router = createRouter({
   routeTree,
   context: { queryClient },
   defaultPreload: "intent",
+  // Hovering a link preloads its route (and its loader's data) — don't redo it
+  // more than once per 30s window.
+  defaultPreloadStaleTime: 30_000,
 });
 
 declare module "@tanstack/react-router" {

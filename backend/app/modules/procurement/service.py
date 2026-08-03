@@ -595,3 +595,79 @@ def cancel_po(db: Session, po_id: uuid.UUID) -> PurchaseOrder:
         raise ConflictError("Received purchase orders cannot be cancelled")
     po.status = PoStatus.cancelled
     return po
+
+
+def supplier_activity(db: Session, supplier_id: uuid.UUID):
+    """Cross-project procurement history for one supplier (its detail-page hub)."""
+    from sqlalchemy import desc
+
+    from app.modules.procurement.schemas import (
+        SupplierActivity,
+        SupplierActivityTotals,
+        SupplierQuoteActivity,
+        SupplierRead,
+    )
+
+    supplier = get_supplier(db, supplier_id)
+
+    pos = list(
+        db.scalars(
+            select(PurchaseOrder)
+            .options(joinedload(PurchaseOrder.project), joinedload(PurchaseOrder.supplier))
+            .where(PurchaseOrder.supplier_id == supplier_id)
+            .order_by(desc(PurchaseOrder.created_at))
+            .limit(20)
+        )
+    )
+    quotes = list(
+        db.scalars(
+            select(Quote)
+            .options(joinedload(Quote.rfq))
+            .where(Quote.supplier_id == supplier_id)
+            .order_by(desc(Quote.received_date))
+            .limit(20)
+        )
+    )
+    po_count = db.scalar(
+        select(func.count()).select_from(PurchaseOrder).where(
+            PurchaseOrder.supplier_id == supplier_id
+        )
+    ) or 0
+    po_value = db.scalar(
+        select(func.coalesce(func.sum(PurchaseOrder.total_amount), 0)).where(
+            PurchaseOrder.supplier_id == supplier_id,
+            PurchaseOrder.status != PoStatus.cancelled,
+        )
+    ) or ZERO
+    quote_count = db.scalar(
+        select(func.count()).select_from(Quote).where(Quote.supplier_id == supplier_id)
+    ) or 0
+
+    from app.modules.procurement.schemas import PoRead
+
+    po_reads = []
+    for po in pos:
+        read = PoRead.model_validate(po)
+        read.supplier_name = supplier.name
+        read.project_code = po.project.code if po.project else None
+        po_reads.append(read)
+
+    return SupplierActivity(
+        supplier=SupplierRead.model_validate(supplier),
+        purchase_orders=po_reads,
+        quotes=[
+            SupplierQuoteActivity(
+                id=q.id,
+                rfq_id=q.rfq_id,
+                rfq_doc_number=q.rfq.doc_number if q.rfq else None,
+                rfq_title=q.rfq.title if q.rfq else None,
+                status=q.status,
+                received_date=q.received_date,
+                total_amount=q.total_amount,
+            )
+            for q in quotes
+        ],
+        totals=SupplierActivityTotals(
+            po_count=po_count, po_value=po_value, quote_count=quote_count
+        ),
+    )

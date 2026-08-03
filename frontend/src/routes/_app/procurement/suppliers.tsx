@@ -2,12 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Pencil, Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Can } from "@/components/layout/Can";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ClickableRow, RowActions } from "@/components/ui/linked-row";
+import { TableSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -18,7 +20,11 @@ import {
 } from "@/components/ui/table";
 import { usePermission } from "@/features/auth/hooks";
 import { SupplierFormDialog } from "@/features/procurement/SupplierFormDialog";
-import { useListSuppliers, useUpdateSupplier } from "@/lib/api/generated/endpoints";
+import {
+  getGetSupplierActivityQueryOptions,
+  useListSuppliers,
+  useUpdateSupplier,
+} from "@/lib/api/generated/endpoints";
 import type { SupplierRead } from "@/lib/api/generated/model";
 
 export const Route = createFileRoute("/_app/procurement/suppliers")({
@@ -31,7 +37,10 @@ function SuppliersPage() {
   const [editing, setEditing] = useState<SupplierRead | null>(null);
   const queryClient = useQueryClient();
   const canWrite = usePermission("procurement:write");
-  const { data, isLoading } = useListSuppliers({ search: search || undefined, page_size: 100 });
+  const { data, isLoading } = useListSuppliers(
+    { search: search || undefined, page_size: 100 },
+    { query: { placeholderData: keepPreviousData } },
+  );
   const updateMutation = useUpdateSupplier();
 
   const toggleActive = async (supplier: SupplierRead) => {
@@ -87,13 +96,7 @@ function SuppliersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading && (
-              <TableRow>
-                <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
-                  Loading…
-                </TableCell>
-              </TableRow>
-            )}
+            {isLoading && !data && <TableSkeleton columns={canWrite ? 5 : 4} rows={6} />}
             {!isLoading && !data?.items.length && (
               <TableRow>
                 <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
@@ -102,7 +105,12 @@ function SuppliersPage() {
               </TableRow>
             )}
             {data?.items.map((s) => (
-              <TableRow key={s.id}>
+              <ClickableRow
+                key={s.id}
+                to="/procurement/suppliers/$supplierId"
+                params={{ supplierId: s.id }}
+                prefetch={() => getGetSupplierActivityQueryOptions(s.id)}
+              >
                 <TableCell>
                   <div className="font-medium">{s.name}</div>
                   {s.tax_id && (
@@ -126,7 +134,7 @@ function SuppliersPage() {
                   )}
                 </TableCell>
                 {canWrite && (
-                  <TableCell>
+                  <RowActions>
                     <div className="flex gap-1.5">
                       <Button
                         variant="ghost"
@@ -147,9 +155,9 @@ function SuppliersPage() {
                         {s.is_active ? "Deactivate" : "Reactivate"}
                       </Button>
                     </div>
-                  </TableCell>
+                  </RowActions>
                 )}
-              </TableRow>
+              </ClickableRow>
             ))}
           </TableBody>
         </Table>

@@ -24,9 +24,9 @@ export interface PoDetail {
   /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
   total_amount: string;
   created_at: string;
+  project_code?: string | null;
   terms: string | null;
   notes: string | null;
   items?: PoItemRead[];
   project_name?: string | null;
-  project_code?: string | null;
 }

@@ -1,7 +1,8 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { EntityLink } from "@/components/ui/linked-row";
 import {
   Table,
   TableBody,
@@ -10,9 +11,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PageSkeleton } from "@/components/ui/skeleton";
+import { PageSkeleton, TableSkeleton } from "@/components/ui/skeleton";
 import { makeBadge } from "@/features/procurement/StatusBadges";
 import {
+  getGetStockItemQueryOptions,
   useGetStockItem,
   useListStockMovements,
 } from "@/lib/api/generated/endpoints";
@@ -20,6 +22,8 @@ import { fmtDate, moneyExact } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/inventory/$itemId")({
   component: StockItemDetailPage,
+  loader: ({ context: { queryClient }, params }) =>
+    queryClient.ensureQueryData(getGetStockItemQueryOptions(params.itemId)),
 });
 
 const MovementTypeBadge = makeBadge({
@@ -31,7 +35,9 @@ const MovementTypeBadge = makeBadge({
 function StockItemDetailPage() {
   const { itemId } = Route.useParams();
   const { data: item } = useGetStockItem(itemId);
-  const { data: movements } = useListStockMovements(itemId, { page_size: 100 });
+  const { data: movements, isLoading: movementsLoading } = useListStockMovements(itemId, {
+    page_size: 100,
+  });
 
   if (!item) {
     return <PageSkeleton rows={4} />;
@@ -39,12 +45,9 @@ function StockItemDetailPage() {
 
   return (
     <div>
-      <Link
-        to="/inventory"
-        className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" /> Inventory
-      </Link>
+      <Breadcrumbs
+        items={[{ label: "Inventory", to: "/inventory" }, { label: item.name }]}
+      />
       <div className="mb-5">
         <div className="flex items-center gap-2.5">
           <h1 className="text-xl font-semibold tracking-tight">{item.name}</h1>
@@ -107,7 +110,8 @@ function StockItemDetailPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {!movements?.items.length && (
+            {movementsLoading && !movements && <TableSkeleton columns={7} rows={5} />}
+            {!movementsLoading && !movements?.items.length && (
               <TableRow>
                 <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
                   No movements yet.
@@ -128,7 +132,19 @@ function StockItemDetailPage() {
                 <TableCell className="text-right tabular-nums">
                   {moneyExact(m.unit_cost)}
                 </TableCell>
-                <TableCell className="text-sm">{m.project_name ?? "—"}</TableCell>
+                <TableCell className="text-sm">
+                  {m.project_id ? (
+                    <EntityLink
+                      to="/projects/$projectId"
+                      params={{ projectId: m.project_id }}
+                      className="text-sm font-normal"
+                    >
+                      {m.project_name ?? "Project"}
+                    </EntityLink>
+                  ) : (
+                    "—"
+                  )}
+                </TableCell>
                 <TableCell className="max-w-52 truncate text-sm text-muted-foreground">
                   {[m.reference, m.notes].filter(Boolean).join(" · ") || "—"}
                 </TableCell>

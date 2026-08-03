@@ -1,4 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { AlertTriangle, CheckCircle2, ExternalLink, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -19,6 +20,7 @@ import {
   actionOf,
   DOC_TYPE_LABELS,
   fieldValue,
+  type ProposedAction,
 } from "@/features/ingestion/types";
 import { useAuthedFile } from "@/features/ingestion/useAuthedFile";
 import {
@@ -35,6 +37,52 @@ function errDetail(err: unknown): string {
     (err as { response?: { data?: { error?: { detail?: string } } } })?.response?.data?.error
       ?.detail ?? "Something went wrong"
   );
+}
+
+/** The posted record is a destination — link straight to it from the lineage. */
+function LineageLink({
+  item,
+  action,
+}: {
+  item: IngestionItemRead;
+  action: ProposedAction;
+}) {
+  const lineage = action.lineage;
+  if (!lineage?.posted_type) return null;
+  const label = (
+    <>
+      Posted as {lineage.posted_type.replace("_", " ")}
+      {lineage.reference && <> — {lineage.reference}</>}
+    </>
+  );
+  const id = lineage.posted_id;
+  const linkClass = "font-medium underline underline-offset-2 hover:opacity-80";
+  if (lineage.posted_type === "purchase_order" && id) {
+    return (
+      <Link to="/procurement/pos/$poId" params={{ poId: id }} className={linkClass}>
+        {label}
+      </Link>
+    );
+  }
+  if (lineage.posted_type === "expense_claim" && id) {
+    return (
+      <Link to="/expenses/$claimId" params={{ claimId: id }} className={linkClass}>
+        {label}
+      </Link>
+    );
+  }
+  if (lineage.posted_type === "cost_entry" && item.project_id) {
+    return (
+      <Link
+        to="/projects/$projectId/boq"
+        params={{ projectId: item.project_id }}
+        className={linkClass}
+      >
+        {label}
+      </Link>
+    );
+  }
+  return <span>{label}</span>;
 }
 
 const FIELD_LABELS: Record<string, string> = {
@@ -278,8 +326,8 @@ export function ReviewPanel({
 
               {action?.lineage?.posted_type && (
                 <div className="flex items-center gap-1.5 rounded-md border border-emerald-300 bg-emerald-500/10 p-2.5 text-xs text-emerald-700">
-                  <ExternalLink className="h-3 w-3" /> Posted as {action.lineage.posted_type}{" "}
-                  {action.lineage.reference && <>— {action.lineage.reference}</>}
+                  <ExternalLink className="h-3 w-3" />
+                  <LineageLink item={item} action={action} />
                 </div>
               )}
               {item.rejection_reason && (

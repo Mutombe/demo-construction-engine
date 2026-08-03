@@ -15,7 +15,7 @@ import {
 import { PageHeader } from "@/components/layout/AppShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { PageSkeleton } from "@/components/ui/skeleton";
+import { CardListSkeleton, PageSkeleton } from "@/components/ui/skeleton";
 import { ProjectStatusBadge } from "@/features/projects/StatusBadge";
 import {
   useBudgetAlerts,
@@ -71,8 +71,8 @@ function monthLabel(key: string): string {
 
 function DashboardPage() {
   const { data: overview, isLoading } = useOverview();
-  const { data: deadlines } = useDeadlines({ days: 21 });
-  const { data: alerts } = useBudgetAlerts({ threshold_pct: 90 });
+  const { data: deadlines, isLoading: deadlinesLoading } = useDeadlines({ days: 21 });
+  const { data: alerts, isLoading: alertsLoading } = useBudgetAlerts({ threshold_pct: 90 });
   const { data: trend } = useFinancialTrend({ months: 6 });
 
   if (isLoading || !overview) {
@@ -232,13 +232,14 @@ function DashboardPage() {
             <CardTitle>Budget alerts</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2.5">
-            {!alerts?.length && (
+            {alertsLoading && !alerts && <CardListSkeleton count={3} />}
+            {!alertsLoading && !alerts?.length && (
               <p className="text-sm text-muted-foreground">No lines above 90% of budget.</p>
             )}
             {alerts?.slice(0, 6).map((a) => (
               <Link
                 key={`${a.project_id}-${a.scope}-${a.item_code ?? "project"}`}
-                to="/projects/$projectId"
+                to={a.item_code ? "/projects/$projectId/boq" : "/projects/$projectId"}
                 params={{ projectId: a.project_id }}
                 className="block rounded-md border p-2.5 transition-colors hover:bg-accent"
               >
@@ -310,7 +311,8 @@ function DashboardPage() {
             <CardTitle>Upcoming deadlines (21 days)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {!deadlines?.length && (
+            {deadlinesLoading && !deadlines && <CardListSkeleton count={3} />}
+            {!deadlinesLoading && !deadlines?.length && (
               <p className="text-sm text-muted-foreground">Nothing due in the next 3 weeks.</p>
             )}
             {deadlines?.slice(0, 8).map((d) => (

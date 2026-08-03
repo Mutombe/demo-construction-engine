@@ -1,7 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EntityLink } from "@/components/ui/linked-row";
+import { CardListSkeleton } from "@/components/ui/skeleton";
 import { PoStatusBadge, RfqStatusBadge } from "@/features/procurement/StatusBadges";
-import { useListPurchaseOrders, useListRfqs } from "@/lib/api/generated/endpoints";
+import {
+  getGetSupplierActivityQueryOptions,
+  useListPurchaseOrders,
+  useListRfqs,
+} from "@/lib/api/generated/endpoints";
 import { fmtDate, money } from "@/lib/format";
 
 export function RfqList({ projectId }: { projectId: string }) {
@@ -12,7 +18,7 @@ export function RfqList({ projectId }: { projectId: string }) {
         <CardTitle>Requests for Quotation</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+        {isLoading && <CardListSkeleton count={3} />}
         {!isLoading && !data?.items.length && (
           <p className="text-sm text-muted-foreground">No RFQs yet for this project.</p>
         )}
@@ -50,7 +56,7 @@ export function PoList({ projectId }: { projectId: string }) {
         <CardTitle>Purchase Orders</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+        {isLoading && <CardListSkeleton count={3} />}
         {!isLoading && !data?.items.length && (
           <p className="text-sm text-muted-foreground">No purchase orders yet.</p>
         )}
@@ -64,7 +70,14 @@ export function PoList({ projectId }: { projectId: string }) {
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-xs text-muted-foreground">{po.doc_number}</span>
-                <span className="truncate font-medium">{po.supplier_name}</span>
+                <EntityLink
+                  to="/procurement/suppliers/$supplierId"
+                  params={{ supplierId: po.supplier_id }}
+                  prefetch={() => getGetSupplierActivityQueryOptions(po.supplier_id)}
+                  className="truncate"
+                >
+                  {po.supplier_name}
+                </EntityLink>
               </div>
               <div className="mt-0.5 text-xs text-muted-foreground">
                 Ordered {fmtDate(po.order_date)} · {money(po.total_amount)}

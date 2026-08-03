@@ -1,18 +1,25 @@
 import { Link, Outlet, createFileRoute, useRouterState } from "@tanstack/react-router";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { useState } from "react";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Can } from "@/components/layout/Can";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import { ProjectFormDialog } from "@/features/projects/ProjectFormDialog";
 import { ProjectStatusBadge } from "@/features/projects/StatusBadge";
-import { useGetProject, useGetProjectSummary } from "@/lib/api/generated/endpoints";
+import {
+  getGetProjectQueryOptions,
+  useGetProject,
+  useGetProjectSummary,
+} from "@/lib/api/generated/endpoints";
 import { fmtDate, money, pct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/projects/$projectId")({
   component: ProjectDetailLayout,
+  loader: ({ context: { queryClient }, params }) =>
+    queryClient.ensureQueryData(getGetProjectQueryOptions(params.projectId)),
 });
 
 const TABS = [
@@ -44,12 +51,9 @@ function ProjectDetailLayout() {
   return (
     <div>
       <div className="mb-4">
-        <Link
-          to="/projects"
-          className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" /> All projects
-        </Link>
+        <Breadcrumbs
+          items={[{ label: "Projects", to: "/projects" }, { label: project.name }]}
+        />
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2.5">

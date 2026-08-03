@@ -17,14 +17,8 @@ import {
   useListProjects,
   useListWorkers,
 } from "@/lib/api/generated/endpoints";
+import { optimistic, tempId } from "@/lib/api/optimistic";
 import { moneyExact } from "@/lib/format";
-
-function errDetail(err: unknown): string {
-  return (
-    (err as { response?: { data?: { error?: { detail?: string } } } })?.response?.data?.error
-      ?.detail ?? "Something went wrong"
-  );
-}
 
 interface Row {
   quantity: string;
@@ -43,7 +37,52 @@ export function DayEntryDialog({
   const queryClient = useQueryClient();
   const { data: projects } = useListProjects({ page_size: 100 }, { query: { enabled: open } });
   const { data: workers } = useListWorkers({ page_size: 200 }, { query: { enabled: open } });
-  const bulkMutation = useBulkCreateTimesheets();
+  // Optimistic bulk create: one placeholder timesheet per crew member appears
+  // the instant the dialog closes.
+  const bulkMutation = useBulkCreateTimesheets({
+    mutation: optimistic(queryClient, {
+      prefixes: ["/api/v1/timesheets"],
+      apply: (
+        old,
+        vars: {
+          data: {
+            project_id: string;
+            work_date: string;
+            entries: { worker_id: string; quantity: string; overtime_quantity: string }[];
+          };
+        },
+      ) => {
+        if (!old || !Array.isArray(old.items)) return old;
+        const project = projects?.items.find((p) => p.id === vars.data.project_id);
+        const byId = new Map((workers?.items ?? []).map((w) => [w.id, w]));
+        const placeholders = vars.data.entries
+          .filter((entry) => Number(entry.quantity) > 0 || Number(entry.overtime_quantity) > 0)
+          .map((entry) => {
+            const worker = byId.get(entry.worker_id);
+            return {
+              id: tempId(),
+              __optimistic: true,
+              worker_id: entry.worker_id,
+              project_id: vars.data.project_id,
+              work_date: vars.data.work_date,
+              quantity: entry.quantity,
+              overtime_quantity: entry.overtime_quantity,
+              notes: null,
+              pay_run_id: null,
+              worker_name: worker?.full_name,
+              worker_trade: worker?.trade,
+              pay_basis: worker?.pay_basis,
+              project_code: project?.code,
+            };
+          });
+        return {
+          ...old,
+          items: [...placeholders, ...old.items],
+          total: old.total + placeholders.length,
+        };
+      },
+    }),
+  });
 
   const [projectId, setProjectId] = useState("");
   const [workDate, setWorkDate] = useState("");
@@ -109,16 +148,15 @@ export function DayEntryDialog({
       toast.error("Enter time for at least one worker");
       return;
     }
-    try {
-      await bulkMutation.mutateAsync({
-        data: { project_id: projectId, work_date: workDate, entries },
-      });
-      await queryClient.invalidateQueries();
-      toast.success(`Day recorded — ${filledCount} worker${filledCount === 1 ? "" : "s"}`);
-      onOpenChange(false);
-    } catch (err) {
-      toast.error(errDetail(err));
-    }
+    // Optimistic: close now; placeholder rows settle or roll back with a toast.
+    const workerCount = filledCount;
+    onOpenChange(false);
+    void bulkMutation
+      .mutateAsync({ data: { project_id: projectId, work_date: workDate, entries } })
+      .then(() =>
+        toast.success(`Day recorded — ${workerCount} worker${workerCount === 1 ? "" : "s"}`),
+      )
+      .catch(() => undefined);
   };
 
   return (

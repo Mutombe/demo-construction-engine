@@ -4,6 +4,7 @@ import {
   Boxes,
   Building2,
   ChevronsLeft,
+  Contact,
   ChevronsRight,
   FileBarChart,
   HardHat,
@@ -46,6 +47,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { to: "/", label: "Dashboard", icon: <LayoutDashboard /> },
   { to: "/projects", label: "Projects", icon: <Building2 /> },
+  { to: "/clients", label: "Clients", icon: <Contact />, permission: "project:read" },
   { to: "/procurement", label: "Procurement", icon: <ShoppingCart />, permission: "procurement:read" },
   { to: "/expenses", label: "Expenses", icon: <Receipt />, permission: "expense:read" },
   { to: "/inventory", label: "Inventory", icon: <Boxes />, permission: "inventory:read" },

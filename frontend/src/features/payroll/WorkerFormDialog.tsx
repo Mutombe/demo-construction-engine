@@ -21,6 +21,7 @@ import {
   useUpdateWorker,
 } from "@/lib/api/generated/endpoints";
 import type { WorkerRead } from "@/lib/api/generated/model";
+import { addRow, optimistic, patchRow, tempId } from "@/lib/api/optimistic";
 import { moneyExact } from "@/lib/format";
 
 function errDetail(err: unknown): string {
@@ -40,8 +41,28 @@ export function WorkerFormDialog({
   worker?: WorkerRead | null;
 }) {
   const queryClient = useQueryClient();
-  const createMutation = useCreateWorker();
-  const updateMutation = useUpdateWorker();
+  const createMutation = useCreateWorker({
+    mutation: optimistic(queryClient, {
+      prefixes: ["/api/v1/workers"],
+      successToast: "Worker added to the register",
+      apply: (old, vars: { data: Record<string, unknown> }) =>
+        addRow(() => ({
+          id: tempId(),
+          is_active: true,
+          pay_items: [],
+          created_at: new Date().toISOString(),
+          ...vars.data,
+        }))(old),
+    }),
+  });
+  const updateMutation = useUpdateWorker({
+    mutation: optimistic(queryClient, {
+      prefixes: ["/api/v1/workers"],
+      successToast: "Worker updated",
+      apply: (old, vars: { workerId: string; data: Record<string, unknown> }) =>
+        patchRow(vars.workerId, vars.data)(old),
+    }),
+  });
   const addItemMutation = useAddWorkerPayItem();
   const deleteItemMutation = useDeleteWorkerPayItem();
 
@@ -84,22 +105,15 @@ export function WorkerFormDialog({
       phone: phone || null,
       national_id: nationalId || null,
     };
-    try {
-      if (worker) {
-        await updateMutation.mutateAsync({
+    // Optimistic: close now; the register updates instantly and rolls back on error.
+    onOpenChange(false);
+    const action = worker
+      ? updateMutation.mutateAsync({
           workerId: worker.id,
           data: { ...payload, is_active: active },
-        });
-        toast.success("Worker updated");
-      } else {
-        await createMutation.mutateAsync({ data: payload });
-        toast.success("Worker added to the register");
-      }
-      await queryClient.invalidateQueries();
-      onOpenChange(false);
-    } catch (err) {
-      toast.error(errDetail(err));
-    }
+        })
+      : createMutation.mutateAsync({ data: payload });
+    void action.catch(() => undefined);
   };
 
   const addItem = async () => {

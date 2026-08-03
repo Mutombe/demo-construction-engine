@@ -1,4 +1,5 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { keepPreviousData } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
@@ -6,7 +7,9 @@ import { PageHeader } from "@/components/layout/AppShell";
 import { Can } from "@/components/layout/Can";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ClickableRow, EntityLink } from "@/components/ui/linked-row";
 import { Select } from "@/components/ui/select";
+import { TableSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -17,7 +20,11 @@ import {
 } from "@/components/ui/table";
 import { ProjectFormDialog } from "@/features/projects/ProjectFormDialog";
 import { ProjectStatusBadge } from "@/features/projects/StatusBadge";
-import { useListProjects } from "@/lib/api/generated/endpoints";
+import {
+  getGetClientQueryOptions,
+  getGetProjectQueryOptions,
+  useListProjects,
+} from "@/lib/api/generated/endpoints";
 import type { ProjectStatus } from "@/lib/api/generated/model";
 import { fmtDate, money } from "@/lib/format";
 
@@ -41,12 +48,16 @@ function ProjectsPage() {
   const navigate = Route.useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const { data, isLoading } = useListProjects({
-    page: search.page,
-    page_size: PAGE_SIZE,
-    status: (search.status as ProjectStatus) ?? undefined,
-    search: search.q || undefined,
-  });
+  const { data, isLoading } = useListProjects(
+    {
+      page: search.page,
+      page_size: PAGE_SIZE,
+      status: (search.status as ProjectStatus) ?? undefined,
+      search: search.q || undefined,
+    },
+    // Refiltering/paging keeps the previous rows on screen — no blank flash
+    { query: { placeholderData: keepPreviousData } },
+  );
 
   const totalPages = data ? Math.max(1, Math.ceil(data.total / PAGE_SIZE)) : 1;
 
@@ -116,13 +127,7 @@ function ProjectsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading && (
-              <TableRow>
-                <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
-                  Loading…
-                </TableCell>
-              </TableRow>
-            )}
+            {isLoading && !data && <TableSkeleton columns={7} rows={6} />}
             {!isLoading && !data?.items.length && (
               <TableRow>
                 <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
@@ -131,30 +136,42 @@ function ProjectsPage() {
               </TableRow>
             )}
             {data?.items.map((p) => (
-              <TableRow key={p.id}>
+              <ClickableRow
+                key={p.id}
+                to="/projects/$projectId"
+                params={{ projectId: p.id }}
+                prefetch={() => getGetProjectQueryOptions(p.id)}
+              >
                 <TableCell className="font-mono text-xs">{p.code}</TableCell>
                 <TableCell>
-                  <Link
-                    to="/projects/$projectId"
-                    params={{ projectId: p.id }}
-                    className="font-medium text-primary hover:underline"
-                  >
-                    {p.name}
-                  </Link>
+                  <span className="font-medium">{p.name}</span>
                   {p.city && <div className="text-xs text-muted-foreground">{p.city}</div>}
                 </TableCell>
-                <TableCell>{p.client_name ?? "—"}</TableCell>
+                <TableCell>
+                  {p.client_name ? (
+                    <EntityLink
+                      to="/clients/$clientId"
+                      params={{ clientId: p.client_id }}
+                      prefetch={() => getGetClientQueryOptions(p.client_id)}
+                      className="text-sm font-normal"
+                    >
+                      {p.client_name}
+                    </EntityLink>
+                  ) : (
+                    "—"
+                  )}
+                </TableCell>
                 <TableCell>
                   <ProjectStatusBadge status={p.status ?? "planning"} />
                 </TableCell>
                 <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
                   {fmtDate(p.planned_start)} → {fmtDate(p.planned_end)}
                 </TableCell>
-                <TableCell className="text-right font-medium">
+                <TableCell className="text-right font-medium tabular-nums">
                   {money(p.contract_value)}
                 </TableCell>
                 <TableCell className="text-sm">{p.project_manager_name ?? "—"}</TableCell>
-              </TableRow>
+              </ClickableRow>
             ))}
           </TableBody>
         </Table>

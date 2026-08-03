@@ -162,6 +162,7 @@ import type {
   StockItemCreate,
   StockItemRead,
   StockItemUpdate,
+  SupplierActivity,
   SupplierCreate,
   SupplierRead,
   SupplierUpdate,
@@ -4444,6 +4445,99 @@ export const useUpdateSupplier = <TError = HTTPValidationError,
       > => {
       return useMutation(getUpdateSupplierMutationOptions(options), queryClient);
     }
+
+/**
+ * @summary Get Supplier Activity
+ */
+export const getSupplierActivity = (
+    supplierId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<SupplierActivity>(
+      {url: `/api/v1/suppliers/${supplierId}/activity`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetSupplierActivityQueryKey = (supplierId: string,) => {
+    return [
+    `/api/v1/suppliers/${supplierId}/activity`
+    ] as const;
+    }
+
+
+export const getGetSupplierActivityQueryOptions = <TData = Awaited<ReturnType<typeof getSupplierActivity>>, TError = HTTPValidationError>(supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupplierActivity>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSupplierActivityQueryKey(supplierId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSupplierActivity>>> = ({ signal }) => getSupplierActivity(supplierId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: supplierId !== null && supplierId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSupplierActivity>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetSupplierActivityQueryResult = NonNullable<Awaited<ReturnType<typeof getSupplierActivity>>>
+export type GetSupplierActivityQueryError = HTTPValidationError
+
+
+export function useGetSupplierActivity<TData = Awaited<ReturnType<typeof getSupplierActivity>>, TError = HTTPValidationError>(
+ supplierId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupplierActivity>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSupplierActivity>>,
+          TError,
+          Awaited<ReturnType<typeof getSupplierActivity>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSupplierActivity<TData = Awaited<ReturnType<typeof getSupplierActivity>>, TError = HTTPValidationError>(
+ supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupplierActivity>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSupplierActivity>>,
+          TError,
+          Awaited<ReturnType<typeof getSupplierActivity>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSupplierActivity<TData = Awaited<ReturnType<typeof getSupplierActivity>>, TError = HTTPValidationError>(
+ supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupplierActivity>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Supplier Activity
+ */
+
+export function useGetSupplierActivity<TData = Awaited<ReturnType<typeof getSupplierActivity>>, TError = HTTPValidationError>(
+ supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupplierActivity>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetSupplierActivityQueryOptions(supplierId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 /**
  * @summary List Rfqs

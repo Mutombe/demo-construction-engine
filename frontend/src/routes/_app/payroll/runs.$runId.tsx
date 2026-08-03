@@ -1,7 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
-  ArrowLeft,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
@@ -11,9 +10,11 @@ import {
 } from "lucide-react";
 import { Fragment, useState } from "react";
 import { toast } from "sonner";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { EntityLink } from "@/components/ui/linked-row";
 import { StatCard } from "@/components/ui/stat-card";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import {
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/table";
 import { downloadFile } from "@/lib/api/download";
 import {
+  getGetPayRunQueryOptions,
   useApprovePayRun,
   useDeletePayRun,
   useGetPayRun,
@@ -35,6 +37,8 @@ import { fmtDate, moneyExact } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/payroll/runs/$runId")({
   component: PayRunDetailPage,
+  loader: ({ context: { queryClient }, params }) =>
+    queryClient.ensureQueryData(getGetPayRunQueryOptions(params.runId)),
 });
 
 function errDetail(err: unknown): string {
@@ -100,12 +104,9 @@ function PayRunDetailPage() {
 
   return (
     <div>
-      <Link
-        to="/payroll"
-        className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" /> Payroll
-      </Link>
+      <Breadcrumbs
+        items={[{ label: "Payroll", to: "/payroll" }, { label: run.doc_number }]}
+      />
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2.5">
@@ -202,7 +203,14 @@ function PayRunDetailPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <div className="font-medium">{line.worker_name}</div>
+                        <div>
+                          <EntityLink
+                            to="/payroll/workers/$workerId"
+                            params={{ workerId: line.worker_id }}
+                          >
+                            {line.worker_name}
+                          </EntityLink>
+                        </div>
                         <div className="text-xs text-muted-foreground">{line.trade}</div>
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
@@ -265,7 +273,13 @@ function PayRunDetailPage() {
                               </span>{" "}
                               {(line.project_allocation ?? []).map((a) => (
                                 <span key={a.project_id} className="mr-3 tabular-nums">
-                                  <span className="font-mono">{a.project_code}</span>{" "}
+                                  <EntityLink
+                                    to="/projects/$projectId"
+                                    params={{ projectId: a.project_id }}
+                                    className="font-mono text-xs font-normal"
+                                  >
+                                    {a.project_code}
+                                  </EntityLink>{" "}
                                   {moneyExact(a.amount)}
                                 </span>
                               ))}

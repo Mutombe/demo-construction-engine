@@ -13,13 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCreateStockItem, useUpdateStockItem } from "@/lib/api/generated/endpoints";
 import type { StockItemRead } from "@/lib/api/generated/model";
-
-function errDetail(err: unknown): string {
-  return (
-    (err as { response?: { data?: { error?: { detail?: string } } } })?.response?.data?.error
-      ?.detail ?? "Something went wrong"
-  );
-}
+import { addRow, optimistic, patchRow, tempId } from "@/lib/api/optimistic";
 
 export function StockItemFormDialog({
   open,
@@ -31,8 +25,30 @@ export function StockItemFormDialog({
   item?: StockItemRead | null;
 }) {
   const queryClient = useQueryClient();
-  const createMutation = useCreateStockItem();
-  const updateMutation = useUpdateStockItem();
+  const createMutation = useCreateStockItem({
+    mutation: optimistic(queryClient, {
+      prefixes: ["/api/v1/stock-items"],
+      successToast: "Item created — record a goods-in to add stock",
+      apply: (old, vars: { data: Record<string, unknown> }) =>
+        addRow(() => ({
+          id: tempId(),
+          qty_on_hand: "0",
+          unit_cost: "0",
+          low_stock: false,
+          is_active: true,
+          created_at: new Date().toISOString(),
+          ...vars.data,
+        }))(old),
+    }),
+  });
+  const updateMutation = useUpdateStockItem({
+    mutation: optimistic(queryClient, {
+      prefixes: ["/api/v1/stock-items"],
+      successToast: "Item updated",
+      apply: (old, vars: { itemId: string; data: Record<string, unknown> }) =>
+        patchRow(vars.itemId, vars.data)(old),
+    }),
+  });
 
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
@@ -50,7 +66,7 @@ export function StockItemFormDialog({
     }
   }, [open, item]);
 
-  const save = async () => {
+  const save = () => {
     if (!code.trim() || !name.trim() || !unit.trim()) {
       toast.error("Code, name and unit are required");
       return;
@@ -62,22 +78,14 @@ export function StockItemFormDialog({
       unit,
       reorder_level: reorderLevel || "0",
     };
-    try {
-      if (item) {
-        await updateMutation.mutateAsync({ itemId: item.id, data: payload });
-        toast.success("Item updated");
-      } else {
-        await createMutation.mutateAsync({ data: payload });
-        toast.success("Item created — record a goods-in to add stock");
-      }
-      await queryClient.invalidateQueries();
-      onOpenChange(false);
-    } catch (err) {
-      toast.error(errDetail(err));
-    }
+    // Optimistic: close now; row appears/patches instantly, rolls back on error.
+    onOpenChange(false);
+    const action = item
+      ? updateMutation.mutateAsync({ itemId: item.id, data: payload })
+      : createMutation.mutateAsync({ data: payload });
+    void action.catch(() => undefined);
   };
 
-  const busy = createMutation.isPending || updateMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -124,8 +132,8 @@ export function StockItemFormDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button disabled={busy} onClick={() => void save()}>
-              {busy ? "Saving…" : item ? "Save changes" : "Create item"}
+            <Button onClick={save}>
+              {item ? "Save changes" : "Create item"}
             </Button>
           </DialogFooter>
         </div>

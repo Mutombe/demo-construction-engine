@@ -223,6 +223,7 @@ class PoRead(BaseModel):
     ai_generated: bool
     total_amount: Decimal
     created_at: datetime
+    project_code: str | None = None
 
 
 class PoDetail(PoRead):
@@ -243,3 +244,28 @@ class PoReceive(BaseModel):
     received_date: date | None = None
     destination: PoDestination = PoDestination.project
     store_lines: list[PoStoreLineMapping] | None = None
+
+
+class SupplierQuoteActivity(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    rfq_id: uuid.UUID
+    rfq_doc_number: str | None = None
+    rfq_title: str | None = None
+    status: QuoteStatus
+    received_date: date
+    total_amount: Decimal
+
+
+class SupplierActivityTotals(BaseModel):
+    po_count: int
+    po_value: Decimal
+    quote_count: int
+
+
+class SupplierActivity(BaseModel):
+    supplier: SupplierRead
+    purchase_orders: list[PoRead]
+    quotes: list[SupplierQuoteActivity]
+    totals: SupplierActivityTotals

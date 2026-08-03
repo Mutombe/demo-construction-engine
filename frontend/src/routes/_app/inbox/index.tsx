@@ -1,8 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { keepPreviousData } from "@tanstack/react-query";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageHeader } from "@/components/layout/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
+import { TableSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -23,6 +25,10 @@ import { fmtDate } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/inbox/")({
   component: InboxPage,
+  // ?item=<id> deep-links straight into the review panel — shareable/bookmarkable
+  validateSearch: (search: Record<string, unknown>) => ({
+    item: typeof search.item === "string" ? search.item : undefined,
+  }),
 });
 
 const STATUS_FILTERS: { value: string; label: string }[] = [
@@ -37,14 +43,24 @@ const STATUS_FILTERS: { value: string; label: string }[] = [
 function InboxPage() {
   const [projectHint, setProjectHint] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [reviewId, setReviewId] = useState<string | null>(null);
+  const { item: reviewId } = Route.useSearch();
+  const navigate = useNavigate();
+  const setReviewId = (id: string | null) =>
+    void navigate({
+      to: "/inbox",
+      search: { item: id ?? undefined },
+      replace: reviewId != null && id != null,
+    });
 
   const { data: projects } = useListProjects({ page_size: 100 });
   const { cards, addFiles, retry, refreshCard } = useUploadPump(projectHint || undefined);
-  const { data: history } = useListIngestionItems({
-    page_size: 50,
-    status: (statusFilter || undefined) as IngestionStatus | undefined,
-  });
+  const { data: history, isLoading } = useListIngestionItems(
+    {
+      page_size: 50,
+      status: (statusFilter || undefined) as IngestionStatus | undefined,
+    },
+    { query: { placeholderData: keepPreviousData } },
+  );
 
   const activeItemIds = new Set(cards.map((c) => c.itemId).filter(Boolean));
   const historyItems = (history?.items ?? []).filter((i) => !activeItemIds.has(i.id));
@@ -113,13 +129,13 @@ function InboxPage() {
                   <TableHead>Status</TableHead>
                   <TableHead>Summary</TableHead>
                   <TableHead>Received</TableHead>
-                  <TableHead />
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {historyItems.length === 0 && (
+                {isLoading && !history && <TableSkeleton columns={5} rows={5} />}
+                {!isLoading && historyItems.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                    <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
                       Nothing here yet — drop a document above to get started.
                     </TableCell>
                   </TableRow>
@@ -149,7 +165,6 @@ function InboxPage() {
                       <TableCell className="text-xs text-muted-foreground">
                         {fmtDate(item.created_at)}
                       </TableCell>
-                      <TableCell className="text-right text-xs text-primary">Open</TableCell>
                     </TableRow>
                   );
                 })}
@@ -160,7 +175,7 @@ function InboxPage() {
       </div>
 
       <ReviewPanel
-        itemId={reviewId}
+        itemId={reviewId ?? null}
         onOpenChange={(open) => {
           if (!open) setReviewId(null);
         }}

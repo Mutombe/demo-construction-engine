@@ -23,4 +23,5 @@ export interface PoRead {
   /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
   total_amount: string;
   created_at: string;
+  project_code?: string | null;
 }

@@ -12,6 +12,7 @@ import {
   useMarkNotificationRead,
 } from "@/lib/api/generated/endpoints";
 import type { NotificationRead } from "@/lib/api/generated/model";
+import { optimistic } from "@/lib/api/optimistic";
 import { cn } from "@/lib/utils";
 
 function timeAgo(iso: string): string {
@@ -34,18 +35,51 @@ export function NotificationBell() {
     { page_size: 15 },
     { query: { enabled: open, refetchOnMount: "always" } },
   );
-  const markRead = useMarkNotificationRead();
-  const markAll = useMarkAllNotificationsRead();
+  // Reads apply instantly: the badge decrements and the row un-bolds the moment
+  // you click, reconciling with the server in the background.
+  const markRead = useMarkNotificationRead({
+    mutation: optimistic(queryClient, {
+      prefixes: ["/api/v1/notifications"],
+      errorToast: false,
+      apply: (old, vars: { notificationId: string }) => {
+        if (old && typeof old.count === "number") {
+          return { ...old, count: Math.max(0, old.count - 1) };
+        }
+        if (old && Array.isArray(old.items)) {
+          return {
+            ...old,
+            items: old.items.map((n: NotificationRead) =>
+              n.id === vars.notificationId ? { ...n, is_read: true } : n,
+            ),
+          };
+        }
+        return old;
+      },
+    }),
+  });
+  const markAll = useMarkAllNotificationsRead({
+    mutation: optimistic(queryClient, {
+      prefixes: ["/api/v1/notifications"],
+      errorToast: false,
+      apply: (old) => {
+        if (old && typeof old.count === "number") return { ...old, count: 0 };
+        if (old && Array.isArray(old.items)) {
+          return {
+            ...old,
+            items: old.items.map((n: NotificationRead) => ({ ...n, is_read: true })),
+          };
+        }
+        return old;
+      },
+    }),
+  });
 
   const count = unread?.count ?? 0;
 
   const openItem = async (item: NotificationRead) => {
     setOpen(false);
     if (!item.is_read) {
-      markRead
-        .mutateAsync({ notificationId: item.id })
-        .then(() => queryClient.invalidateQueries())
-        .catch(() => undefined);
+      markRead.mutateAsync({ notificationId: item.id }).catch(() => undefined);
     }
     if (item.link_path) {
       await navigate({ to: item.link_path });
@@ -81,12 +115,7 @@ export function NotificationBell() {
           <button
             type="button"
             className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-            onClick={() =>
-              void markAll
-                .mutateAsync()
-                .then(() => queryClient.invalidateQueries())
-                .catch(() => undefined)
-            }
+            onClick={() => void markAll.mutateAsync().catch(() => undefined)}
           >
             <CheckCheck className="h-3.5 w-3.5" /> Mark all read
           </button>

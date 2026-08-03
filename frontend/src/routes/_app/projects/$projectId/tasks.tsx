@@ -7,6 +7,7 @@ import { Can } from "@/components/layout/Can";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Select } from "@/components/ui/select";
+import { TableSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -94,13 +95,7 @@ function TasksTab() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading && (
-              <TableRow>
-                <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
-                  Loading…
-                </TableCell>
-              </TableRow>
-            )}
+            {isLoading && <TableSkeleton columns={canWrite ? 8 : 7} rows={6} />}
             {!isLoading && !tasks?.length && (
               <TableRow>
                 <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">

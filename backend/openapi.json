@@ -2941,6 +2941,54 @@
         }
       }
     },
+    "/api/v1/suppliers/{supplier_id}/activity": {
+      "get": {
+        "tags": [
+          "procurement"
+        ],
+        "summary": "Get Supplier Activity",
+        "operationId": "get_supplier_activity",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "supplier_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Supplier Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierActivity"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects/{project_id}/rfqs": {
       "get": {
         "tags": [
@@ -14238,6 +14286,17 @@
             "format": "date-time",
             "title": "Created At"
           },
+          "project_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Code"
+          },
           "terms": {
             "anyOf": [
               {
@@ -14278,17 +14337,6 @@
               }
             ],
             "title": "Project Name"
-          },
-          "project_code": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Project Code"
           }
         },
         "type": "object",
@@ -14538,6 +14586,17 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "project_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Code"
           }
         },
         "type": "object",
@@ -17989,6 +18048,62 @@
         ],
         "title": "StockMovementType"
       },
+      "SupplierActivity": {
+        "properties": {
+          "supplier": {
+            "$ref": "#/components/schemas/SupplierRead"
+          },
+          "purchase_orders": {
+            "items": {
+              "$ref": "#/components/schemas/PoRead"
+            },
+            "type": "array",
+            "title": "Purchase Orders"
+          },
+          "quotes": {
+            "items": {
+              "$ref": "#/components/schemas/SupplierQuoteActivity"
+            },
+            "type": "array",
+            "title": "Quotes"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/SupplierActivityTotals"
+          }
+        },
+        "type": "object",
+        "required": [
+          "supplier",
+          "purchase_orders",
+          "quotes",
+          "totals"
+        ],
+        "title": "SupplierActivity"
+      },
+      "SupplierActivityTotals": {
+        "properties": {
+          "po_count": {
+            "type": "integer",
+            "title": "Po Count"
+          },
+          "po_value": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Po Value"
+          },
+          "quote_count": {
+            "type": "integer",
+            "title": "Quote Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "po_count",
+          "po_value",
+          "quote_count"
+        ],
+        "title": "SupplierActivityTotals"
+      },
       "SupplierCreate": {
         "properties": {
           "name": {
@@ -18085,6 +18200,64 @@
           "name"
         ],
         "title": "SupplierCreate"
+      },
+      "SupplierQuoteActivity": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "rfq_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Rfq Id"
+          },
+          "rfq_doc_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rfq Doc Number"
+          },
+          "rfq_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rfq Title"
+          },
+          "status": {
+            "$ref": "#/components/schemas/QuoteStatus"
+          },
+          "received_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Received Date"
+          },
+          "total_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "rfq_id",
+          "status",
+          "received_date",
+          "total_amount"
+        ],
+        "title": "SupplierQuoteActivity"
       },
       "SupplierRead": {
         "properties": {
