@@ -1,0 +1,205 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { Diamond, Pencil, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Can } from "@/components/layout/Can";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Select } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { usePermission } from "@/features/auth/hooks";
+import { WorkStatusBadge } from "@/features/projects/StatusBadge";
+import { TaskFormDialog } from "@/features/tasks/TaskFormDialog";
+import {
+  useDeleteTask,
+  useListTasks,
+  useUpdateTask,
+} from "@/lib/api/generated/endpoints";
+import type { TaskListItem } from "@/lib/api/generated/model";
+import { fmtDate, STATUS_LABELS } from "@/lib/format";
+import { cn } from "@/lib/utils";
+
+export const Route = createFileRoute("/_app/projects/$projectId/tasks")({
+  component: TasksTab,
+});
+
+function TasksTab() {
+  const { projectId } = Route.useParams();
+  const queryClient = useQueryClient();
+  const { data: tasks, isLoading } = useListTasks(projectId);
+  const updateMutation = useUpdateTask();
+  const deleteMutation = useDeleteTask();
+  const canWrite = usePermission("task:write");
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<TaskListItem | null>(null);
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  const quickUpdate = async (task: TaskListItem, patch: Record<string, unknown>) => {
+    try {
+      await updateMutation.mutateAsync({ taskId: task.id, data: patch });
+      await queryClient.invalidateQueries();
+    } catch {
+      toast.error("Update failed");
+    }
+  };
+
+  const handleDelete = async (task: TaskListItem) => {
+    if (!window.confirm(`Delete task "${task.name}"? This also removes its dependencies.`)) return;
+    try {
+      await deleteMutation.mutateAsync({ taskId: task.id });
+      await queryClient.invalidateQueries();
+      toast.success("Task deleted");
+    } catch {
+      toast.error("Delete failed");
+    }
+  };
+
+  return (
+    <div>
+      <div className="mb-3 flex justify-end">
+        <Can perm="task:write">
+          <Button
+            onClick={() => {
+              setEditing(null);
+              setDialogOpen(true);
+            }}
+          >
+            <Plus /> New task
+          </Button>
+        </Can>
+      </div>
+
+      <div className="rounded-lg border bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-16">WBS</TableHead>
+              <TableHead>Task</TableHead>
+              <TableHead>Phase</TableHead>
+              <TableHead>Assignee</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="w-36">Progress</TableHead>
+              <TableHead>Due</TableHead>
+              {canWrite && <TableHead className="w-20" />}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading && (
+              <TableRow>
+                <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
+                  Loading…
+                </TableCell>
+              </TableRow>
+            )}
+            {!isLoading && !tasks?.length && (
+              <TableRow>
+                <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
+                  No tasks yet.
+                </TableCell>
+              </TableRow>
+            )}
+            {tasks?.map((task) => {
+              const isOverdue =
+                task.planned_end &&
+                task.planned_end < today &&
+                !["done", "cancelled"].includes(task.status ?? "");
+              return (
+                <TableRow key={task.id}>
+                  <TableCell className="font-mono text-xs">{task.wbs_code ?? "—"}</TableCell>
+                  <TableCell>
+                    <span className="flex items-center gap-1.5 font-medium">
+                      {task.is_milestone && <Diamond className="h-3 w-3 text-primary" />}
+                      {task.name}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {task.phase_name ?? "—"}
+                  </TableCell>
+                  <TableCell className="text-sm">{task.assignee_name ?? "—"}</TableCell>
+                  <TableCell>
+                    {canWrite ? (
+                      <Select
+                        className="h-7 w-32 text-xs"
+                        value={task.status ?? "not_started"}
+                        onChange={(e) => void quickUpdate(task, { status: e.target.value })}
+                      >
+                        {["not_started", "in_progress", "blocked", "done", "cancelled"].map(
+                          (s) => (
+                            <option key={s} value={s}>
+                              {STATUS_LABELS[s]}
+                            </option>
+                          ),
+                        )}
+                      </Select>
+                    ) : (
+                      <WorkStatusBadge status={task.status ?? "not_started"} />
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Progress value={task.progress_pct ?? 0} className="flex-1" />
+                      <span className="w-8 text-right text-xs text-muted-foreground">
+                        {task.progress_pct}%
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell
+                    className={cn(
+                      "whitespace-nowrap text-sm",
+                      isOverdue && "font-medium text-destructive",
+                    )}
+                  >
+                    {fmtDate(task.planned_end)}
+                  </TableCell>
+                  {canWrite && (
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => {
+                            setEditing(task);
+                            setDialogOpen(true);
+                          }}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-destructive"
+                          onClick={() => void handleDelete(task)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  )}
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+
+      <TaskFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        projectId={projectId}
+        task={editing}
+        allTasks={tasks ?? []}
+      />
+    </div>
+  );
+}

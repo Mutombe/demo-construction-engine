@@ -1,0 +1,14 @@
+# Import every module's models so Base.metadata (and Alembic autogenerate) sees all tables.
+from app.modules.boq import models as boq_models  # noqa: F401
+from app.modules.clients import models as clients_models  # noqa: F401
+from app.modules.company import models as company_models  # noqa: F401
+from app.modules.costs import models as costs_models  # noqa: F401
+from app.modules.expenses import models as expenses_models  # noqa: F401
+from app.modules.ingestion import models as ingestion_models  # noqa: F401
+from app.modules.inventory import models as inventory_models  # noqa: F401
+from app.modules.procurement import models as procurement_models  # noqa: F401
+from app.modules.projects import models as projects_models  # noqa: F401
+from app.modules.site import models as site_models  # noqa: F401
+from app.modules.tasks import models as tasks_models  # noqa: F401
+from app.modules.users import models as users_models  # noqa: F401
+from app.modules.valuations import models as valuations_models  # noqa: F401

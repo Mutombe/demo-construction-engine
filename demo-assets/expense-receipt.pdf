@@ -1,0 +1,49 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 637 >>
+stream
+BT
+/F2 16 Tf 1 0 0 1 60 780 Tm (TOTAL FUEL STATION) Tj
+/F1 10 Tf 1 0 0 1 60 755 Tm (Cnr Samora Machel / 5th, Harare) Tj
+/F1 6 Tf 1 0 0 1 60 739 Tm () Tj
+/F2 11 Tf 1 0 0 1 60 730 Tm (CASH RECEIPT #88412) Tj
+/F1 10 Tf 1 0 0 1 60 713 Tm (Date: 2026-07-30  14:22) Tj
+/F1 6 Tf 1 0 0 1 60 697 Tm () Tj
+/F1 10 Tf 1 0 0 1 60 688 Tm (Diesel 50ppm        56.2 L  x 1.52       85.40) Tj
+/F1 6 Tf 1 0 0 1 60 672 Tm () Tj
+/F2 11 Tf 1 0 0 1 60 663 Tm (TOTAL USD: 85.40) Tj
+/F1 10 Tf 1 0 0 1 60 646 Tm (Paid: cash) Tj
+/F1 6 Tf 1 0 0 1 60 630 Tm () Tj
+/F1 10 Tf 1 0 0 1 60 621 Tm (Customer note: diesel for generator - Riverside site PRJ-2026-001) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000251 00000 n 
+0000000939 00000 n 
+0000001009 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+1084
+%%EOF

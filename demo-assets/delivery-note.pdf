@@ -1,0 +1,52 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 986 >>
+stream
+BT
+/F2 16 Tf 1 0 0 1 60 780 Tm (STEELCO ZIMBABWE \(PVT\) LTD) Tj
+/F1 10 Tf 1 0 0 1 60 755 Tm (12 Coventry Rd, Workington, Harare) Tj
+/F1 6 Tf 1 0 0 1 60 739 Tm () Tj
+/F2 11 Tf 1 0 0 1 60 730 Tm (DELIVERY NOTE DN-4471) Tj
+/F1 10 Tf 1 0 0 1 60 713 Tm (Delivery date: 2026-08-01) Tj
+/F1 10 Tf 1 0 0 1 60 697 Tm (Customer: Demo Construction Co.) Tj
+/F1 10 Tf 1 0 0 1 60 681 Tm (Deliver to: Stand 512, Riverside Drive, Harare) Tj
+/F1 10 Tf 1 0 0 1 60 665 Tm (Customer order no: PO-2026-002) Tj
+/F1 6 Tf 1 0 0 1 60 649 Tm () Tj
+/F2 11 Tf 1 0 0 1 60 640 Tm (Item                                    Qty        Unit) Tj
+/F1 10 Tf 1 0 0 1 60 623 Tm (Rebar Y12 6m length                     500        length) Tj
+/F1 10 Tf 1 0 0 1 60 607 Tm (Rebar Y16 6m length                     200        length) Tj
+/F1 6 Tf 1 0 0 1 60 591 Tm () Tj
+/F1 10 Tf 1 0 0 1 60 582 Tm (Received in good order. Goods checked against order.) Tj
+/F1 10 Tf 1 0 0 1 60 566 Tm (Driver: T. Phiri     Vehicle: AEZ 4471) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000251 00000 n 
+0000001288 00000 n 
+0000001358 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+1433
+%%EOF

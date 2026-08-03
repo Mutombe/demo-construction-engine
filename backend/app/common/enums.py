@@ -1,0 +1,149 @@
+from enum import StrEnum
+
+
+class UserRole(StrEnum):
+    admin = "admin"
+    project_manager = "project_manager"
+    site_manager = "site_manager"
+    procurement_officer = "procurement_officer"
+    viewer = "viewer"
+
+
+class ProjectStatus(StrEnum):
+    planning = "planning"
+    active = "active"
+    on_hold = "on_hold"
+    completed = "completed"
+    cancelled = "cancelled"
+
+
+class WorkStatus(StrEnum):
+    not_started = "not_started"
+    in_progress = "in_progress"
+    blocked = "blocked"
+    done = "done"
+    cancelled = "cancelled"
+
+
+class DependencyType(StrEnum):
+    FS = "FS"  # finish-to-start
+    SS = "SS"  # start-to-start
+    FF = "FF"  # finish-to-finish
+    SF = "SF"  # start-to-finish
+
+
+class CostCategory(StrEnum):
+    material = "material"
+    labour = "labour"
+    plant = "plant"
+    subcontract = "subcontract"
+    preliminaries = "preliminaries"
+    other = "other"
+
+
+class BoqItemType(StrEnum):
+    original = "original"
+    variation = "variation"
+    omission = "omission"
+
+
+class CostSource(StrEnum):
+    manual = "manual"
+    expense = "expense"
+    purchase_order = "purchase_order"
+    invoice = "invoice"
+    payroll = "payroll"
+    inventory_issue = "inventory_issue"
+
+
+class WeatherCondition(StrEnum):
+    sunny = "sunny"
+    cloudy = "cloudy"
+    rain = "rain"
+    storm = "storm"
+
+
+class IssueSeverity(StrEnum):
+    low = "low"
+    medium = "medium"
+    high = "high"
+    critical = "critical"
+
+
+class IssueStatus(StrEnum):
+    open = "open"
+    resolved = "resolved"
+
+
+class ExpenseCategory(StrEnum):
+    materials = "materials"
+    transport = "transport"
+    fuel = "fuel"
+    accommodation = "accommodation"
+    meals = "meals"
+    tools = "tools"
+    other = "other"
+
+
+class ExpenseStatus(StrEnum):
+    pending = "pending"
+    approved = "approved"
+    rejected = "rejected"
+    cancelled = "cancelled"
+
+
+class StockMovementType(StrEnum):
+    goods_in = "goods_in"
+    issue = "issue"
+    adjustment = "adjustment"
+
+
+class ValuationStatus(StrEnum):
+    draft = "draft"
+    issued = "issued"
+    paid = "paid"
+    cancelled = "cancelled"
+
+
+class PoDestination(StrEnum):
+    project = "project"
+    store = "store"
+
+
+class IngestionStatus(StrEnum):
+    received = "received"
+    failed = "failed"
+    needs_info = "needs_info"
+    drafted = "drafted"
+    posted = "posted"
+    rejected = "rejected"
+
+
+class IngestionDocType(StrEnum):
+    supplier_invoice = "supplier_invoice"
+    expense_receipt = "expense_receipt"
+    delivery_note = "delivery_note"
+    supplier_quote = "supplier_quote"
+
+
+class IngestionChannel(StrEnum):
+    upload = "upload"
+
+
+class RfqStatus(StrEnum):
+    draft = "draft"
+    issued = "issued"
+    closed = "closed"
+
+
+class QuoteStatus(StrEnum):
+    received = "received"
+    accepted = "accepted"
+    rejected = "rejected"
+
+
+class PoStatus(StrEnum):
+    draft = "draft"
+    issued = "issued"
+    received = "received"
+    cancelled = "cancelled"

@@ -1,0 +1,55 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 1282 >>
+stream
+BT
+/F2 16 Tf 1 0 0 1 60 780 Tm (MASHONALAND BUILDING SUPPLIES) Tj
+/F1 10 Tf 1 0 0 1 60 755 Tm (14 Willowvale Rd, Harare  |  VAT 220-114-778) Tj
+/F1 6 Tf 1 0 0 1 60 739 Tm () Tj
+/F2 11 Tf 1 0 0 1 60 730 Tm (TAX INVOICE  MBS-INV-2071) Tj
+/F1 10 Tf 1 0 0 1 60 713 Tm (Invoice date: 2026-07-28) Tj
+/F1 10 Tf 1 0 0 1 60 697 Tm (Bill to: Demo Construction Co.) Tj
+/F1 10 Tf 1 0 0 1 60 681 Tm (Project / site: PRJ-2026-001 Riverside Apartments - Block A, Stand 512 Riverside Drive) Tj
+/F1 6 Tf 1 0 0 1 60 665 Tm () Tj
+/F2 11 Tf 1 0 0 1 60 656 Tm (Description                              Qty      Unit       Amount) Tj
+/F1 10 Tf 1 0 0 1 60 639 Tm (Readymix concrete 25MPa                 18 m3    152.00     2,736.00) Tj
+/F1 10 Tf 1 0 0 1 60 623 Tm (Cement 42.5N 50kg bags                  120 bag   12.40     1,488.00) Tj
+/F1 10 Tf 1 0 0 1 60 607 Tm (River sand delivered                    22 m3     18.50       407.00) Tj
+/F1 6 Tf 1 0 0 1 60 591 Tm () Tj
+/F2 11 Tf 1 0 0 1 60 582 Tm (Subtotal:  4,631.00) Tj
+/F1 10 Tf 1 0 0 1 60 565 Tm (VAT 0% \(zero-rated contract supply\): 0.00) Tj
+/F2 11 Tf 1 0 0 1 60 549 Tm (TOTAL DUE \(USD\):  4,631.00) Tj
+/F1 6 Tf 1 0 0 1 60 532 Tm () Tj
+/F1 10 Tf 1 0 0 1 60 523 Tm (Payment terms: 30 days from date of invoice. Bank: CBZ 011-223344-001.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000251 00000 n 
+0000001585 00000 n 
+0000001655 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+1730
+%%EOF

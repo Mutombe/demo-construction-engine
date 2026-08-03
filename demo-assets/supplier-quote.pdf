@@ -1,0 +1,54 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 1298 >>
+stream
+BT
+/F2 16 Tf 1 0 0 1 60 780 Tm (NYANGA TIMBER & HARDWARE) Tj
+/F1 10 Tf 1 0 0 1 60 755 Tm (88 Rekayi Tangwena Ave, Mutare  |  info@nyangatimber.example) Tj
+/F1 6 Tf 1 0 0 1 60 739 Tm () Tj
+/F2 11 Tf 1 0 0 1 60 730 Tm (QUOTATION Q-2026-315) Tj
+/F1 10 Tf 1 0 0 1 60 713 Tm (Date: 2026-07-29    Valid until: 2026-08-29) Tj
+/F1 10 Tf 1 0 0 1 60 697 Tm (To: Demo Construction Co. - Procurement) Tj
+/F1 10 Tf 1 0 0 1 60 681 Tm (Your reference: RFQ-2026-001 Supply of Concrete and Reinforcement) Tj
+/F1 6 Tf 1 0 0 1 60 665 Tm () Tj
+/F2 11 Tf 1 0 0 1 60 656 Tm (Item                                       Qty      Unit     Rate      Amount) Tj
+/F1 10 Tf 1 0 0 1 60 639 Tm (Concrete grade 25 in strip footings        96 m3    m3       149.50    14,352.00) Tj
+/F1 10 Tf 1 0 0 1 60 623 Tm (High-tensile rebar, cut bent and fixed     8,400    kg       1.80      15,120.00) Tj
+/F1 10 Tf 1 0 0 1 60 607 Tm (Rebar to superstructure                    46,200   kg       1.86      85,932.00) Tj
+/F1 6 Tf 1 0 0 1 60 591 Tm () Tj
+/F2 11 Tf 1 0 0 1 60 582 Tm (TOTAL \(USD\): 115,404.00) Tj
+/F1 6 Tf 1 0 0 1 60 565 Tm () Tj
+/F1 10 Tf 1 0 0 1 60 556 Tm (Payment terms: 30 days net. Delivery: staged, within 7 days of call-off.) Tj
+/F1 10 Tf 1 0 0 1 60 540 Tm (Prices include delivery to site within greater Harare.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000251 00000 n 
+0000001601 00000 n 
+0000001671 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+1746
+%%EOF

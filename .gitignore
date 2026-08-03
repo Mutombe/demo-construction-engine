@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Env
+.env
+.env.local
+
+# Node
+node_modules/
+dist/
+coverage/
+
+# Local database data (portable Postgres)
+.pgdata/
+*.log
+
+# Uploaded ingestion documents (served only via the authed API)
+backend/media/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
