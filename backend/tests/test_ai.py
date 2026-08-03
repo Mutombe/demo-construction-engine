@@ -406,3 +406,24 @@ def test_weekly_report_role_and_gating(client, db, no_ai):
     )
     res = client.post("/api/v1/ai/site/weekly-report", json=payload, headers=auth_headers(site))
     assert res.status_code == 503
+
+
+def test_ingestion_history_chat_tool(client, db, fake_ai):
+    from app.modules.ai.tools import CHAT_TOOLS, run_tool
+
+    # append-only cache rule: the new tool must be the LAST entry
+    assert CHAT_TOOLS[-1]["name"] == "get_ingestion_history"
+
+    headers = _proc(db)
+    upload = client.post(
+        "/api/v1/ingestion/items",
+        files={"file": ("tool-test.png", b"img-bytes", "image/png")},
+        headers=headers,
+    )
+    assert upload.status_code == 201
+
+    out = run_tool(db, "get_ingestion_history", {"days": 2})
+    assert out.is_error is False
+    assert "tool-test.png" in out.text
+    out = run_tool(db, "get_ingestion_history", {"status": "posted"})
+    assert "tool-test.png" not in out.text

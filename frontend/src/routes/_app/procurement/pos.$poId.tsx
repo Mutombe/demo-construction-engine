@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowLeft, Ban, PackageCheck, Send } from "lucide-react";
+import { ArrowLeft, Ban, Download, PackageCheck, Send } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Can } from "@/components/layout/Can";
@@ -15,7 +15,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { PageSkeleton } from "@/components/ui/skeleton";
 import { ReceivePoDialog } from "@/features/procurement/ReceivePoDialog";
+import { downloadFile } from "@/lib/api/download";
 import { PoStatusBadge } from "@/features/procurement/StatusBadges";
 import {
   useCancelPurchaseOrder,
@@ -44,7 +46,7 @@ function PoDetailPage() {
   const [receiveOpen, setReceiveOpen] = useState(false);
 
   if (!po) {
-    return <div className="p-8 text-center text-muted-foreground">Loading purchase order…</div>;
+    return <PageSkeleton rows={5} />;
   }
   const items = po.items ?? [];
 
@@ -91,6 +93,16 @@ function PoDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() =>
+              void downloadFile(`/api/v1/purchase-orders/${poId}/pdf`, `${po.doc_number}.pdf`).catch(
+                () => toast.error("Download failed"),
+              )
+            }
+          >
+            <Download /> PDF
+          </Button>
           {po.status === "draft" && (
             <Can perm="po:approve">
               <Button

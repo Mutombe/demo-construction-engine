@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { PageSkeleton } from "@/components/ui/skeleton";
 import { makeBadge } from "@/features/procurement/StatusBadges";
 import {
   useGetStockItem,
@@ -33,7 +34,7 @@ function StockItemDetailPage() {
   const { data: movements } = useListStockMovements(itemId, { page_size: 100 });
 
   if (!item) {
-    return <div className="p-8 text-center text-muted-foreground">Loading item…</div>;
+    return <PageSkeleton rows={4} />;
   }
 
   return (

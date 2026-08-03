@@ -59,4 +59,41 @@ class Valuation(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
     paid_date: Mapped[date | None] = mapped_column(Date)
     notes: Mapped[str | None] = mapped_column(Text)
 
+    @property
+    def is_measured(self) -> bool:
+        return len(self.lines) > 0
+
     project = relationship("Project")
+    lines: Mapped[list["ValuationLine"]] = relationship(
+        back_populates="valuation",
+        cascade="all, delete-orphan",
+        order_by="ValuationLine.item_code",
+    )
+
+
+class ValuationLine(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """One measured BOQ line on a valuation's measurement sheet.
+
+    BOQ details are snapshotted so a later rate edit on the BOQ cannot rewrite
+    an issued certificate; amount = qty_to_date x rate is computed in the
+    service, and the parent's gross_valuation is the sum of line amounts.
+    """
+
+    __tablename__ = "valuation_lines"
+    __table_args__ = (UniqueConstraint("valuation_id", "boq_item_id"),)
+
+    valuation_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("valuations.id", ondelete="CASCADE"), index=True
+    )
+    boq_item_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("boq_items.id", ondelete="SET NULL"), index=True
+    )
+    item_code: Mapped[str] = mapped_column(String(30))
+    description: Mapped[str] = mapped_column(Text)
+    unit: Mapped[str] = mapped_column(String(10))
+    rate: Mapped[Decimal] = mapped_column(Numeric(14, 2))
+    boq_quantity: Mapped[Decimal] = mapped_column(Numeric(14, 3))
+    qty_to_date: Mapped[Decimal] = mapped_column(Numeric(14, 3))
+    amount: Mapped[Decimal] = mapped_column(Numeric(14, 2))
+
+    valuation: Mapped[Valuation] = relationship(back_populates="lines")

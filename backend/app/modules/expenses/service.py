@@ -11,6 +11,7 @@ from app.modules.boq.models import BoqItem
 from app.modules.costs.models import CostEntry
 from app.modules.expenses.models import ExpenseClaim
 from app.modules.expenses.schemas import ExpenseClaimCreate, ExpenseClaimRead, ExpenseClaimUpdate
+from app.modules.notifications import service as notifications
 from app.modules.projects.models import Project
 from app.modules.projects.service import get_project
 from app.modules.users.models import User
@@ -84,6 +85,15 @@ def create_claim(
     )
     db.add(claim)
     db.flush()
+    notifications.notify_roles(
+        db,
+        [UserRole.admin, UserRole.project_manager],
+        "expense_submitted",
+        f"Expense {claim.doc_number} awaiting approval",
+        f"{claim.description} — {claim.amount}",
+        link="/expenses",
+        exclude=created_by,
+    )
     return claim
 
 
@@ -141,6 +151,15 @@ def approve_claim(db: Session, claim_id: uuid.UUID, approver: User) -> ExpenseCl
     claim.approved_by = approver.id
     claim.decided_at = datetime.now(UTC)
     claim.cost_entry_id = entry.id
+    notifications.notify(
+        db,
+        [claim.created_by],
+        "expense_approved",
+        f"Expense {claim.doc_number} approved",
+        f"{claim.description} — posted to the project ledger",
+        link="/expenses",
+        exclude=approver.id,
+    )
     return claim
 
 
@@ -153,4 +172,13 @@ def reject_claim(db: Session, claim_id: uuid.UUID, reason: str, approver: User) 
     claim.approved_by = approver.id
     claim.decided_at = datetime.now(UTC)
     claim.rejection_reason = reason
+    notifications.notify(
+        db,
+        [claim.created_by],
+        "expense_rejected",
+        f"Expense {claim.doc_number} rejected",
+        reason,
+        link="/expenses",
+        exclude=approver.id,
+    )
     return claim

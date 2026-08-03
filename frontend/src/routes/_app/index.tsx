@@ -1,10 +1,12 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { AlertTriangle, Building2, CalendarClock, Wallet } from "lucide-react";
+import { AlertTriangle, Building2, CalendarClock, Landmark, Wallet } from "lucide-react";
 import {
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
+  ComposedChart,
+  Line,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -13,8 +15,14 @@ import {
 import { PageHeader } from "@/components/layout/AppShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { PageSkeleton } from "@/components/ui/skeleton";
 import { ProjectStatusBadge } from "@/features/projects/StatusBadge";
-import { useBudgetAlerts, useDeadlines, useOverview } from "@/lib/api/generated/endpoints";
+import {
+  useBudgetAlerts,
+  useDeadlines,
+  useFinancialTrend,
+  useOverview,
+} from "@/lib/api/generated/endpoints";
 import { fmtDate, money, pct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -25,40 +33,58 @@ function KpiCard({
   value,
   icon,
   tone,
+  sub,
 }: {
   label: string;
   value: string | number;
   icon: React.ReactNode;
   tone?: "danger" | "default";
+  sub?: string;
 }) {
   return (
-    <Card>
+    <Card className="transition-shadow hover:shadow-md">
       <CardContent className="flex items-center gap-3 p-4">
         <div
           className={cn(
-            "flex h-10 w-10 items-center justify-center rounded-lg [&_svg]:size-5",
+            "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg [&_svg]:size-5",
             tone === "danger" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary",
           )}
         >
           {icon}
         </div>
-        <div>
+        <div className="min-w-0">
           <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-          <div className="text-xl font-semibold">{value}</div>
+          <div className="truncate text-xl font-semibold tabular-nums">{value}</div>
+          {sub && <div className="truncate text-[11px] text-muted-foreground">{sub}</div>}
         </div>
       </CardContent>
     </Card>
   );
 }
 
+function monthLabel(key: string): string {
+  const [year, month] = key.split("-");
+  return new Date(Number(year), Number(month) - 1, 1).toLocaleString("en-US", {
+    month: "short",
+  });
+}
+
 function DashboardPage() {
   const { data: overview, isLoading } = useOverview();
   const { data: deadlines } = useDeadlines({ days: 21 });
   const { data: alerts } = useBudgetAlerts({ threshold_pct: 90 });
+  const { data: trend } = useFinancialTrend({ months: 6 });
 
   if (isLoading || !overview) {
-    return <div className="p-8 text-center text-muted-foreground">Loading dashboard…</div>;
+    return <PageSkeleton rows={6} />;
   }
+
+  const trendData = (trend?.months ?? []).map((m) => ({
+    name: monthLabel(m.month),
+    cost: Number(m.cost),
+    certified: Number(m.certified_net),
+    paid: Number(m.paid),
+  }));
 
   const chartData = overview.projects.map((p) => ({
     name: p.code,
@@ -72,7 +98,7 @@ function DashboardPage() {
     <div>
       <PageHeader title="Dashboard" description="Portfolio health across all live projects" />
 
-      <div className="mb-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
+      <div className="mb-5 grid grid-cols-2 gap-4 xl:grid-cols-5">
         <KpiCard label="Active projects" value={overview.active_projects} icon={<Building2 />} />
         <KpiCard
           label="Contract value"
@@ -85,12 +111,85 @@ function DashboardPage() {
           icon={<CalendarClock />}
         />
         <KpiCard
+          label="Cash position"
+          value={money(trend?.totals.portfolio_outstanding)}
+          icon={<Landmark />}
+          sub={`${money(trend?.totals.portfolio_paid)} received of ${money(trend?.totals.portfolio_invoiced)} invoiced`}
+        />
+        <KpiCard
           label="Overdue tasks"
           value={overview.overdue_tasks}
           icon={<AlertTriangle />}
           tone={overview.overdue_tasks > 0 ? "danger" : "default"}
         />
       </div>
+
+      <Card className="mb-4">
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <CardTitle>Revenue vs cost — last 6 months</CardTitle>
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-sm bg-muted-foreground/40" /> Cost
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-0.5 w-3 rounded bg-primary" /> Certified
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-0.5 w-3 rounded bg-success" /> Paid
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="h-56">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={trendData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                <XAxis dataKey="name" tickLine={false} axisLine={false} fontSize={12} />
+                <YAxis
+                  tickFormatter={(v: number) => `${Math.round(v / 1000)}k`}
+                  tickLine={false}
+                  axisLine={false}
+                  fontSize={12}
+                  width={44}
+                />
+                <Tooltip
+                  formatter={(value, name) => [money(Number(value)), String(name)]}
+                  contentStyle={{
+                    borderRadius: 8,
+                    border: "1px solid var(--border)",
+                    background: "var(--card)",
+                    fontSize: 12,
+                  }}
+                />
+                <Bar
+                  dataKey="cost"
+                  name="Cost"
+                  fill="var(--muted-foreground)"
+                  opacity={0.35}
+                  radius={[3, 3, 0, 0]}
+                  maxBarSize={42}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="certified"
+                  name="Certified"
+                  stroke="var(--primary)"
+                  strokeWidth={2.5}
+                  dot={{ r: 3 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="paid"
+                  name="Paid"
+                  stroke="var(--success)"
+                  strokeWidth={2.5}
+                  dot={{ r: 3 }}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 xl:grid-cols-5">
         <Card className="xl:col-span-3">

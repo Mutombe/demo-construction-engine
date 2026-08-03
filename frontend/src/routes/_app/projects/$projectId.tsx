@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Can } from "@/components/layout/Can";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { PageSkeleton } from "@/components/ui/skeleton";
 import { ProjectFormDialog } from "@/features/projects/ProjectFormDialog";
 import { ProjectStatusBadge } from "@/features/projects/StatusBadge";
 import { useGetProject, useGetProjectSummary } from "@/lib/api/generated/endpoints";
@@ -32,7 +33,7 @@ function ProjectDetailLayout() {
   const [editOpen, setEditOpen] = useState(false);
 
   if (!project) {
-    return <div className="p-8 text-center text-muted-foreground">Loading project…</div>;
+    return <PageSkeleton rows={5} />;
   }
 
   const overBudget =

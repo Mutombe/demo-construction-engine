@@ -130,6 +130,21 @@ class IngestionChannel(StrEnum):
     upload = "upload"
 
 
+class PayBasis(StrEnum):
+    hourly = "hourly"
+    daily = "daily"
+
+
+class PayItemKind(StrEnum):
+    allowance = "allowance"
+    deduction = "deduction"
+
+
+class PayRunStatus(StrEnum):
+    draft = "draft"
+    approved = "approved"
+
+
 class RfqStatus(StrEnum):
     draft = "draft"
     issued = "issued"

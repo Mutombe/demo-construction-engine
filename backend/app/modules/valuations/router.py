@@ -8,6 +8,8 @@ from app.common.schemas import Page
 from app.core.deps import DbDep, require_roles
 from app.modules.valuations import service
 from app.modules.valuations.schemas import (
+    MeasurementContext,
+    MeasurementSet,
     RevenueSummary,
     ValuationCreate,
     ValuationDetail,
@@ -69,21 +71,56 @@ def delete_valuation(valuation_id: uuid.UUID, db: DbDep) -> None:
     service.delete_valuation(db, valuation_id)
 
 
-@router.post(
-    "/valuations/{valuation_id}/issue", response_model=ValuationDetail, dependencies=[val_write]
+@router.get("/valuations/{valuation_id}/certificate")
+def download_valuation_certificate(valuation_id: uuid.UUID, db: DbDep):
+    from fastapi import Response
+
+    from app.common.enums import ValuationStatus
+    from app.core.exceptions import ConflictError
+    from app.modules.valuations.pdf import certificate_pdf
+
+    valuation = service.get_valuation(db, valuation_id)
+    if valuation.status not in (ValuationStatus.issued, ValuationStatus.paid):
+        raise ConflictError("Only issued or paid valuations have a certificate")
+    return Response(
+        content=certificate_pdf(db, valuation),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{valuation.doc_number}_certificate.pdf"'
+        },
+    )
+
+
+@router.get("/valuations/{valuation_id}/measurement", response_model=MeasurementContext)
+def get_measurement_context(valuation_id: uuid.UUID, db: DbDep) -> MeasurementContext:
+    return service.measurement_context(db, valuation_id)
+
+
+@router.put(
+    "/valuations/{valuation_id}/measurement",
+    response_model=ValuationDetail,
+    dependencies=[val_write],
 )
-def issue_valuation(
-    valuation_id: uuid.UUID, body: ValuationIssue, db: DbDep
+def set_measurement(
+    valuation_id: uuid.UUID, body: MeasurementSet, db: DbDep
 ) -> ValuationDetail:
-    service.issue_valuation(db, valuation_id, body.issued_date)
+    service.set_measurement(db, valuation_id, body)
     return service.valuation_detail(db, valuation_id)
 
 
-@router.post(
-    "/valuations/{valuation_id}/pay", response_model=ValuationDetail, dependencies=[val_write]
-)
-def pay_valuation(valuation_id: uuid.UUID, body: ValuationPay, db: DbDep) -> ValuationDetail:
-    service.pay_valuation(db, valuation_id, body.paid_date)
+@router.post("/valuations/{valuation_id}/issue", response_model=ValuationDetail)
+def issue_valuation(
+    valuation_id: uuid.UUID, body: ValuationIssue, db: DbDep, user=Depends(val_user)
+) -> ValuationDetail:
+    service.issue_valuation(db, valuation_id, body.issued_date, actor_id=user.id)
+    return service.valuation_detail(db, valuation_id)
+
+
+@router.post("/valuations/{valuation_id}/pay", response_model=ValuationDetail)
+def pay_valuation(
+    valuation_id: uuid.UUID, body: ValuationPay, db: DbDep, user=Depends(val_user)
+) -> ValuationDetail:
+    service.pay_valuation(db, valuation_id, body.paid_date, actor_id=user.id)
     return service.valuation_detail(db, valuation_id)
 
 

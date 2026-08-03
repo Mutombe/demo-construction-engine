@@ -43,12 +43,62 @@ class ValuationRead(BaseModel):
     issued_date: date | None
     paid_date: date | None
     notes: str | None
+    is_measured: bool = False
     created_at: datetime
+
+
+class ValuationLineRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    boq_item_id: uuid.UUID | None
+    item_code: str
+    description: str
+    unit: str
+    rate: Decimal
+    boq_quantity: Decimal
+    qty_to_date: Decimal
+    amount: Decimal
 
 
 class ValuationDetail(ValuationRead):
     project_name: str | None = None
     project_code: str | None = None
+    lines: list[ValuationLineRead] = []
+
+
+# --- Measurement sheet --------------------------------------------------------
+
+
+class MeasurementLineIn(BaseModel):
+    boq_item_id: uuid.UUID
+    qty_to_date: Decimal = Field(ge=0)
+
+
+class MeasurementSet(BaseModel):
+    lines: list[MeasurementLineIn]
+
+
+class MeasurementItem(BaseModel):
+    boq_item_id: uuid.UUID
+    item_code: str
+    description: str
+    unit: str
+    boq_quantity: Decimal
+    rate: Decimal
+    previous_qty: Decimal
+    current_qty: Decimal | None  # qty on this draft's sheet, if measured
+
+
+class MeasurementSection(BaseModel):
+    code: str
+    title: str
+    items: list[MeasurementItem]
+
+
+class MeasurementContext(BaseModel):
+    valuation_id: uuid.UUID
+    sections: list[MeasurementSection]
 
 
 class RevenueSummary(BaseModel):

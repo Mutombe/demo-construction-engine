@@ -171,6 +171,33 @@ CHAT_TOOLS = [
             [],
         ),
     },
+    # NOTE: append-only past this point — the tool list must stay byte-stable
+    # as a prefix for prompt caching.
+    {
+        "name": "get_ingestion_history",
+        "description": (
+            "Documents that came through the AI inbox: filename, detected type, status "
+            "(needs_info/drafted/posted/rejected), summary, confidence and what was posted. "
+            "Call when asked what came through the inbox, what was scanned/uploaded, or "
+            "what documents are awaiting review."
+        ),
+        "input_schema": _obj(
+            {
+                "days": {"type": "integer", "description": "Days back to look (default 7)"},
+                "status": {
+                    "type": "string",
+                    "description": "Filter: received|failed|needs_info|drafted|posted|rejected",
+                },
+                "doc_type": {
+                    "type": "string",
+                    "description": (
+                        "Filter: supplier_invoice|expense_receipt|delivery_note|supplier_quote"
+                    ),
+                },
+            },
+            [],
+        ),
+    },
 ]
 
 
@@ -446,6 +473,40 @@ def _tool_get_stock_levels(db: Session, args: dict) -> str:
     )
 
 
+def _tool_get_ingestion_history(db: Session, args: dict) -> str:
+    from datetime import UTC, datetime, timedelta
+
+    from app.common.enums import IngestionDocType, IngestionStatus
+    from app.modules.ingestion.models import IngestionItem
+
+    days = int(args.get("days") or 7)
+    cutoff = datetime.now(UTC) - timedelta(days=days)
+    query = select(IngestionItem).where(IngestionItem.created_at >= cutoff)
+    if args.get("status"):
+        query = query.where(IngestionItem.status == IngestionStatus(args["status"]))
+    if args.get("doc_type"):
+        query = query.where(IngestionItem.doc_type == IngestionDocType(args["doc_type"]))
+    items = db.scalars(query.order_by(IngestionItem.created_at.desc()).limit(ROW_CAP)).all()
+
+    rows = []
+    for item in items:
+        action = item.proposed_action or {}
+        lineage = action.get("lineage") or {}
+        rows.append(
+            {
+                "filename": item.original_filename,
+                "doc_type": item.doc_type.value if item.doc_type else None,
+                "status": item.status.value,
+                "summary": (action.get("display") or {}).get("summary"),
+                "confidence": action.get("confidence_score"),
+                "posted_as": lineage.get("posted_type"),
+                "posted_reference": lineage.get("reference"),
+                "uploaded": str(item.created_at.date()),
+            }
+        )
+    return _dump(rows)
+
+
 _REGISTRY = {
     "list_projects": _tool_list_projects,
     "get_project_summary": _tool_get_project_summary,
@@ -461,6 +522,7 @@ _REGISTRY = {
     "list_site_issues": _tool_list_site_issues,
     "list_expense_claims": _tool_list_expense_claims,
     "get_stock_levels": _tool_get_stock_levels,
+    "get_ingestion_history": _tool_get_ingestion_history,
 }
 
 

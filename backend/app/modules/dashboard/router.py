@@ -1,10 +1,16 @@
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Query
 
 from app.core.deps import DbDep
 from app.modules.dashboard import service
-from app.modules.dashboard.schemas import BudgetAlert, CompanyOverview, DeadlineItem
+from app.modules.dashboard.schemas import (
+    BudgetAlert,
+    CompanyOverview,
+    DeadlineItem,
+    FinancialTrend,
+)
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -17,6 +23,15 @@ def overview(db: DbDep) -> CompanyOverview:
 @router.get("/deadlines", response_model=list[DeadlineItem])
 def deadlines(db: DbDep, days: Annotated[int, Query(ge=1, le=365)] = 30) -> list[DeadlineItem]:
     return service.deadlines(db, days)
+
+
+@router.get("/financial-trend", response_model=FinancialTrend)
+def financial_trend(
+    db: DbDep,
+    months: Annotated[int, Query(ge=2, le=24)] = 6,
+    project_id: uuid.UUID | None = None,
+) -> FinancialTrend:
+    return service.financial_trend(db, months, project_id)
 
 
 @router.get("/budget-alerts", response_model=list[BudgetAlert])

@@ -208,3 +208,17 @@ def receive_purchase_order(
 @router.post("/purchase-orders/{po_id}/cancel", response_model=PoDetail, dependencies=[po_approve])
 def cancel_purchase_order(po_id: uuid.UUID, db: DbDep) -> PoDetail:
     return _po_detail(service.cancel_po(db, po_id))
+
+
+@router.get("/purchase-orders/{po_id}/pdf")
+def download_purchase_order_pdf(po_id: uuid.UUID, db: DbDep):
+    from fastapi import Response
+
+    from app.modules.procurement.pdf import po_pdf
+
+    po = service.get_po(db, po_id)
+    return Response(
+        content=po_pdf(db, po),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{po.doc_number}.pdf"'},
+    )

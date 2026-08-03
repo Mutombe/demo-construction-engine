@@ -25,6 +25,9 @@ export type Permission =
   | "valuation:write"
   | "ingestion:use"
   | "ingestion:approve"
+  | "payroll:read"
+  | "payroll:write"
+  | "timesheet:write"
   | "users:manage"
   | "settings:manage";
 
@@ -58,6 +61,9 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "valuation:write",
     "ingestion:use",
     "ingestion:approve",
+    "payroll:read",
+    "payroll:write",
+    "timesheet:write",
     "users:manage",
     "settings:manage",
   ],
@@ -78,8 +84,11 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "valuation:write",
     "ingestion:use",
     "ingestion:approve",
+    "payroll:read",
+    "payroll:write",
+    "timesheet:write",
   ],
-  site_manager: [...READ_ALL, "task:write", "cost:write", "site:write", "expense:submit", "inventory:issue", "ingestion:use"],
+  site_manager: [...READ_ALL, "task:write", "cost:write", "site:write", "expense:submit", "inventory:issue", "ingestion:use", "timesheet:write"],
   procurement_officer: [...READ_ALL, "procurement:write", "po:approve", "expense:submit", "inventory:write", "inventory:issue", "ingestion:use", "ingestion:approve"],
   viewer: [...READ_ALL],
 };

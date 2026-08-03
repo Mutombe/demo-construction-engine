@@ -213,3 +213,36 @@ def done(task: Task) -> Task:
 
 def fake_uuid() -> str:
     return str(uuid.uuid4())
+
+
+def make_worker(db: Session, **kw):
+    from app.common.enums import PayBasis
+    from app.modules.payroll.models import Worker
+
+    n = _next()
+    worker = Worker(
+        full_name=kw.pop("full_name", f"Worker {n}"),
+        trade=kw.pop("trade", "General hand"),
+        pay_basis=kw.pop("pay_basis", PayBasis.daily),
+        rate=kw.pop("rate", Decimal("20")),
+        **kw,
+    )
+    db.add(worker)
+    db.flush()
+    return worker
+
+
+def make_timesheet(db: Session, worker, project, **kw):
+    from app.modules.payroll.models import Timesheet
+
+    sheet = Timesheet(
+        worker_id=worker.id,
+        project_id=project.id,
+        work_date=kw.pop("work_date", date.today()),
+        quantity=kw.pop("quantity", Decimal("1")),
+        overtime_quantity=kw.pop("overtime_quantity", Decimal("0")),
+        **kw,
+    )
+    db.add(sheet)
+    db.flush()
+    return sheet

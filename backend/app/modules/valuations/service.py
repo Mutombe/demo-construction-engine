@@ -6,12 +6,17 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.common.doc_numbers import next_doc_number
-from app.common.enums import ValuationStatus
+from app.common.enums import BoqItemType, ValuationStatus
 from app.core.exceptions import ConflictError, NotFoundError, ValidationFailedError
+from app.modules.boq.models import BoqItem, BoqSection
 from app.modules.projects.models import Project
 from app.modules.projects.service import get_project, project_progress_pct
-from app.modules.valuations.models import Valuation
+from app.modules.valuations.models import Valuation, ValuationLine
 from app.modules.valuations.schemas import (
+    MeasurementContext,
+    MeasurementItem,
+    MeasurementSection,
+    MeasurementSet,
     RevenueSummary,
     ValuationCreate,
     ValuationDetail,
@@ -151,6 +156,10 @@ def update_valuation(
     _require_status(valuation, ValuationStatus.draft, "edited")
     updates = data.model_dump(exclude_unset=True)
     if "gross_valuation" in updates:
+        if valuation.lines:
+            raise ConflictError(
+                "This valuation is measured — edit the measurement sheet instead"
+            )
         _check_gross(db, valuation.project, updates["gross_valuation"])
         valuation.gross_valuation = updates.pop("gross_valuation")
     for field, value in updates.items():
@@ -169,8 +178,34 @@ def delete_valuation(db: Session, valuation_id: uuid.UUID) -> None:
     db.delete(valuation)
 
 
+def _notify_valuation(db: Session, valuation: Valuation, event: str, actor_id) -> None:
+    from app.common.enums import UserRole
+    from app.modules.notifications import service as notifications
+
+    project = valuation.project
+    recipients = {project.project_manager_id} if project else set()
+    notifications.notify(
+        db,
+        recipients,
+        f"valuation_{event}",
+        f"{valuation.doc_number} {event} — {project.name if project else ''}".strip(),
+        f"Net certified {valuation.net_certified}",
+        link=f"/projects/{valuation.project_id}/valuations",
+        exclude=actor_id,
+    )
+    notifications.notify_roles(
+        db,
+        [UserRole.admin],
+        f"valuation_{event}",
+        f"{valuation.doc_number} {event} — {project.name if project else ''}".strip(),
+        f"Net certified {valuation.net_certified}",
+        link=f"/projects/{valuation.project_id}/valuations",
+        exclude=actor_id,
+    )
+
+
 def issue_valuation(
-    db: Session, valuation_id: uuid.UUID, issued_date: date | None
+    db: Session, valuation_id: uuid.UUID, issued_date: date | None, actor_id=None
 ) -> Valuation:
     valuation = get_valuation(db, valuation_id)
     _require_status(valuation, ValuationStatus.draft, "issued")
@@ -183,14 +218,18 @@ def issue_valuation(
     )
     valuation.status = ValuationStatus.issued
     valuation.issued_date = issued_date or date.today()
+    _notify_valuation(db, valuation, "issued", actor_id)
     return valuation
 
 
-def pay_valuation(db: Session, valuation_id: uuid.UUID, paid_date: date | None) -> Valuation:
+def pay_valuation(
+    db: Session, valuation_id: uuid.UUID, paid_date: date | None, actor_id=None
+) -> Valuation:
     valuation = get_valuation(db, valuation_id)
     _require_status(valuation, ValuationStatus.issued, "marked paid")
     valuation.status = ValuationStatus.paid
     valuation.paid_date = paid_date or date.today()
+    _notify_valuation(db, valuation, "paid", actor_id)
     return valuation
 
 
@@ -243,3 +282,95 @@ def revenue_summary(db: Session, project_id: uuid.UUID) -> RevenueSummary:
         suggested_gross=suggested,
         valuation_count=count,
     )
+
+
+# --- Measurement sheet --------------------------------------------------------
+
+
+def set_measurement(db: Session, valuation_id: uuid.UUID, data: MeasurementSet) -> Valuation:
+    """Replace the measurement sheet; gross becomes the sum of measured lines.
+
+    Zero-quantity lines are dropped; sending an empty list reverts the
+    valuation to single-figure mode (gross keeps its current value).
+    """
+    valuation = get_valuation(db, valuation_id)
+    _require_status(valuation, ValuationStatus.draft, "measured")
+    project = valuation.project
+
+    valuation.lines.clear()
+    db.flush()  # delete old rows before re-inserting the same (valuation, boq_item) keys
+    seen: set[uuid.UUID] = set()
+    total = ZERO
+    for spec in data.lines:
+        if spec.boq_item_id in seen:
+            raise ValidationFailedError("Duplicate BOQ item on the measurement sheet")
+        seen.add(spec.boq_item_id)
+        if spec.qty_to_date == 0:
+            continue
+        item = db.get(BoqItem, spec.boq_item_id)
+        if item is None or item.project_id != valuation.project_id:
+            raise ValidationFailedError("BOQ item does not exist in this project")
+        if item.item_type == BoqItemType.omission:
+            raise ValidationFailedError("Omission items cannot be measured")
+        amount = (spec.qty_to_date * item.rate).quantize(CENT)
+        valuation.lines.append(
+            ValuationLine(
+                boq_item_id=item.id,
+                item_code=item.item_code,
+                description=item.description,
+                unit=item.unit,
+                rate=item.rate,
+                boq_quantity=item.quantity,
+                qty_to_date=spec.qty_to_date,
+                amount=amount,
+            )
+        )
+        total += amount
+
+    if valuation.lines:
+        _check_gross(db, project, total)
+        valuation.gross_valuation = total
+    previous = _previous_certified(db, valuation.project_id)
+    valuation.previous_certified = previous
+    valuation.retention_amount, valuation.net_certified = _compute(
+        project, valuation.gross_valuation, previous
+    )
+    db.flush()
+    return valuation
+
+
+def measurement_context(db: Session, valuation_id: uuid.UUID) -> MeasurementContext:
+    """The sheet the UI renders: every measurable BOQ line with its BOQ qty,
+    the cumulative qty certified on the latest certificate, and the qty on
+    this draft (if any)."""
+    valuation = get_valuation(db, valuation_id)
+    latest = _latest_certified(db, valuation.project_id)
+    previous_qty = (
+        {line.boq_item_id: line.qty_to_date for line in latest.lines} if latest else {}
+    )
+    current_qty = {line.boq_item_id: line.qty_to_date for line in valuation.lines}
+
+    sections = db.scalars(
+        select(BoqSection)
+        .where(BoqSection.project_id == valuation.project_id)
+        .order_by(BoqSection.sort_order)
+    )
+    out: list[MeasurementSection] = []
+    for section in sections:
+        items = [
+            MeasurementItem(
+                boq_item_id=item.id,
+                item_code=item.item_code,
+                description=item.description,
+                unit=item.unit,
+                boq_quantity=item.quantity,
+                rate=item.rate,
+                previous_qty=previous_qty.get(item.id, ZERO),
+                current_qty=current_qty.get(item.id),
+            )
+            for item in section.items
+            if item.item_type != BoqItemType.omission
+        ]
+        if items:
+            out.append(MeasurementSection(code=section.code, title=section.title, items=items))
+    return MeasurementContext(valuation_id=valuation.id, sections=out)

@@ -67,6 +67,18 @@ def approve_item(db: Session, item_id: uuid.UUID, approver: User) -> IngestionIt
     item.reviewed_by = approver.id
     item.reviewed_at = datetime.now(UTC)
     db.flush()
+
+    from app.modules.notifications import service as notifications
+
+    notifications.notify(
+        db,
+        [item.created_by],
+        "ingestion_posted",
+        f"{item.original_filename} approved and posted",
+        f"Posted as {lineage.get('posted_type', 'record')} {lineage.get('reference', '')}".strip(),
+        link="/inbox",
+        exclude=approver.id,
+    )
     return item
 
 

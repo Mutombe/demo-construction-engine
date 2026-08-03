@@ -6,6 +6,9 @@ from app.modules.costs import models as costs_models  # noqa: F401
 from app.modules.expenses import models as expenses_models  # noqa: F401
 from app.modules.ingestion import models as ingestion_models  # noqa: F401
 from app.modules.inventory import models as inventory_models  # noqa: F401
+from app.modules.notifications import models as notifications_models  # noqa: F401
+from app.modules.payroll import models as payroll_models  # noqa: F401
+from app.modules.portal import models as portal_models  # noqa: F401
 from app.modules.procurement import models as procurement_models  # noqa: F401
 from app.modules.projects import models as projects_models  # noqa: F401
 from app.modules.site import models as site_models  # noqa: F401

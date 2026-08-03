@@ -4,6 +4,7 @@
  * Construction ERP API
  * OpenAPI spec version: 0.1.0
  */
+import type { ValuationLineRead } from './valuationLineRead.ts';
 import type { ValuationStatus } from './valuationStatus.ts';
 
 export interface ValuationDetail {
@@ -24,7 +25,9 @@ export interface ValuationDetail {
   issued_date: string | null;
   paid_date: string | null;
   notes: string | null;
+  is_measured?: boolean;
   created_at: string;
   project_name?: string | null;
   project_code?: string | null;
+  lines?: ValuationLineRead[];
 }

@@ -24,5 +24,6 @@ export interface ValuationRead {
   issued_date: string | null;
   paid_date: string | null;
   notes: string | null;
+  is_measured?: boolean;
   created_at: string;
 }

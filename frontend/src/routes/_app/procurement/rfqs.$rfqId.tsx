@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { PageSkeleton } from "@/components/ui/skeleton";
 import { PoFromQuoteDialog } from "@/features/procurement/PoFromQuoteDialog";
 import { QuoteCompare } from "@/features/procurement/QuoteCompare";
 import { QuoteExtractDialog } from "@/features/procurement/QuoteExtractDialog";
@@ -41,7 +42,7 @@ function RfqDetailPage() {
   const [poQuoteId, setPoQuoteId] = useState<string | null>(null);
 
   if (!rfq) {
-    return <div className="p-8 text-center text-muted-foreground">Loading RFQ…</div>;
+    return <PageSkeleton rows={5} />;
   }
 
   const issue = async () => {

@@ -56,3 +56,22 @@ class BudgetAlert(BaseModel):
     budget: Decimal
     actual: Decimal
     used_pct: float
+
+
+class TrendMonth(BaseModel):
+    month: str  # "2026-03"
+    cost: Decimal
+    certified_net: Decimal
+    paid: Decimal
+
+
+class FinancialTotals(BaseModel):
+    portfolio_invoiced: Decimal
+    portfolio_paid: Decimal
+    portfolio_outstanding: Decimal
+    portfolio_cost: Decimal
+
+
+class FinancialTrend(BaseModel):
+    months: list[TrendMonth]
+    totals: FinancialTotals

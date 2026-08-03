@@ -303,6 +303,18 @@ def reject_item(db: Session, item_id: uuid.UUID, reason: str, user_id: uuid.UUID
     item.reviewed_by = user_id
     item.reviewed_at = datetime.now(UTC)
     db.flush()
+
+    from app.modules.notifications import service as notifications
+
+    notifications.notify(
+        db,
+        [item.created_by],
+        "ingestion_rejected",
+        f"{item.original_filename} was rejected",
+        reason,
+        link="/inbox",
+        exclude=user_id,
+    )
     return item
 
 

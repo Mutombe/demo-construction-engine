@@ -12,7 +12,10 @@ from app.modules.dashboard.schemas import (
     BudgetAlert,
     CompanyOverview,
     DeadlineItem,
+    FinancialTotals,
+    FinancialTrend,
     ProjectHealth,
+    TrendMonth,
 )
 from app.modules.projects.models import Phase, Project
 from app.modules.projects.service import project_progress_pct
@@ -209,3 +212,73 @@ def budget_alerts(db: Session, threshold_pct: float = 90.0) -> list[BudgetAlert]
         )
     alerts.sort(key=lambda a: a.used_pct, reverse=True)
     return alerts
+
+
+def financial_trend(
+    db: Session, months: int = 6, project_id: uuid.UUID | None = None
+) -> FinancialTrend:
+    """Monthly cost vs revenue: cost from the ledger (entry_date), certified
+    net from valuations (issued_date), receipts from paid_date."""
+    from app.common.enums import ValuationStatus
+    from app.modules.valuations.models import Valuation
+
+    today = date.today()
+    start_month = date(today.year, today.month, 1)
+    keys: list[str] = []
+    cursor = start_month
+    for _ in range(months):
+        keys.append(cursor.strftime("%Y-%m"))
+        prev_last_day = cursor - timedelta(days=1)
+        cursor = date(prev_last_day.year, prev_last_day.month, 1)
+    keys.reverse()
+    window_start = date(int(keys[0][:4]), int(keys[0][5:]), 1)
+
+    cost_by_month: dict[str, Decimal] = dict.fromkeys(keys, Decimal("0"))
+    cost_query = select(CostEntry).where(CostEntry.entry_date >= window_start)
+    if project_id is not None:
+        cost_query = cost_query.where(CostEntry.project_id == project_id)
+    total_cost = Decimal("0")
+    for entry in db.scalars(cost_query):
+        total_cost += entry.amount
+        key = entry.entry_date.strftime("%Y-%m")
+        if key in cost_by_month:
+            cost_by_month[key] += entry.amount
+
+    certified_by_month: dict[str, Decimal] = dict.fromkeys(keys, Decimal("0"))
+    paid_by_month: dict[str, Decimal] = dict.fromkeys(keys, Decimal("0"))
+    val_query = select(Valuation).where(
+        Valuation.status.in_((ValuationStatus.issued, ValuationStatus.paid))
+    )
+    if project_id is not None:
+        val_query = val_query.where(Valuation.project_id == project_id)
+    invoiced = Decimal("0")
+    paid_total = Decimal("0")
+    for valuation in db.scalars(val_query):
+        invoiced += valuation.net_certified
+        if valuation.issued_date is not None:
+            key = valuation.issued_date.strftime("%Y-%m")
+            if key in certified_by_month:
+                certified_by_month[key] += valuation.net_certified
+        if valuation.status == ValuationStatus.paid and valuation.paid_date is not None:
+            paid_total += valuation.net_certified
+            key = valuation.paid_date.strftime("%Y-%m")
+            if key in paid_by_month:
+                paid_by_month[key] += valuation.net_certified
+
+    return FinancialTrend(
+        months=[
+            TrendMonth(
+                month=key,
+                cost=cost_by_month[key],
+                certified_net=certified_by_month[key],
+                paid=paid_by_month[key],
+            )
+            for key in keys
+        ],
+        totals=FinancialTotals(
+            portfolio_invoiced=invoiced,
+            portfolio_paid=paid_total,
+            portfolio_outstanding=invoiced - paid_total,
+            portfolio_cost=total_cost,
+        ),
+    )

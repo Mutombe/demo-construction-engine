@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { PageSkeleton } from "@/components/ui/skeleton";
 import { BoqSheet } from "@/features/boq/BoqSheet";
 import { downloadFile } from "@/lib/api/download";
 import { useGetBoq } from "@/lib/api/generated/endpoints";
@@ -21,7 +22,7 @@ function BoqTab() {
     ).catch(() => toast.error("Export failed"));
 
   if (isLoading || !data) {
-    return <div className="p-8 text-center text-muted-foreground">Loading BOQ…</div>;
+    return <PageSkeleton rows={5} />;
   }
   return (
     <div>

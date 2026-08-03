@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { PageSkeleton } from "@/components/ui/skeleton";
 import { GanttChart } from "@/features/gantt/GanttChart";
 import { useGetGantt } from "@/lib/api/generated/endpoints";
 
@@ -11,7 +12,7 @@ function ProgramTab() {
   const { data, isLoading } = useGetGantt(projectId);
 
   if (isLoading || !data) {
-    return <div className="p-8 text-center text-muted-foreground">Loading program…</div>;
+    return <PageSkeleton rows={6} />;
   }
   if (!data.tasks.length && !data.phases.length) {
     return (

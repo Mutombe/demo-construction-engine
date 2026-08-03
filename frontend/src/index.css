@@ -73,3 +73,42 @@
     font-size: 14px;
   }
 }
+
+/* --- M5 micro-animations (respect prefers-reduced-motion) ------------------ */
+
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-in {
+  animation: dropdown-in 0.15s ease-out;
+}
+
+.fade-up {
+  animation: fade-up 0.4s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dropdown-in,
+  .fade-up {
+    animation: none;
+  }
+}

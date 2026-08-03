@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Can } from "@/components/layout/Can";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PortalAccessCard } from "@/features/portal/PortalAccessCard";
 import { WorkStatusBadge } from "@/features/projects/StatusBadge";
 import {
   useGetBoqSummary,
+  useGetProject,
   useListCostEntries,
   useListPhases,
   useListTasks,
@@ -16,6 +19,7 @@ export const Route = createFileRoute("/_app/projects/$projectId/")({
 
 function OverviewTab() {
   const { projectId } = Route.useParams();
+  const { data: project } = useGetProject(projectId);
   const { data: phases } = useListPhases(projectId);
   const { data: tasks } = useListTasks(projectId);
   const { data: boq } = useGetBoqSummary(projectId);
@@ -142,6 +146,12 @@ function OverviewTab() {
             ))}
           </CardContent>
         </Card>
+
+        {project?.client_id && (
+          <Can perm="project:write">
+            <PortalAccessCard clientId={project.client_id} clientName={project.client_name} />
+          </Can>
+        )}
       </div>
     </div>
   );

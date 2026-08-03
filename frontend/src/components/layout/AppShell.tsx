@@ -1,5 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
+  Banknote,
   Boxes,
   Building2,
   ChevronsLeft,
@@ -22,6 +23,7 @@ import { ChatPanel } from "@/features/ai/ChatPanel";
 import { useChatStore } from "@/features/ai/chatStore";
 import { logout } from "@/features/auth/api";
 import { useAuth } from "@/features/auth/hooks";
+import { NotificationBell } from "@/features/notifications/NotificationBell";
 import { can, type Permission } from "@/features/auth/permissions";
 import { ROLE_LABELS } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -47,6 +49,7 @@ const NAV: NavItem[] = [
   { to: "/procurement", label: "Procurement", icon: <ShoppingCart />, permission: "procurement:read" },
   { to: "/expenses", label: "Expenses", icon: <Receipt />, permission: "expense:read" },
   { to: "/inventory", label: "Inventory", icon: <Boxes />, permission: "inventory:read" },
+  { to: "/payroll", label: "Payroll", icon: <Banknote />, permission: "timesheet:write" },
   { to: "/inbox", label: "AI Inbox", icon: <Inbox />, permission: "ingestion:use" },
   { to: "/reports", label: "Reports", icon: <FileBarChart /> },
 ];
@@ -157,6 +160,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <Sparkles className="text-primary" /> Assistant
             </Button>
+            <NotificationBell />
             {user && (
               <div className="text-right">
                 <div className="text-sm font-medium leading-tight">{user.full_name}</div>

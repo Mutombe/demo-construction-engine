@@ -478,3 +478,13 @@ def test_po_edit_only_in_draft(client, db):
         ).status_code
         == 409
     )
+
+
+def test_po_pdf_download(client, db):
+    headers = _proc(db)
+    project = make_project(db)
+    po = _issued_po(client, db, headers, project)
+    res = client.get(f"/api/v1/purchase-orders/{po['id']}/pdf", headers=headers)
+    assert res.status_code == 200
+    assert res.headers["content-type"] == "application/pdf"
+    assert res.content.startswith(b"%PDF")

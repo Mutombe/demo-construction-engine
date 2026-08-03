@@ -1,11 +1,14 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Ban, CheckCircle2, Pencil, Plus, Send, Trash2 } from "lucide-react";
+import { Ban, CheckCircle2, Download, Pencil, Plus, Ruler, Send, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Can } from "@/components/layout/Can";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { downloadFile } from "@/lib/api/download";
+import { MeasurementSheetDialog } from "@/features/valuations/MeasurementSheetDialog";
 import {
   Table,
   TableBody,
@@ -65,6 +68,7 @@ function ValuationsTab() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<ValuationRead | undefined>(undefined);
+  const [measuring, setMeasuring] = useState<ValuationRead | null>(null);
 
   const act = async (fn: () => Promise<unknown>, confirmMsg: string, successMsg: string) => {
     if (!window.confirm(confirmMsg)) return;
@@ -147,7 +151,14 @@ function ValuationsTab() {
               {items.map((v) => (
                 <TableRow key={v.id}>
                   <TableCell className="font-medium">V{v.valuation_number}</TableCell>
-                  <TableCell className="font-mono text-xs">{v.doc_number}</TableCell>
+                  <TableCell className="font-mono text-xs">
+                    {v.doc_number}
+                    {v.is_measured && (
+                      <Badge variant="outline" className="ml-1.5 px-1.5 text-[10px]">
+                        measured
+                      </Badge>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <ValuationStatusBadge status={v.status} />
                   </TableCell>
@@ -174,6 +185,14 @@ function ValuationsTab() {
                       <div className="flex justify-end gap-1">
                         {v.status === "draft" && (
                           <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Measurement sheet"
+                              onClick={() => setMeasuring(v)}
+                            >
+                              <Ruler />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="icon"
@@ -218,6 +237,21 @@ function ValuationsTab() {
                               <Trash2 />
                             </Button>
                           </>
+                        )}
+                        {(v.status === "issued" || v.status === "paid") && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Certificate PDF"
+                            onClick={() =>
+                              void downloadFile(
+                                `/api/v1/valuations/${v.id}/certificate`,
+                                `${v.doc_number}_certificate.pdf`,
+                              ).catch(() => toast.error("Download failed"))
+                            }
+                          >
+                            <Download />
+                          </Button>
                         )}
                         {v.status === "issued" && (
                           <>
@@ -271,6 +305,14 @@ function ValuationsTab() {
         summary={summary}
         retentionPct={project?.retention_pct}
         valuation={editing}
+      />
+      <MeasurementSheetDialog
+        valuationId={measuring?.id ?? null}
+        onOpenChange={(open) => {
+          if (!open) setMeasuring(null);
+        }}
+        retentionPct={project?.retention_pct}
+        previousCertified={measuring?.previous_certified}
       />
     </div>
   );

@@ -90,3 +90,42 @@ def test_project_summary_endpoint(client, db):
     assert Decimal(body["budget_total"]) == Decimal("1000.00")
     assert Decimal(body["actual_total"]) == Decimal("200.00")
     assert body["budget_variance_pct"] == -80.0
+
+
+def test_financial_trend_buckets_and_totals(client, db):
+    from app.common.enums import UserRole
+
+    pm = auth_headers(make_user(db, role=UserRole.project_manager))
+    project = make_project(db, contract_value=Decimal("500000"))
+    make_cost_entry(db, project, amount=Decimal("1200"), entry_date=date.today())
+
+    val = client.post(
+        f"/api/v1/projects/{project.id}/valuations",
+        json={"period_end": str(date.today()), "gross_valuation": "50000"},
+        headers=pm,
+    ).json()
+    client.post(
+        f"/api/v1/valuations/{val['id']}/issue",
+        json={"issued_date": str(date.today())},
+        headers=pm,
+    )
+
+    res = client.get("/api/v1/dashboard/financial-trend?months=3", headers=pm)
+    assert res.status_code == 200
+    body = res.json()
+    assert len(body["months"]) == 3
+    current = body["months"][-1]
+    assert current["month"] == date.today().strftime("%Y-%m")
+    assert Decimal(current["cost"]) == Decimal("1200")
+    assert Decimal(current["certified_net"]) == Decimal("50000.00")
+    assert Decimal(body["totals"]["portfolio_invoiced"]) == Decimal("50000.00")
+    assert Decimal(body["totals"]["portfolio_outstanding"]) == Decimal("50000.00")
+    assert Decimal(body["totals"]["portfolio_paid"]) == Decimal("0")
+
+    # project filter excludes other projects' costs
+    other = make_project(db)
+    make_cost_entry(db, other, amount=Decimal("999"), entry_date=date.today())
+    scoped = client.get(
+        f"/api/v1/dashboard/financial-trend?months=3&project_id={project.id}", headers=pm
+    ).json()
+    assert Decimal(scoped["months"][-1]["cost"]) == Decimal("1200")

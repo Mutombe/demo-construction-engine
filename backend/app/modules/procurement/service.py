@@ -533,6 +533,19 @@ def receive_po(db: Session, po_id: uuid.UUID, body: PoReceive, user_id: uuid.UUI
     po.received_date = when
     po.received_to = body.destination
     db.flush()
+
+    from app.modules.notifications import service as notifications
+
+    destination = "the store" if body.destination == PoDestination.store else "the project"
+    notifications.notify(
+        db,
+        [po.created_by],
+        "po_received",
+        f"{po.doc_number} received into {destination}",
+        f"{po.supplier.name if po.supplier else ''} — {po.total_amount}",
+        link=f"/procurement/pos/{po.id}",
+        exclude=user_id,
+    )
     return po
 
 

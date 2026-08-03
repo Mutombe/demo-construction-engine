@@ -1306,6 +1306,165 @@ def seed_purchase_orders(db, users) -> None:
     issue_po(db, po2.id)
 
 
+WORKERS = [
+    # (name, trade, basis, rate, pay items)
+    ("Josiah Mapfumo", "Bricklayer", "daily", "38.00", [("allowance", "Transport", "12.00")]),
+    ("Peter Chirwa", "Bricklayer", "daily", "38.00", []),
+    ("Simba Dlamini", "Carpenter / shutterhand", "daily", "42.00", []),
+    ("Nomsa Khumalo", "Steel fixer", "daily", "40.00", [("deduction", "Tool advance", "15.00")]),
+    ("Gift Moyo", "General hand", "daily", "22.00", []),
+    ("Tarisai Gumbo", "General hand", "daily", "22.00", []),
+    ("Elias Phiri", "Crane operator", "hourly", "9.50", [("allowance", "Height pay", "20.00")]),
+    ("Mercy Sibanda", "Site clerk", "hourly", "6.00", []),
+]
+
+
+def seed_payroll(db, users) -> None:
+    from app.modules.payroll.models import Worker
+    from app.modules.payroll.schemas import (
+        PayItemCreate,
+        PayRunCreate,
+        TimesheetCreate,
+        WorkerCreate,
+    )
+    from app.modules.payroll.service import (
+        add_pay_item,
+        approve_pay_run,
+        create_pay_run,
+        create_timesheet,
+        create_worker,
+    )
+
+    if db.scalar(select(Worker).limit(1)):
+        return  # already seeded
+    pm, site = users["project_manager"], users["site_manager"]
+    riverside = db.scalar(select(Project).where(Project.code == "PRJ-2026-001"))
+    warehouse = db.scalar(select(Project).where(Project.code == "PRJ-2026-002"))
+    if riverside is None or warehouse is None:
+        return
+
+    workers = []
+    for name, trade, basis, rate, items in WORKERS:
+        worker = create_worker(
+            db,
+            WorkerCreate(full_name=name, trade=trade, pay_basis=basis, rate=Decimal(rate)),
+            pm.id,
+        )
+        for kind, label, amount in items:
+            add_pay_item(db, worker.id, PayItemCreate(kind=kind, label=label, amount=Decimal(amount)))
+        workers.append(worker)
+
+    # Two weeks of weekday timesheets. Elias (crane) splits time with the
+    # warehouse project; everyone else is on Riverside.
+    def _week(start: date) -> None:
+        for offset in range(7):
+            day = start + timedelta(days=offset)
+            if day.weekday() >= 5:
+                continue
+            for i, worker in enumerate(workers):
+                if worker.pay_basis.value == "daily":
+                    qty, ot = Decimal("1"), Decimal("0")
+                else:
+                    qty, ot = Decimal("8"), Decimal("2") if day.weekday() == 3 else Decimal("0")
+                project = warehouse if (worker.trade == "Crane operator" and offset % 2) else riverside
+                create_timesheet(
+                    db,
+                    TimesheetCreate(
+                        worker_id=worker.id,
+                        project_id=project.id,
+                        work_date=day,
+                        quantity=qty,
+                        overtime_quantity=ot,
+                    ),
+                    site.id,
+                )
+                _ = i
+
+    last_monday = TODAY - timedelta(days=TODAY.weekday())
+    prev_monday = last_monday - timedelta(days=7)
+    _week(prev_monday)
+    _week(last_monday)
+
+    # Last week's run approved (labour costs land in the ledgers)...
+    run = create_pay_run(
+        db,
+        PayRunCreate(
+            period_start=prev_monday,
+            period_end=prev_monday + timedelta(days=6),
+            notes="Weekly site labour",
+        ),
+        pm.id,
+    )
+    approve_pay_run(db, run.id, pm.id)
+    # ...and this week's sits in draft for the demo.
+    create_pay_run(
+        db,
+        PayRunCreate(period_start=last_monday, period_end=last_monday + timedelta(days=6)),
+        pm.id,
+    )
+
+
+def seed_portal_link(db, users) -> str | None:
+    from app.modules.portal.models import ClientAccessToken
+    from app.modules.portal.schemas import PortalLinkCreate
+    from app.modules.portal.service import create_link, portal_url
+
+    if db.scalar(select(ClientAccessToken).limit(1)):
+        return None
+    riverside_client = db.scalar(
+        select(Client).where(Client.name == "Riverside Property Group")
+    )
+    if riverside_client is None:
+        return None
+    _, raw = create_link(
+        db,
+        riverside_client.id,
+        PortalLinkCreate(label="Demo link — J. Banda", expires_in_days=180),
+        users["project_manager"].id,
+    )
+    return portal_url(raw)
+
+
+def seed_measurement(db, users) -> None:
+    """A measured draft valuation on the warehouse project (hybrid demo:
+    Riverside stays single-figure, Mutare is measured line-by-line)."""
+    from app.modules.valuations.models import Valuation
+    from app.modules.valuations.schemas import (
+        MeasurementLineIn,
+        MeasurementSet,
+        ValuationCreate,
+    )
+    from app.modules.valuations.service import create_valuation, set_measurement
+
+    project = db.scalar(select(Project).where(Project.code == "PRJ-2026-002"))
+    if project is None:
+        return
+    if db.scalar(select(Valuation).where(Valuation.project_id == project.id).limit(1)):
+        return
+    draft = create_valuation(
+        db,
+        project.id,
+        ValuationCreate(
+            period_end=TODAY - timedelta(days=3),
+            gross_valuation=Decimal("1"),  # replaced by the measurement below
+            notes="Valuation 1 — earthworks complete, pads underway (measured)",
+        ),
+        users["project_manager"].id,
+    )
+    items = {
+        i.item_code: i
+        for i in db.scalars(select(BoqItem).where(BoqItem.project_id == project.id))
+    }
+    measures = [("A.1", "5200"), ("A.2", "60"), ("A.3", "12")]
+    lines = [
+        MeasurementLineIn(boq_item_id=items[code].id, qty_to_date=Decimal(qty))
+        for code, qty in measures
+        if code in items
+    ]
+    if lines:
+        set_measurement(db, draft.id, MeasurementSet(lines=lines))
+
+
 def main() -> None:
     if settings.environment == "production":
         print("Refusing to seed a production environment.")
@@ -1325,9 +1484,14 @@ def main() -> None:
         seed_inventory(db, users)
         seed_valuations(db, users)
         seed_purchase_orders(db, users)
+        seed_payroll(db, users)
+        seed_measurement(db, users)
+        portal_link = seed_portal_link(db, users)
         db.commit()
         print("Seed complete.")
         print(f"Login with any of: {', '.join(u[0] for u in USERS)} / {DEV_PASSWORD}")
+        if portal_link:
+            print(f"Client portal demo link (Riverside Property Group): {portal_link}")
     except Exception:
         db.rollback()
         raise
