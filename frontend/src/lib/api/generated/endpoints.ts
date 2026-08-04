@@ -63,6 +63,7 @@ import type {
   ExpenseClaimRead,
   ExpenseClaimReject,
   ExpenseClaimUpdate,
+  ExpiryReport,
   ExportCostLedgerParams,
   ExportExpenseRegisterParams,
   ExportMaterialReconciliationParams,
@@ -97,6 +98,7 @@ import type {
   ListRequisitionsParams,
   ListRfqsParams,
   ListSiteIssuesParams,
+  ListStockBatchesParams,
   ListStockItemsParams,
   ListStockLocationsParams,
   ListStockMovementsParams,
@@ -173,6 +175,7 @@ import type {
   QuoteExtractionOut,
   QuoteRead,
   QuoteUpdate,
+  RecallTrace,
   ReorderRequest,
   ReorderResult,
   ReorderSuggestions,
@@ -191,6 +194,7 @@ import type {
   SiteIssueRead,
   SiteIssueResolve,
   SiteIssueUpdate,
+  StockBatchRead,
   StockItemCreate,
   StockItemRead,
   StockItemUpdate,
@@ -10450,6 +10454,290 @@ export const useCreateStockTransfer = <TError = HTTPValidationError,
       > => {
       return useMutation(getCreateStockTransferMutationOptions(options), queryClient);
     }
+
+/**
+ * @summary List Stock Batches
+ */
+export const listStockBatches = (
+    params?: ListStockBatchesParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<StockBatchRead[]>(
+      {url: `/api/v1/stock-batches`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getListStockBatchesQueryKey = (params?: ListStockBatchesParams,) => {
+    return [
+    `/api/v1/stock-batches`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListStockBatchesQueryOptions = <TData = Awaited<ReturnType<typeof listStockBatches>>, TError = HTTPValidationError>(params?: ListStockBatchesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStockBatches>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListStockBatchesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listStockBatches>>> = ({ signal }) => listStockBatches(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listStockBatches>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListStockBatchesQueryResult = NonNullable<Awaited<ReturnType<typeof listStockBatches>>>
+export type ListStockBatchesQueryError = HTTPValidationError
+
+
+export function useListStockBatches<TData = Awaited<ReturnType<typeof listStockBatches>>, TError = HTTPValidationError>(
+ params: undefined |  ListStockBatchesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStockBatches>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStockBatches>>,
+          TError,
+          Awaited<ReturnType<typeof listStockBatches>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListStockBatches<TData = Awaited<ReturnType<typeof listStockBatches>>, TError = HTTPValidationError>(
+ params?: ListStockBatchesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStockBatches>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStockBatches>>,
+          TError,
+          Awaited<ReturnType<typeof listStockBatches>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListStockBatches<TData = Awaited<ReturnType<typeof listStockBatches>>, TError = HTTPValidationError>(
+ params?: ListStockBatchesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStockBatches>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Stock Batches
+ */
+
+export function useListStockBatches<TData = Awaited<ReturnType<typeof listStockBatches>>, TError = HTTPValidationError>(
+ params?: ListStockBatchesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStockBatches>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListStockBatchesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Stock past its date or heading there, so it is used or written off
+ * before it becomes a surprise.
+ * @summary Get Expiry Report
+ */
+export const getExpiryReport = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<ExpiryReport>(
+      {url: `/api/v1/stock-batches/expiring`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetExpiryReportQueryKey = () => {
+    return [
+    `/api/v1/stock-batches/expiring`
+    ] as const;
+    }
+
+
+export const getGetExpiryReportQueryOptions = <TData = Awaited<ReturnType<typeof getExpiryReport>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getExpiryReport>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetExpiryReportQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getExpiryReport>>> = ({ signal }) => getExpiryReport(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getExpiryReport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetExpiryReportQueryResult = NonNullable<Awaited<ReturnType<typeof getExpiryReport>>>
+export type GetExpiryReportQueryError = unknown
+
+
+export function useGetExpiryReport<TData = Awaited<ReturnType<typeof getExpiryReport>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getExpiryReport>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getExpiryReport>>,
+          TError,
+          Awaited<ReturnType<typeof getExpiryReport>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetExpiryReport<TData = Awaited<ReturnType<typeof getExpiryReport>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getExpiryReport>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getExpiryReport>>,
+          TError,
+          Awaited<ReturnType<typeof getExpiryReport>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetExpiryReport<TData = Awaited<ReturnType<typeof getExpiryReport>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getExpiryReport>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Expiry Report
+ */
+
+export function useGetExpiryReport<TData = Awaited<ReturnType<typeof getExpiryReport>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getExpiryReport>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetExpiryReportQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Where a lot went: what is left on the shelf, and which projects got the
+ * rest.
+ * @summary Trace Batch
+ */
+export const traceBatch = (
+    batchNumber: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<RecallTrace>(
+      {url: `/api/v1/stock-batches/recall/${batchNumber}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getTraceBatchQueryKey = (batchNumber: string,) => {
+    return [
+    `/api/v1/stock-batches/recall/${batchNumber}`
+    ] as const;
+    }
+
+
+export const getTraceBatchQueryOptions = <TData = Awaited<ReturnType<typeof traceBatch>>, TError = HTTPValidationError>(batchNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof traceBatch>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTraceBatchQueryKey(batchNumber);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof traceBatch>>> = ({ signal }) => traceBatch(batchNumber, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: batchNumber !== null && batchNumber !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof traceBatch>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TraceBatchQueryResult = NonNullable<Awaited<ReturnType<typeof traceBatch>>>
+export type TraceBatchQueryError = HTTPValidationError
+
+
+export function useTraceBatch<TData = Awaited<ReturnType<typeof traceBatch>>, TError = HTTPValidationError>(
+ batchNumber: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof traceBatch>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof traceBatch>>,
+          TError,
+          Awaited<ReturnType<typeof traceBatch>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTraceBatch<TData = Awaited<ReturnType<typeof traceBatch>>, TError = HTTPValidationError>(
+ batchNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof traceBatch>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof traceBatch>>,
+          TError,
+          Awaited<ReturnType<typeof traceBatch>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTraceBatch<TData = Awaited<ReturnType<typeof traceBatch>>, TError = HTTPValidationError>(
+ batchNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof traceBatch>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Trace Batch
+ */
+
+export function useTraceBatch<TData = Awaited<ReturnType<typeof traceBatch>>, TError = HTTPValidationError>(
+ batchNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof traceBatch>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTraceBatchQueryOptions(batchNumber,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 /**
  * @summary List Valuations

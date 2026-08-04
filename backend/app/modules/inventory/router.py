@@ -28,6 +28,9 @@ from app.modules.inventory.schemas import (
     StocktakeDetail,
     StocktakeRead,
     StockTransferRead,
+    ExpiryReport,
+    RecallTrace,
+    StockBatchRead,
     TransferRequest,
 )
 
@@ -244,3 +247,30 @@ def create_stock_transfer(
 ) -> StockTransferRead:
     """Site moves material between stores, so issue-level access is enough."""
     return service.transfer_read(service.transfer_stock(db, body, user.id))
+
+
+# --- Batches, expiry and recall ----------------------------------------------
+
+
+@router.get("/stock-batches", response_model=list[StockBatchRead])
+def list_stock_batches(
+    db: DbDep,
+    item_id: uuid.UUID | None = None,
+    location_id: uuid.UUID | None = None,
+    include_empty: bool = False,
+) -> list[StockBatchRead]:
+    return service.list_batches(db, item_id, location_id, include_empty)
+
+
+@router.get("/stock-batches/expiring", response_model=ExpiryReport)
+def get_expiry_report(db: DbDep) -> ExpiryReport:
+    """Stock past its date or heading there, so it is used or written off
+    before it becomes a surprise."""
+    return service.expiry_report(db)
+
+
+@router.get("/stock-batches/recall/{batch_number}", response_model=RecallTrace)
+def trace_batch(batch_number: str, db: DbDep) -> RecallTrace:
+    """Where a lot went: what is left on the shelf, and which projects got the
+    rest."""
+    return service.recall_trace(db, batch_number)

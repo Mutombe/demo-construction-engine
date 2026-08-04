@@ -13,8 +13,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { useCreateStockItem, useUpdateStockItem } from "@/lib/api/generated/endpoints";
-import type { StockItemRead } from "@/lib/api/generated/model";
+import type { StockItemRead, TrackingMode } from "@/lib/api/generated/model";
 import { addRow, optimistic, patchRow, tempId } from "@/lib/api/optimistic";
 
 export function StockItemFormDialog({
@@ -58,6 +59,7 @@ export function StockItemFormDialog({
   const [unit, setUnit] = useState("");
   const [reorderLevel, setReorderLevel] = useState("0");
   const [barcode, setBarcode] = useState("");
+  const [trackingMode, setTrackingMode] = useState<TrackingMode>("none");
   const [scanOpen, setScanOpen] = useState(false);
 
   useEffect(() => {
@@ -68,6 +70,7 @@ export function StockItemFormDialog({
       setUnit(item?.unit ?? "");
       setReorderLevel(String(item?.reorder_level ?? "0"));
       setBarcode(item?.barcode ?? "");
+      setTrackingMode(item?.tracking_mode ?? "none");
     }
   }, [open, item]);
 
@@ -83,6 +86,7 @@ export function StockItemFormDialog({
       unit,
       reorder_level: reorderLevel || "0",
       barcode: barcode.trim() || null,
+      tracking_mode: trackingMode,
     };
     // Optimistic: close now; row appears/patches instantly, rolls back on error.
     onOpenChange(false);
@@ -133,6 +137,21 @@ export function StockItemFormDialog({
                 onChange={(e) => setReorderLevel(e.target.value)}
               />
             </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Tracking</Label>
+            <Select
+              value={trackingMode}
+              onChange={(e) => setTrackingMode(e.target.value as TrackingMode)}
+            >
+              <option value="none">None — just a quantity</option>
+              <option value="batch">Batch / lot with expiry</option>
+              <option value="serial">Serial number per unit</option>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Use batches for anything with a shelf life (cement, paint, admixtures);
+              serials for plant and tools. Issues then take the earliest expiry first.
+            </p>
           </div>
           <div className="space-y-1.5">
             <Label>Barcode</Label>

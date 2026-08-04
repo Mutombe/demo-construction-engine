@@ -11,6 +11,7 @@ from app.core.exceptions import ConflictError, NotFoundError, ValidationFailedEr
 from app.modules.boq.models import BoqItem
 from app.modules.costs.models import CostEntry
 from app.modules.inventory.models import (
+    StockBatch,
     StockItem,
     StockLevel,
     StockLocation,
@@ -278,6 +279,85 @@ def level_quantity(db: Session, item_id: uuid.UUID, location_id: uuid.UUID) -> D
     ) or Decimal("0")
 
 
+def _upsert_batch(db, item, location, batch_number, expiry, supplier_ref, received):
+    """Find this lot at this location, or start it.
+
+    The same lot at two locations is two rows sharing a batch_number, so a
+    recall gathers them with one query while quantity stays a simple
+    item-by-location grid.
+    """
+    batch = db.scalar(
+        select(StockBatch)
+        .where(
+            StockBatch.stock_item_id == item.id,
+            StockBatch.location_id == location.id,
+            StockBatch.batch_number == batch_number,
+        )
+        .with_for_update()
+    )
+    if batch is None:
+        batch = StockBatch(
+            stock_item_id=item.id,
+            location_id=location.id,
+            batch_number=batch_number,
+            expiry_date=expiry,
+            received_date=received,
+            supplier_ref=supplier_ref,
+            quantity=Decimal("0"),
+        )
+        db.add(batch)
+        db.flush()
+    elif expiry and batch.expiry_date != expiry:
+        # Same lot number cannot carry two different dates
+        raise ValidationFailedError(
+            f"Batch {batch_number} is already recorded with expiry "
+            f"{batch.expiry_date}"
+        )
+    return batch
+
+
+def _consume_batches(db, item, location, quantity, batch_id=None):
+    """Take quantity out of the lots at a location, earliest expiry first.
+
+    FEFO rather than FIFO: with perishable material what matters is what goes
+    off soonest, not what arrived first. Undated lots are consumed last, since
+    anything with a date is more urgent than anything without one.
+    """
+    query = select(StockBatch).where(
+        StockBatch.stock_item_id == item.id,
+        StockBatch.location_id == location.id,
+        StockBatch.quantity > 0,
+    )
+    if batch_id is not None:
+        query = query.where(StockBatch.id == batch_id)
+    batches = list(
+        db.scalars(
+            query.order_by(
+                StockBatch.expiry_date.is_(None),  # dated lots first
+                StockBatch.expiry_date,
+                StockBatch.received_date,
+            ).with_for_update()
+        )
+    )
+    available = sum((b.quantity for b in batches), Decimal("0"))
+    if available < quantity:
+        where = "that batch" if batch_id else f"the lots at {location.name}"
+        raise ConflictError(
+            f"Insufficient stock in {where}: only {available} {item.unit} available"
+        )
+
+    taken = []
+    remaining = quantity
+    for batch in batches:
+        if remaining <= 0:
+            break
+        portion = min(batch.quantity, remaining)
+        batch.quantity -= portion
+        remaining -= portion
+        taken.append((batch, portion))
+    return taken
+
+
 def _check_barcode_free(db: Session, barcode: str, exclude_id: uuid.UUID | None = None) -> None:
     query = select(StockItem).where(StockItem.barcode == barcode)
     if exclude_id is not None:
@@ -344,9 +424,36 @@ def list_movements(
 def goods_in(
     db: Session, item_id: uuid.UUID, data: GoodsInRequest, user_id: uuid.UUID
 ) -> StockItem:
+    from app.common.enums import TrackingMode
+
     item = _lock_item(db, item_id)
     location = _resolve_location(db, getattr(data, "location_id", None))
     level = _lock_level(db, item.id, location.id)
+
+    batch = None
+    if item.tracking_mode != TrackingMode.none:
+        batch_number = (getattr(data, "batch_number", None) or "").strip()
+        if not batch_number:
+            raise ValidationFailedError(
+                f"{item.name} is {item.tracking_mode.value}-tracked — a "
+                f"{'serial' if item.tracking_mode == TrackingMode.serial else 'batch'} "
+                "number is required"
+            )
+        if item.tracking_mode == TrackingMode.serial and data.quantity != 1:
+            raise ValidationFailedError(
+                "Serial-tracked items are received one unit at a time"
+            )
+        batch = _upsert_batch(
+            db,
+            item,
+            location,
+            batch_number,
+            getattr(data, "expiry_date", None),
+            getattr(data, "supplier_ref", None),
+            data.movement_date or date.today(),
+        )
+        batch.quantity += data.quantity
+
     qoh, qty = item.qty_on_hand, data.quantity
     # Weighted average is company-wide: the same material costs the same
     # wherever it is stored, so receiving anywhere reprices the item once.
@@ -363,6 +470,7 @@ def goods_in(
             stock_item_id=item.id,
             location_id=location.id,
             doc_number=next_doc_number(db, StockMovement, "GRN"),
+            batch_id=batch.id if batch else None,
             movement_type=StockMovementType.goods_in,
             movement_date=data.movement_date or date.today(),
             quantity=qty,
@@ -414,22 +522,51 @@ def issue_to_project(
 
     item.qty_on_hand -= data.quantity  # WAC unchanged on issue
     level.quantity -= data.quantity
-    db.add(
-        StockMovement(
-            stock_item_id=item.id,
-            location_id=location.id,
-            doc_number=doc,
-            movement_type=StockMovementType.issue,
-            movement_date=when,
-            quantity=-data.quantity,
-            unit_cost=item.unit_cost,
-            project_id=data.project_id,
-            boq_item_id=data.boq_item_id,
-            cost_entry_id=entry.id,
-            notes=data.notes,
-            created_by=user_id,
+
+    # A tracked item issues from specific lots, so the ledger records which
+    # ones — that link is what makes a recall answerable later. One movement
+    # per lot keeps each row's quantity true to a single batch.
+    from app.common.enums import TrackingMode
+
+    if item.tracking_mode != TrackingMode.none:
+        taken = _consume_batches(
+            db, item, location, data.quantity, getattr(data, "batch_id", None)
         )
-    )
+        for index, (batch, portion) in enumerate(taken):
+            db.add(
+                StockMovement(
+                    stock_item_id=item.id,
+                    location_id=location.id,
+                    batch_id=batch.id,
+                    doc_number=doc if index == 0 else f"{doc}-{index + 1}",
+                    movement_type=StockMovementType.issue,
+                    movement_date=when,
+                    quantity=-portion,
+                    unit_cost=item.unit_cost,
+                    project_id=data.project_id,
+                    boq_item_id=data.boq_item_id,
+                    cost_entry_id=entry.id,
+                    notes=data.notes,
+                    created_by=user_id,
+                )
+            )
+    else:
+        db.add(
+            StockMovement(
+                stock_item_id=item.id,
+                location_id=location.id,
+                doc_number=doc,
+                movement_type=StockMovementType.issue,
+                movement_date=when,
+                quantity=-data.quantity,
+                unit_cost=item.unit_cost,
+                project_id=data.project_id,
+                boq_item_id=data.boq_item_id,
+                cost_entry_id=entry.id,
+                notes=data.notes,
+                created_by=user_id,
+            )
+        )
     db.flush()
     return item
 
@@ -841,3 +978,123 @@ def transfer_stock(db: Session, data, user_id: uuid.UUID):
         )
     db.flush()
     return transfer
+
+
+# --- Batches, expiry and recall ----------------------------------------------
+
+
+def batch_read(batch, item=None):
+    from app.modules.inventory.schemas import StockBatchRead
+
+    item = item or batch.stock_item
+    read = StockBatchRead.model_validate(batch)
+    if item:
+        read.item_code, read.item_name = item.code, item.name
+        read.value = (batch.quantity * item.unit_cost).quantize(CENT)
+    if batch.location:
+        read.location_name = batch.location.name
+    if batch.expiry_date:
+        read.days_to_expiry = (batch.expiry_date - date.today()).days
+        read.is_expired = read.days_to_expiry < 0
+        warn_within = item.expiry_warning_days if item else 30
+        read.is_expiring_soon = not read.is_expired and read.days_to_expiry <= warn_within
+    return read
+
+
+def list_batches(db: Session, item_id: uuid.UUID | None = None, location_id=None,
+                 include_empty: bool = False):
+    query = select(StockBatch).options(
+        joinedload(StockBatch.stock_item), joinedload(StockBatch.location)
+    )
+    if item_id is not None:
+        query = query.where(StockBatch.stock_item_id == item_id)
+    if location_id is not None:
+        query = query.where(StockBatch.location_id == location_id)
+    if not include_empty:
+        query = query.where(StockBatch.quantity > 0)
+    rows = db.scalars(
+        query.order_by(StockBatch.expiry_date.is_(None), StockBatch.expiry_date)
+    )
+    return [batch_read(b) for b in rows]
+
+
+def expiry_report(db: Session):
+    """What is past its date, and what is about to be.
+
+    Only batches still holding stock: an expired lot that has been fully used
+    is history, not a problem to act on.
+    """
+    from app.modules.inventory.schemas import ExpiryReport
+
+    batches = db.scalars(
+        select(StockBatch)
+        .options(joinedload(StockBatch.stock_item), joinedload(StockBatch.location))
+        .where(StockBatch.quantity > 0, StockBatch.expiry_date.is_not(None))
+        .order_by(StockBatch.expiry_date)
+    )
+    expired, soon = [], []
+    for batch in batches:
+        read = batch_read(batch)
+        if read.is_expired:
+            expired.append(read)
+        elif read.is_expiring_soon:
+            soon.append(read)
+    return ExpiryReport(
+        expired=expired,
+        expiring_soon=soon,
+        expired_value=sum((b.value for b in expired), Decimal("0")).quantize(CENT),
+        expiring_value=sum((b.value for b in soon), Decimal("0")).quantize(CENT),
+    )
+
+
+def recall_trace(db: Session, batch_number: str):
+    """Everywhere one lot went.
+
+    The question a recall actually asks is "which jobs got this cement?" — so
+    this returns both what is still on the shelf and every issue that took it
+    to a project, gathered across locations.
+    """
+    from app.modules.inventory.schemas import RecallTrace, RecallUsage
+    from app.modules.projects.models import Project
+
+    batches = list(
+        db.scalars(
+            select(StockBatch)
+            .options(joinedload(StockBatch.stock_item), joinedload(StockBatch.location))
+            .where(StockBatch.batch_number == batch_number)
+        )
+    )
+    if not batches:
+        raise NotFoundError(f"No batch numbered {batch_number}")
+
+    batch_ids = [b.id for b in batches]
+    rows = db.execute(
+        select(StockMovement, StockLocation.name, Project.id, Project.name)
+        .outerjoin(StockLocation, StockLocation.id == StockMovement.location_id)
+        .outerjoin(Project, Project.id == StockMovement.project_id)
+        .where(
+            StockMovement.batch_id.in_(batch_ids),
+            StockMovement.movement_type == StockMovementType.issue,
+        )
+        .order_by(StockMovement.movement_date.desc())
+    ).all()
+
+    usages = [
+        RecallUsage(
+            movement_id=movement.id,
+            doc_number=movement.doc_number,
+            movement_date=movement.movement_date,
+            quantity=abs(movement.quantity),
+            location_name=location_name,
+            project_id=project_id,
+            project_name=project_name,
+        )
+        for movement, location_name, project_id, project_name in rows
+    ]
+    return RecallTrace(
+        batch_number=batch_number,
+        batches=[batch_read(b) for b in batches],
+        remaining_quantity=sum((b.quantity for b in batches), Decimal("0")),
+        issued_quantity=sum((u.quantity for u in usages), Decimal("0")),
+        usages=usages,
+    )

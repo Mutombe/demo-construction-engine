@@ -24,6 +24,7 @@ import {
   getGetStockItemQueryOptions,
   useGetStockItem,
   useGetStockItemLevels,
+  useListStockBatches,
   useListStockMovements,
 } from "@/lib/api/generated/endpoints";
 import type { StockItemRead } from "@/lib/api/generated/model";
@@ -46,6 +47,7 @@ function StockItemDetailPage() {
   const { itemId } = Route.useParams();
   const { data: item } = useGetStockItem(itemId);
   const { data: levels } = useGetStockItemLevels(itemId);
+  const { data: batches } = useListStockBatches({ item_id: itemId });
   const [transferring, setTransferring] = useState<StockItemRead | null>(null);
   const [movementsPage, setMovementsPage] = useState(1);
   const { data: movements, isLoading: movementsLoading } = useListStockMovements(
@@ -142,6 +144,70 @@ function StockItemDetailPage() {
                 </div>
               ))}
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {batches && batches.length > 0 && (
+        <Card className="mb-5">
+          <CardContent className="p-4">
+            <div className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">
+              {item.tracking_mode === "serial" ? "Serial numbers" : "Batches"} in stock
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{item.tracking_mode === "serial" ? "Serial" : "Lot"}</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Received</TableHead>
+                  <TableHead>Expiry</TableHead>
+                  <TableHead className="text-right">Quantity</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {batches.map((batch) => (
+                  <TableRow key={batch.id}>
+                    <TableCell className="font-mono text-xs">
+                      {batch.batch_number}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {batch.location_name}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {fmtDate(batch.received_date)}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {batch.expiry_date ? (
+                        <span
+                          className={
+                            batch.is_expired
+                              ? "font-medium text-destructive"
+                              : batch.is_expiring_soon
+                                ? "font-medium text-warning"
+                                : "text-muted-foreground"
+                          }
+                        >
+                          {fmtDate(batch.expiry_date)}
+                          {batch.is_expired
+                            ? " · expired"
+                            : batch.is_expiring_soon
+                              ? ` · ${batch.days_to_expiry}d left`
+                              : ""}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {Number(batch.quantity).toLocaleString()} {item.unit}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Issues consume the earliest expiry first.
+            </p>
           </CardContent>
         </Card>
       )}

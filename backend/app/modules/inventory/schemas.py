@@ -4,11 +4,18 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.common.enums import StockLocationKind, StockMovementType, StocktakeStatus
+from app.common.enums import (
+    StockLocationKind,
+    StockMovementType,
+    StocktakeStatus,
+    TrackingMode,
+)
 
 
 class StockItemBase(BaseModel):
     code: str = Field(min_length=1, max_length=40)
+    tracking_mode: TrackingMode = TrackingMode.none
+    expiry_warning_days: int = Field(default=30, ge=0, le=365)
     barcode: str | None = Field(default=None, max_length=64)
     name: str = Field(min_length=1, max_length=200)
     category: str | None = Field(default=None, max_length=100)
@@ -23,6 +30,8 @@ class StockItemCreate(StockItemBase):
 
 class StockItemUpdate(BaseModel):
     barcode: str | None = Field(default=None, max_length=64)
+    tracking_mode: TrackingMode | None = None
+    expiry_warning_days: int | None = Field(default=None, ge=0, le=365)
     # qty_on_hand and unit_cost are deliberately absent — movements only
     code: str | None = Field(default=None, min_length=1, max_length=40)
     name: str | None = Field(default=None, min_length=1, max_length=200)
@@ -85,6 +94,10 @@ class ReorderResult(BaseModel):
 class GoodsInRequest(BaseModel):
     # Omit to use the default location — keeps single-store callers unchanged
     location_id: uuid.UUID | None = None
+    # Required for batch/serial-tracked items; ignored for untracked ones
+    batch_number: str | None = Field(default=None, max_length=60)
+    expiry_date: date | None = None
+    supplier_ref: str | None = Field(default=None, max_length=60)
     quantity: Decimal = Field(gt=0)
     unit_cost: Decimal = Field(ge=0)
     movement_date: date | None = None
@@ -94,6 +107,8 @@ class GoodsInRequest(BaseModel):
 
 class IssueRequest(BaseModel):
     location_id: uuid.UUID | None = None
+    # Name a lot to force it; otherwise the earliest expiry goes first
+    batch_id: uuid.UUID | None = None
     project_id: uuid.UUID
     boq_item_id: uuid.UUID | None = None
     quantity: Decimal = Field(gt=0)
@@ -260,3 +275,57 @@ class StockTransferRead(BaseModel):
     value: Decimal = Decimal("0")
     notes: str | None
     created_at: datetime
+
+
+# --- Batches -----------------------------------------------------------------
+
+
+class StockBatchRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    stock_item_id: uuid.UUID
+    item_code: str = ""
+    item_name: str = ""
+    location_id: uuid.UUID
+    location_name: str = ""
+    batch_number: str
+    expiry_date: date | None
+    received_date: date
+    quantity: Decimal
+    supplier_ref: str | None
+    notes: str | None
+    # Derived
+    days_to_expiry: int | None = None
+    is_expired: bool = False
+    is_expiring_soon: bool = False
+    value: Decimal = Decimal("0")
+
+
+class ExpiryReport(BaseModel):
+    """Stock that is past its date or heading there, worst first."""
+
+    expired: list[StockBatchRead]
+    expiring_soon: list[StockBatchRead]
+    expired_value: Decimal
+    expiring_value: Decimal
+
+
+class RecallUsage(BaseModel):
+    """One place a recalled lot ended up."""
+
+    movement_id: uuid.UUID
+    doc_number: str
+    movement_date: date
+    quantity: Decimal
+    location_name: str | None
+    project_id: uuid.UUID | None
+    project_name: str | None
+
+
+class RecallTrace(BaseModel):
+    batch_number: str
+    batches: list[StockBatchRead]
+    remaining_quantity: Decimal
+    issued_quantity: Decimal
+    usages: list[RecallUsage]

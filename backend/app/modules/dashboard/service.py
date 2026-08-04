@@ -577,6 +577,14 @@ def nav_counts(db: Session, user) -> NavCounts:
             "warning",
         )
 
+    # Inventory expiry: material that will be written off if nobody uses it
+    if role != UserRole.viewer:
+        from app.modules.inventory.service import expiry_report
+
+        report = expiry_report(db)
+        at_risk = len(report.expired) + len(report.expiring_soon)
+        add("/inventory/stocktake", at_risk, "danger" if report.expired else "warning")
+
     # AI Inbox: documents drafted or stuck, waiting on a human decision
     if role != UserRole.viewer:
         add(

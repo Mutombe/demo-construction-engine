@@ -7,6 +7,7 @@
 
 export interface IssueRequest {
   location_id?: string | null;
+  batch_id?: string | null;
   project_id: string;
   boq_item_id?: string | null;
   quantity: number | string;

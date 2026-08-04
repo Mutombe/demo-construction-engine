@@ -4,6 +4,7 @@
  * Construction ERP API
  * OpenAPI spec version: 0.1.0
  */
+import type { TrackingMode } from './trackingMode.ts';
 
 export interface StockItemCreate {
   /**
@@ -11,6 +12,12 @@ export interface StockItemCreate {
      * @maxLength 40
      */
   code: string;
+  tracking_mode?: TrackingMode;
+  /**
+     * @minimum 0
+     * @maximum 365
+     */
+  expiry_warning_days?: number;
   barcode?: string | null;
   /**
      * @minLength 1

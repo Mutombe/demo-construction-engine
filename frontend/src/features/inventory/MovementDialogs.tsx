@@ -52,6 +52,8 @@ export function MovementDialog({
   const [projectId, setProjectId] = useState("");
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
+  const [batchNumber, setBatchNumber] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
 
   useEffect(() => {
     if (open) {
@@ -60,12 +62,16 @@ export function MovementDialog({
       setProjectId("");
       setReference("");
       setNotes("");
+      setBatchNumber("");
+      setExpiryDate("");
     }
   }, [open, kind]);
 
   if (!open || !item) return null;
 
   const busy = goodsInMutation.isPending || issueMutation.isPending || adjustMutation.isPending;
+  const tracked = item.tracking_mode && item.tracking_mode !== "none";
+  const serial = item.tracking_mode === "serial";
 
   const submit = async () => {
     try {
@@ -77,6 +83,8 @@ export function MovementDialog({
             unit_cost: unitCost || "0",
             reference: reference || null,
             notes: notes || null,
+            batch_number: batchNumber || null,
+            expiry_date: expiryDate || null,
           },
         });
         toast.success("Goods received into store");
@@ -137,7 +145,35 @@ export function MovementDialog({
                 onChange={(e) => setQuantity(e.target.value)}
               />
             </div>
-            {kind === "goods-in" && (
+            {kind === "goods-in" && tracked && (
+            <div className="grid grid-cols-2 gap-3 rounded-md border bg-muted/30 p-3">
+              <div className="space-y-1.5">
+                <Label>
+                  {serial ? "Serial Number" : "Batch / Lot Number"}
+                  <span className="ml-1 text-destructive">*</span>
+                </Label>
+                <Input
+                  value={batchNumber}
+                  onChange={(e) => setBatchNumber(e.target.value)}
+                  placeholder={serial ? "SN-00123" : "e.g. CEM-L2409"}
+                  className="font-mono"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Expiry Date</Label>
+                <Input
+                  type="date"
+                  value={expiryDate}
+                  onChange={(e) => setExpiryDate(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Issues take the earliest expiry first.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {kind === "goods-in" && (
               <div className="space-y-1.5">
                 <Label>Unit Cost (USD)</Label>
                 <Input
@@ -163,6 +199,34 @@ export function MovementDialog({
               </div>
             )}
           </div>
+          {kind === "goods-in" && tracked && (
+            <div className="grid grid-cols-2 gap-3 rounded-md border bg-muted/30 p-3">
+              <div className="space-y-1.5">
+                <Label>
+                  {serial ? "Serial Number" : "Batch / Lot Number"}
+                  <span className="ml-1 text-destructive">*</span>
+                </Label>
+                <Input
+                  value={batchNumber}
+                  onChange={(e) => setBatchNumber(e.target.value)}
+                  placeholder={serial ? "SN-00123" : "e.g. CEM-L2409"}
+                  className="font-mono"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Expiry Date</Label>
+                <Input
+                  type="date"
+                  value={expiryDate}
+                  onChange={(e) => setExpiryDate(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Issues take the earliest expiry first.
+                </p>
+              </div>
+            </div>
+          )}
+
           {kind === "goods-in" && (
             <div className="space-y-1.5">
               <Label>Reference (PO / Delivery Note)</Label>

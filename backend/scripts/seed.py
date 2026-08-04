@@ -1197,6 +1197,44 @@ def seed_locations(db) -> None:
     db.flush()
 
 
+def seed_batches(db, users) -> None:
+    """Put cement on batch tracking with a lot that is about to expire, so the
+    expiry warning has something real to show."""
+    from app.modules.inventory.models import StockBatch, StockItem
+    from app.modules.inventory.schemas import GoodsInRequest
+    from app.modules.inventory.service import default_location, goods_in
+
+    if db.scalar(select(StockBatch).limit(1)):
+        return
+    cement = db.scalar(select(StockItem).where(StockItem.code == "CEM-425"))
+    if cement is None:
+        return
+    cement.tracking_mode = "batch"
+    cement.expiry_warning_days = 30
+    db.flush()
+
+    location = default_location(db)
+    # Cement has a real shelf life, so the demo shows one lot near its date
+    for lot, days, qty in (
+        ("CEM-L2409", 12, "120"),   # expiring soon
+        ("CEM-L2412", 150, "200"),  # comfortable
+    ):
+        goods_in(
+            db,
+            cement.id,
+            GoodsInRequest(
+                location_id=location.id,
+                quantity=Decimal(qty),
+                unit_cost=Decimal("12.40"),
+                batch_number=lot,
+                expiry_date=TODAY + timedelta(days=days),
+                movement_date=TODAY - timedelta(days=5),
+                reference="Opening batch stock",
+            ),
+            users["procurement_officer"].id,
+        )
+
+
 def seed_stock_transfers(db, users) -> None:
     """Move some cement to the site store so levels differ by location."""
     from app.modules.inventory.models import StockItem, StockLocation, StockTransfer
@@ -1683,6 +1721,7 @@ def main() -> None:
         seed_requisitions(db, users)
         seed_baseline(db)
         seed_stock_transfers(db, users)
+        seed_batches(db, users)
         seed_coordinates(db)
         portal_link = seed_portal_link(db, users)
         db.commit()

@@ -7234,6 +7234,167 @@
     }
    }
   },
+  "/api/v1/stock-batches": {
+   "get": {
+    "tags": [
+     "inventory"
+    ],
+    "summary": "List Stock Batches",
+    "operationId": "list_stock_batches",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "item_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "uuid"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Item Id"
+      }
+     },
+     {
+      "name": "location_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "uuid"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Location Id"
+      }
+     },
+     {
+      "name": "include_empty",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "boolean",
+       "default": false,
+       "title": "Include Empty"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/StockBatchRead"
+         },
+         "title": "Response List Stock Batches"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/stock-batches/expiring": {
+   "get": {
+    "tags": [
+     "inventory"
+    ],
+    "summary": "Get Expiry Report",
+    "description": "Stock past its date or heading there, so it is used or written off\nbefore it becomes a surprise.",
+    "operationId": "get_expiry_report",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ExpiryReport"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/stock-batches/recall/{batch_number}": {
+   "get": {
+    "tags": [
+     "inventory"
+    ],
+    "summary": "Trace Batch",
+    "description": "Where a lot went: what is left on the shelf, and which projects got the\nrest.",
+    "operationId": "trace_batch",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "batch_number",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Batch Number"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RecallTrace"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/v1/projects/{project_id}/valuations": {
    "get": {
     "tags": [
@@ -14025,6 +14186,43 @@
     ],
     "title": "ExpenseStatus"
    },
+   "ExpiryReport": {
+    "properties": {
+     "expired": {
+      "items": {
+       "$ref": "#/components/schemas/StockBatchRead"
+      },
+      "type": "array",
+      "title": "Expired"
+     },
+     "expiring_soon": {
+      "items": {
+       "$ref": "#/components/schemas/StockBatchRead"
+      },
+      "type": "array",
+      "title": "Expiring Soon"
+     },
+     "expired_value": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Expired Value"
+     },
+     "expiring_value": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Expiring Value"
+     }
+    },
+    "type": "object",
+    "required": [
+     "expired",
+     "expiring_soon",
+     "expired_value",
+     "expiring_value"
+    ],
+    "title": "ExpiryReport",
+    "description": "Stock that is past its date or heading there, worst first."
+   },
    "ExtractedLineOut": {
     "properties": {
      "rfq_item_id": {
@@ -14559,6 +14757,42 @@
       ],
       "title": "Location Id"
      },
+     "batch_number": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 60
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Batch Number"
+     },
+     "expiry_date": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Expiry Date"
+     },
+     "supplier_ref": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 60
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Supplier Ref"
+     },
      "quantity": {
       "anyOf": [
        {
@@ -14897,6 +15131,18 @@
        }
       ],
       "title": "Location Id"
+     },
+     "batch_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Batch Id"
      },
      "project_id": {
       "type": "string",
@@ -20272,6 +20518,116 @@
     "type": "object",
     "title": "QuoteUpdate"
    },
+   "RecallTrace": {
+    "properties": {
+     "batch_number": {
+      "type": "string",
+      "title": "Batch Number"
+     },
+     "batches": {
+      "items": {
+       "$ref": "#/components/schemas/StockBatchRead"
+      },
+      "type": "array",
+      "title": "Batches"
+     },
+     "remaining_quantity": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Remaining Quantity"
+     },
+     "issued_quantity": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Issued Quantity"
+     },
+     "usages": {
+      "items": {
+       "$ref": "#/components/schemas/RecallUsage"
+      },
+      "type": "array",
+      "title": "Usages"
+     }
+    },
+    "type": "object",
+    "required": [
+     "batch_number",
+     "batches",
+     "remaining_quantity",
+     "issued_quantity",
+     "usages"
+    ],
+    "title": "RecallTrace"
+   },
+   "RecallUsage": {
+    "properties": {
+     "movement_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Movement Id"
+     },
+     "doc_number": {
+      "type": "string",
+      "title": "Doc Number"
+     },
+     "movement_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Movement Date"
+     },
+     "quantity": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Quantity"
+     },
+     "location_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location Name"
+     },
+     "project_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Project Id"
+     },
+     "project_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Project Name"
+     }
+    },
+    "type": "object",
+    "required": [
+     "movement_id",
+     "doc_number",
+     "movement_date",
+     "quantity",
+     "location_name",
+     "project_id",
+     "project_name"
+    ],
+    "title": "RecallUsage",
+    "description": "One place a recalled lot ended up."
+   },
    "Recommendation": {
     "properties": {
      "supplier_id": {
@@ -21890,6 +22246,128 @@
     "type": "object",
     "title": "SiteIssueUpdate"
    },
+   "StockBatchRead": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "stock_item_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Stock Item Id"
+     },
+     "item_code": {
+      "type": "string",
+      "title": "Item Code",
+      "default": ""
+     },
+     "item_name": {
+      "type": "string",
+      "title": "Item Name",
+      "default": ""
+     },
+     "location_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Location Id"
+     },
+     "location_name": {
+      "type": "string",
+      "title": "Location Name",
+      "default": ""
+     },
+     "batch_number": {
+      "type": "string",
+      "title": "Batch Number"
+     },
+     "expiry_date": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Expiry Date"
+     },
+     "received_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Received Date"
+     },
+     "quantity": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Quantity"
+     },
+     "supplier_ref": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Supplier Ref"
+     },
+     "notes": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notes"
+     },
+     "days_to_expiry": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Days To Expiry"
+     },
+     "is_expired": {
+      "type": "boolean",
+      "title": "Is Expired",
+      "default": false
+     },
+     "is_expiring_soon": {
+      "type": "boolean",
+      "title": "Is Expiring Soon",
+      "default": false
+     },
+     "value": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Value",
+      "default": "0"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "stock_item_id",
+     "location_id",
+     "batch_number",
+     "expiry_date",
+     "received_date",
+     "quantity",
+     "supplier_ref",
+     "notes"
+    ],
+    "title": "StockBatchRead"
+   },
    "StockItemCreate": {
     "properties": {
      "code": {
@@ -21897,6 +22375,17 @@
       "maxLength": 40,
       "minLength": 1,
       "title": "Code"
+     },
+     "tracking_mode": {
+      "$ref": "#/components/schemas/TrackingMode",
+      "default": "none"
+     },
+     "expiry_warning_days": {
+      "type": "integer",
+      "maximum": 365.0,
+      "minimum": 0.0,
+      "title": "Expiry Warning Days",
+      "default": 30
      },
      "barcode": {
       "anyOf": [
@@ -21975,6 +22464,17 @@
       "maxLength": 40,
       "minLength": 1,
       "title": "Code"
+     },
+     "tracking_mode": {
+      "$ref": "#/components/schemas/TrackingMode",
+      "default": "none"
+     },
+     "expiry_warning_days": {
+      "type": "integer",
+      "maximum": 365.0,
+      "minimum": 0.0,
+      "title": "Expiry Warning Days",
+      "default": 30
      },
      "barcode": {
       "anyOf": [
@@ -22085,6 +22585,29 @@
        }
       ],
       "title": "Barcode"
+     },
+     "tracking_mode": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/TrackingMode"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "expiry_warning_days": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 365.0,
+        "minimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Expiry Warning Days"
      },
      "code": {
       "anyOf": [
@@ -24646,6 +25169,16 @@
      "user"
     ],
     "title": "TokenResponse"
+   },
+   "TrackingMode": {
+    "type": "string",
+    "enum": [
+     "none",
+     "batch",
+     "serial"
+    ],
+    "title": "TrackingMode",
+    "description": "How closely individual units of an item are tracked.\n\n`none` is the default and behaves exactly as inventory did before batches\nexisted. `batch` suits anything with a shelf life \u2014 cement, admixtures,\npaint, sealants. `serial` is the same machinery with one unit per record,\nfor plant and power tools."
    },
    "TransferRequest": {
     "properties": {

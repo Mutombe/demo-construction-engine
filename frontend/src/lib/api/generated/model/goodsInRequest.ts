@@ -7,6 +7,9 @@
 
 export interface GoodsInRequest {
   location_id?: string | null;
+  batch_number?: string | null;
+  expiry_date?: string | null;
+  supplier_ref?: string | null;
   quantity: number | string;
   unit_cost: number | string;
   movement_date?: string | null;

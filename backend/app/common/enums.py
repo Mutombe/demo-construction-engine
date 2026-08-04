@@ -111,6 +111,20 @@ class StockMovementType(StrEnum):
     transfer = "transfer"
 
 
+class TrackingMode(StrEnum):
+    """How closely individual units of an item are tracked.
+
+    `none` is the default and behaves exactly as inventory did before batches
+    existed. `batch` suits anything with a shelf life — cement, admixtures,
+    paint, sealants. `serial` is the same machinery with one unit per record,
+    for plant and power tools.
+    """
+
+    none = "none"
+    batch = "batch"
+    serial = "serial"
+
+
 class StockLocationKind(StrEnum):
     """Where stock physically sits.
 

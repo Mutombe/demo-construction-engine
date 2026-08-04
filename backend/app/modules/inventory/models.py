@@ -9,6 +9,7 @@ from sqlalchemy import (
     Enum,
     ForeignKey,
     Index,
+    Integer,
     Numeric,
     String,
     Text,
@@ -17,7 +18,12 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.common.enums import StockLocationKind, StockMovementType, StocktakeStatus
+from app.common.enums import (
+    StockLocationKind,
+    StockMovementType,
+    StocktakeStatus,
+    TrackingMode,
+)
 from app.common.models import AuditMixin, TimestampMixin, UUIDPrimaryKeyMixin
 from app.core.database import Base
 
@@ -93,6 +99,12 @@ class StockItem(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
     qty_on_hand: Mapped[Decimal] = mapped_column(Numeric(14, 3), default=Decimal("0"))
     reorder_level: Mapped[Decimal] = mapped_column(Numeric(14, 3), default=Decimal("0"))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    tracking_mode: Mapped[TrackingMode] = mapped_column(
+        Enum(TrackingMode, name="tracking_mode", native_enum=True),
+        default=TrackingMode.none,
+    )
+    # Warn this many days before a batch expires; 0 means only once expired
+    expiry_warning_days: Mapped[int] = mapped_column(Integer, default=30)
     notes: Mapped[str | None] = mapped_column(Text)
 
     levels: Mapped[list["StockLevel"]] = relationship(
@@ -115,6 +127,10 @@ class StockMovement(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     )
     location_id: Mapped[uuid.UUID | None] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("stock_locations.id", ondelete="RESTRICT"), index=True
+    )
+    # Which lot this movement touched — the thread a recall pulls on
+    batch_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("stock_batches.id", ondelete="SET NULL"), index=True
     )
     doc_number: Mapped[str] = mapped_column(String(20), unique=True)
     movement_type: Mapped[StockMovementType] = mapped_column(
@@ -226,3 +242,39 @@ class StockTransfer(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
     stock_item = relationship("StockItem")
     from_location: Mapped[StockLocation] = relationship(foreign_keys=[from_location_id])
     to_location: Mapped[StockLocation] = relationship(foreign_keys=[to_location_id])
+
+
+class StockBatch(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
+    """One lot of an item held at one location.
+
+    Identity is the lot number, so the same lot arriving at two locations is
+    two rows sharing a batch_number — which keeps quantity a two-dimensional
+    problem (item x location) rather than three, while a recall can still
+    gather every row for a lot in one query.
+
+    A serial-tracked item uses the same table with quantity 1 and the serial
+    number as the batch number, so there is one mechanism to reason about
+    rather than two.
+    """
+
+    __tablename__ = "stock_batches"
+    __table_args__ = (
+        UniqueConstraint("stock_item_id", "location_id", "batch_number"),
+        Index("ix_stock_batches_expiry", "expiry_date"),
+    )
+
+    stock_item_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("stock_items.id", ondelete="CASCADE"), index=True
+    )
+    location_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("stock_locations.id", ondelete="RESTRICT"), index=True
+    )
+    batch_number: Mapped[str] = mapped_column(String(60))
+    expiry_date: Mapped[date | None] = mapped_column(Date)
+    received_date: Mapped[date] = mapped_column(Date, default=date.today)
+    quantity: Mapped[Decimal] = mapped_column(Numeric(14, 3), default=Decimal("0"))
+    supplier_ref: Mapped[str | None] = mapped_column(String(60))
+    notes: Mapped[str | None] = mapped_column(Text)
+
+    stock_item = relationship("StockItem")
+    location: Mapped["StockLocation"] = relationship()

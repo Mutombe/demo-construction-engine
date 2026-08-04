@@ -4,9 +4,12 @@
  * Construction ERP API
  * OpenAPI spec version: 0.1.0
  */
+import type { TrackingMode } from './trackingMode.ts';
 
 export interface StockItemUpdate {
   barcode?: string | null;
+  tracking_mode?: TrackingMode | null;
+  expiry_warning_days?: number | null;
   code?: string | null;
   name?: string | null;
   category?: string | null;
