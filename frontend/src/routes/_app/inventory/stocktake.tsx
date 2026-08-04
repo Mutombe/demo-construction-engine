@@ -20,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { InventoryTabs } from "@/features/inventory/InventoryTabs";
 import { errDetail } from "@/lib/api/errors";
 import {
   useApproveStocktake,
@@ -67,7 +68,7 @@ function StocktakePage() {
   return (
     <div>
       <PageHeader
-        title="Stocktake"
+        title="Inventory"
         description="Count the shelves, review the variance, then post the corrections in one approval"
         actions={
           !open && (
@@ -87,6 +88,8 @@ function StocktakePage() {
           )
         }
       />
+
+      <InventoryTabs />
 
       {open ? (
         <CountSheet stocktakeId={open.id} onChanged={refresh} />

@@ -14,9 +14,15 @@ export default defineConfig({
     alias: { "@": path.resolve(__dirname, "./src") },
   },
   server: {
-    port: 5173,
+    // Overridable so a second instance can run alongside the default stack:
+    // FRONTEND_PORT picks the dev-server port, API_TARGET points the proxy at
+    // whichever backend that instance is talking to.
+    port: Number(process.env.FRONTEND_PORT) || 5173,
     proxy: {
-      "/api": { target: "http://localhost:8000", changeOrigin: false },
+      "/api": {
+        target: process.env.API_TARGET ?? "http://localhost:8000",
+        changeOrigin: false,
+      },
     },
   },
 });

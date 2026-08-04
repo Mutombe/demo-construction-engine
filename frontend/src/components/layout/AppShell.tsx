@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { AddressBook, Buildings, CaretDoubleLeft, CaretDoubleRight, ChartBar, ClipboardText, Gear, ListChecks, HardHat, MapTrifold, Money, Package, Receipt, ShoppingCart, SignOut, SquaresFour, Tray } from "@phosphor-icons/react";
+import { AddressBook, Buildings, CaretDoubleLeft, CaretDoubleRight, ChartBar, ClipboardText, Gear, HardHat, MapTrifold, Money, Package, Receipt, ShoppingCart, SignOut, SquaresFour, Tray } from "@phosphor-icons/react";
 import { ClaudeIcon } from "@/components/ui/claude-icon";
 import type { ReactNode } from "react";
 import { create } from "zustand";
@@ -29,20 +29,69 @@ interface NavItem {
   soon?: boolean;
 }
 
-const NAV: NavItem[] = [
-  { to: "/", label: "Dashboard", icon: <SquaresFour /> },
-  { to: "/projects", label: "Projects", icon: <Buildings /> },
-  { to: "/map", label: "Site Map", icon: <MapTrifold />, permission: "project:read" },
-  { to: "/clients", label: "Clients", icon: <AddressBook />, permission: "project:read" },
-  { to: "/procurement", label: "Procurement", icon: <ShoppingCart />, permission: "procurement:read" },
-  { to: "/procurement/requisitions", label: "Material Requests", icon: <ClipboardText />, permission: "procurement:read" },
-  { to: "/expenses", label: "Expenses", icon: <Receipt />, permission: "expense:read" },
-  { to: "/inventory", label: "Inventory", icon: <Package />, permission: "inventory:read" },
-  { to: "/inventory/stocktake", label: "Stocktake", icon: <ListChecks />, permission: "inventory:read" },
-  { to: "/payroll", label: "Payroll", icon: <Money />, permission: "timesheet:write" },
-  { to: "/inbox", label: "AI Inbox", icon: <Tray />, permission: "ingestion:use" },
-  { to: "/reports", label: "Reports", icon: <ChartBar /> },
+interface NavGroup {
+  /** Undefined for the pinned items at the top, which carry no header. */
+  title?: string;
+  items: NavItem[];
+}
+
+/** Grouped by business function so new modules have an obvious home:
+ *  accounting and invoicing land under Finance, CRM and contracts under
+ *  Commercial, without the sidebar growing another flat row each time.
+ *
+ *  A page earns a row here only if it is somewhere you START work. Anything
+ *  that is a step inside another workflow (stocktaking, raising an adjustment)
+ *  lives as a view inside its parent page instead.
+ */
+const NAV: NavGroup[] = [
+  {
+    items: [
+      { to: "/", label: "Dashboard", icon: <SquaresFour /> },
+      { to: "/map", label: "Site Map", icon: <MapTrifold />, permission: "project:read" },
+    ],
+  },
+  {
+    title: "Delivery",
+    items: [{ to: "/projects", label: "Projects", icon: <Buildings /> }],
+  },
+  {
+    title: "Commercial",
+    items: [
+      { to: "/clients", label: "Clients", icon: <AddressBook />, permission: "project:read" },
+    ],
+  },
+  {
+    title: "Supply Chain",
+    items: [
+      { to: "/procurement", label: "Procurement", icon: <ShoppingCart />, permission: "procurement:read" },
+      { to: "/procurement/requisitions", label: "Material Requests", icon: <ClipboardText />, permission: "procurement:read" },
+      { to: "/inventory", label: "Inventory", icon: <Package />, permission: "inventory:read" },
+    ],
+  },
+  {
+    title: "Finance",
+    items: [
+      { to: "/expenses", label: "Expenses", icon: <Receipt />, permission: "expense:read" },
+      { to: "/payroll", label: "Payroll", icon: <Money />, permission: "timesheet:write" },
+    ],
+  },
+  {
+    title: "Insights",
+    items: [
+      { to: "/inbox", label: "AI Inbox", icon: <Tray />, permission: "ingestion:use" },
+      { to: "/reports", label: "Reports", icon: <ChartBar /> },
+    ],
+  },
 ];
+
+/** Longest matching path wins, so /procurement/requisitions highlights only
+ *  Material Requests rather than lighting up Procurement as well. */
+function activeNavPath(pathname: string, candidates: string[]): string | null {
+  if (pathname === "/") return "/";
+  return candidates
+    .filter((to) => to !== "/" && (pathname === to || pathname.startsWith(`${to}/`)))
+    .sort((a, b) => b.length - a.length)[0] ?? null;
+}
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useAuth();
@@ -51,6 +100,20 @@ export function AppShell({ children }: { children: ReactNode }) {
   const toggleChat = useChatStore((s) => s.toggle);
   const chatOpen = useChatStore((s) => s.open);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  // A group vanishes entirely once the role can see none of its pages, so a
+  // viewer never meets an empty "Finance" heading.
+  const visibleGroups = NAV.map((group) => ({
+    ...group,
+    items: group.items.filter(
+      (item) => !item.permission || can(user?.role, item.permission),
+    ),
+  })).filter((group) => group.items.length > 0);
+
+  const activePath = activeNavPath(
+    pathname,
+    visibleGroups.flatMap((group) => group.items.map((item) => item.to ?? "")),
+  );
 
   const handleLogout = async () => {
     await logout();
@@ -77,41 +140,58 @@ export function AppShell({ children }: { children: ReactNode }) {
           )}
         </div>
 
-        <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 py-2">
-          {NAV.filter((item) => !item.permission || can(user?.role, item.permission)).map(
-            (item) =>
-              item.soon || !item.to ? (
-                <div
-                  key={item.label}
-                  className="flex cursor-default items-center gap-3 rounded-md px-2.5 py-2 text-sm text-sidebar-muted [&_svg]:size-4.5 [&_svg]:shrink-0"
-                  title={collapsed ? item.label : undefined}
-                >
-                  {item.icon}
-                  {!collapsed && (
-                    <span className="flex flex-1 items-center justify-between gap-2 truncate">
-                      {item.label}
-                      <span className="rounded bg-sidebar-accent px-1.5 py-0.5 text-[10px] uppercase tracking-wide">
-                        Soon
+        <nav className="flex-1 overflow-y-auto px-2 py-2">
+          {visibleGroups.map((group, groupIndex) => (
+            <div key={group.title ?? "pinned"} className="space-y-0.5">
+              {group.title &&
+                (collapsed ? (
+                  // Collapsed to icons only: a rule keeps the grouping legible
+                  // where a heading would not fit.
+                  <div className="mx-2 my-2 border-t border-sidebar-accent" />
+                ) : (
+                  <div
+                    className={cn(
+                      "px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-muted",
+                      groupIndex > 0 && "pt-3",
+                    )}
+                  >
+                    {group.title}
+                  </div>
+                ))}
+              {group.items.map((item) =>
+                item.soon || !item.to ? (
+                  <div
+                    key={item.label}
+                    className="flex cursor-default items-center gap-3 rounded-md px-2.5 py-2 text-sm text-sidebar-muted [&_svg]:size-4.5 [&_svg]:shrink-0"
+                    title={collapsed ? item.label : undefined}
+                  >
+                    {item.icon}
+                    {!collapsed && (
+                      <span className="flex flex-1 items-center justify-between gap-2 truncate">
+                        {item.label}
+                        <span className="rounded bg-sidebar-accent px-1.5 py-0.5 text-[10px] uppercase tracking-wide">
+                          Soon
+                        </span>
                       </span>
-                    </span>
-                  )}
-                </div>
-              ) : (
-                <Link
-                  key={item.label}
-                  to={item.to}
-                  title={collapsed ? item.label : undefined}
-                  className={cn(
-                    "flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-colors hover:bg-sidebar-accent [&_svg]:size-4.5 [&_svg]:shrink-0",
-                    (item.to === "/" ? pathname === "/" : pathname.startsWith(item.to)) &&
-                      "bg-sidebar-accent font-medium",
-                  )}
-                >
-                  {item.icon}
-                  {!collapsed && <span className="truncate">{item.label}</span>}
-                </Link>
-              ),
-          )}
+                    )}
+                  </div>
+                ) : (
+                  <Link
+                    key={item.label}
+                    to={item.to}
+                    title={collapsed ? item.label : undefined}
+                    className={cn(
+                      "flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-colors hover:bg-sidebar-accent [&_svg]:size-4.5 [&_svg]:shrink-0",
+                      item.to === activePath && "bg-sidebar-accent font-medium",
+                    )}
+                  >
+                    {item.icon}
+                    {!collapsed && <span className="truncate">{item.label}</span>}
+                  </Link>
+                ),
+              )}
+            </div>
+          ))}
         </nav>
 
         <div className="space-y-0.5 px-2 pb-2">

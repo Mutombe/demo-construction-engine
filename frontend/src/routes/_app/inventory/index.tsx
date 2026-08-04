@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { usePermission } from "@/features/auth/hooks";
 import { BarcodeScannerDialog } from "@/features/inventory/BarcodeScannerDialog";
+import { InventoryTabs } from "@/features/inventory/InventoryTabs";
 import { ReorderDialog } from "@/features/inventory/ReorderDialog";
 import { MovementDialog, type MovementKind } from "@/features/inventory/MovementDialogs";
 import { StockItemFormDialog } from "@/features/inventory/StockItemFormDialog";
@@ -125,6 +126,8 @@ function InventoryPage() {
           </>
         }
       />
+
+      <InventoryTabs />
 
       <div className="mb-4 flex items-center gap-3">
         <div className="relative w-72">
