@@ -97,7 +97,7 @@ export function MovementDialog({
           itemId: item.id,
           data: { project_id: projectId, quantity, notes: notes || null },
         });
-        toast.success("Stock issued — cost posted to the project budget");
+        toast.success("Stock issued. Cost posted to the project budget");
       } else {
         if (!notes.trim()) {
           toast.error("Adjustments require a note");
@@ -117,9 +117,9 @@ export function MovementDialog({
   };
 
   const titles: Record<MovementKind, string> = {
-    "goods-in": `Goods In — ${item.name}`,
-    issue: `Issue to Project — ${item.name}`,
-    adjust: `Adjust Stock — ${item.name}`,
+    "goods-in": `Goods In: ${item.name}`,
+    issue: `Issue to Project: ${item.name}`,
+    adjust: `Adjust Stock: ${item.name}`,
   };
 
   return (
@@ -192,7 +192,7 @@ export function MovementDialog({
                   <option value="">Select project…</option>
                   {projects?.items.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.code} — {p.name}
+                      {p.code} · {p.name}
                     </option>
                   ))}
                 </Select>

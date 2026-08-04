@@ -121,7 +121,7 @@ export function ExpenseFormDialog({
               <option value="">Select project…</option>
               {projects?.items.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.code} — {p.name}
+                  {p.code} · {p.name}
                 </option>
               ))}
             </Select>
@@ -177,7 +177,7 @@ export function ExpenseFormDialog({
                 {boq?.sections.flatMap((s) =>
                   (s.items ?? []).map((item) => (
                     <option key={item.id} value={item.id}>
-                      {item.item_code} — {item.description.slice(0, 40)}
+                      {item.item_code} · {item.description.slice(0, 40)}
                     </option>
                   )),
                 )}

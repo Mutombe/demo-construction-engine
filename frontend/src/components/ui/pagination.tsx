@@ -1,7 +1,10 @@
 import { CaretDoubleLeft, CaretDoubleRight, CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 
-export const DEFAULT_PAGE_SIZE = 25;
+/** Sized to fill a normal screen without pushing the pager below the fold.
+ *  Small enough that a page arrives fast, large enough to avoid constant
+ *  paging. */
+export const DEFAULT_PAGE_SIZE = 15;
 
 /** Standard table pager: "26–50 of 312" plus first/prev/next/last.
  *  Renders nothing while total is unknown or everything fits on one page,

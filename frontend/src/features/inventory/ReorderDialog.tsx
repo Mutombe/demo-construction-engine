@@ -91,12 +91,12 @@ export function ReorderDialog({
       await queryClient.invalidateQueries({ queryKey: ["/api/v1/dashboard"] });
       if (result.po_numbers.length > 0) {
         toast.success(
-          `Drafted ${result.po_numbers.join(", ")} — review prices, then issue`,
+          `Drafted ${result.po_numbers.join(", ")}. Review prices, then issue`,
         );
       }
       if (result.skipped_items.length > 0) {
         toast.error(
-          `No known supplier for ${result.skipped_items.join(", ")} — order those by hand`,
+          `No known supplier for ${result.skipped_items.join(", ")}. Order those by hand`,
         );
       }
       onOpenChange(false);
@@ -113,7 +113,7 @@ export function ReorderDialog({
         </DialogHeader>
         <p className="text-xs text-muted-foreground">
           Quantities top each item back up to twice its reorder level, priced from the last
-          delivery. One draft order per supplier — nothing is sent until you issue it.
+          delivery. One draft order per supplier, and nothing is sent until you issue it.
         </p>
 
         <div className="min-h-0 flex-1 overflow-y-auto rounded-md border">
@@ -125,7 +125,7 @@ export function ReorderDialog({
             <EmptyState
               icon={<Warning />}
               title="Nothing is below its reorder level"
-              hint="Stock levels are healthy — there is nothing to reorder right now."
+              hint="Stock levels are healthy. Nothing to reorder right now."
             />
           ) : (
             <table className="w-full text-sm">
@@ -172,7 +172,7 @@ export function ReorderDialog({
                           </div>
                         </>
                       ) : (
-                        <span className="text-warning">Never purchased — order by hand</span>
+                        <span className="text-warning">Never purchased, order by hand</span>
                       )}
                     </td>
                     <td className="px-3 py-2 text-right tabular-nums">
@@ -192,7 +192,7 @@ export function ReorderDialog({
               <Select value={projectId} onChange={(e) => setProjectId(e.target.value)}>
                 {projects?.items.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.code} — {p.name}
+                    {p.code} · {p.name}
                   </option>
                 ))}
               </Select>

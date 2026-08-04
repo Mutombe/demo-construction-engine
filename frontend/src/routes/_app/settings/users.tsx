@@ -143,7 +143,7 @@ function UsersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading && <TableSkeleton columns={6} rows={5} />}
+            {isLoading && <TableSkeleton columns={6} />}
             {data?.items.map((u) => (
               <TableRow key={u.id}>
                 <TableCell className="font-medium">{u.full_name}</TableCell>

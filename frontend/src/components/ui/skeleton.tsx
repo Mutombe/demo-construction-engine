@@ -1,4 +1,5 @@
 import type { HTMLAttributes } from "react";
+import { DEFAULT_PAGE_SIZE } from "@/components/ui/pagination";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +17,7 @@ export function Skeleton({ className, ...props }: HTMLAttributes<HTMLDivElement>
  *  swaps in with zero layout shift. Place inside <TableBody>. */
 export function TableSkeleton({
   columns,
-  rows = 5,
+  rows = DEFAULT_PAGE_SIZE,
   widths,
 }: {
   columns: number;

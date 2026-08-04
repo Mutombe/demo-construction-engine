@@ -99,7 +99,7 @@ export function IngestionCard({
           )}
           {card.duplicateIds.length > 0 && (
             <div className="flex items-center gap-1 text-xs text-amber-600">
-              <Warning className="h-3 w-3" /> Identical file uploaded before — check the
+              <Warning className="h-3 w-3" /> Identical file uploaded before. Check the
               history below.
             </div>
           )}

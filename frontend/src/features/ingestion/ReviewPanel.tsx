@@ -52,7 +52,7 @@ function LineageLink({
   const label = (
     <>
       Posted as {lineage.posted_type.replace("_", " ")}
-      {lineage.reference && <> — {lineage.reference}</>}
+      {lineage.reference && <>, {lineage.reference}</>}
     </>
   );
   const id = lineage.posted_id;
@@ -159,7 +159,7 @@ function FieldRow({
           title="Click to correct"
           onClick={() => setEditing(true)}
         >
-          {value || (missing ? "missing — click to fill in" : "—")}
+          {value || (missing ? "missing, click to fill in" : "—")}
         </button>
       )}
       {edited !== undefined && (
@@ -218,8 +218,8 @@ export function ReviewPanel({
       await finish(
         updated,
         updated.status === "drafted"
-          ? "Corrections applied — ready to approve"
-          : "Corrections applied — still needs attention",
+          ? "Corrections applied. Ready to approve"
+          : "Corrections applied. Still needs attention",
       );
     } catch (err) {
       toast.error(errDetail(err));
@@ -229,7 +229,7 @@ export function ReviewPanel({
   const approve = async () => {
     try {
       const updated = await approveMutation.mutateAsync({ itemId });
-      await finish(updated, "Approved — record posted");
+      await finish(updated, "Approved and posted");
       onOpenChange(false);
     } catch (err) {
       toast.error(errDetail(err));

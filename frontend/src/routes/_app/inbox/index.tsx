@@ -72,7 +72,7 @@ function InboxPage() {
     <div>
       <PageHeader
         title="AI Inbox"
-        description="Drop site paperwork — Claude reads it, you approve it, the ERP posts it"
+        description="Drop site paperwork here. Claude reads it, you approve it, and it posts"
         actions={
           <div className="flex items-center gap-2 text-sm">
             <span className="text-muted-foreground">Project hint</span>
@@ -84,7 +84,7 @@ function InboxPage() {
               <option value="">No hint</option>
               {projects?.items.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.code} — {p.name}
+                  {p.code} · {p.name}
                 </option>
               ))}
             </Select>
@@ -142,11 +142,11 @@ function InboxPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading && !history && <TableSkeleton columns={5} rows={5} />}
+                {isLoading && !history && <TableSkeleton columns={5} />}
                 {!isLoading && historyItems.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                      Nothing here yet — drop a document above to get started.
+                      Nothing here yet. Drop a document above to get started.
                     </TableCell>
                   </TableRow>
                 )}

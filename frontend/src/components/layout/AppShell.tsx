@@ -5,8 +5,6 @@ import type { ReactNode } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { Button } from "@/components/ui/button";
-import { ChatPanel } from "@/features/ai/ChatPanel";
-import { useChatStore } from "@/features/ai/chatStore";
 import { logout } from "@/features/auth/api";
 import { useAuth } from "@/features/auth/hooks";
 import { NotificationBell } from "@/features/notifications/NotificationBell";
@@ -84,6 +82,7 @@ const NAV: NavGroup[] = [
   {
     title: "Insights",
     items: [
+      { to: "/assistant", label: "Assistant", icon: <ClaudeIcon /> },
       { to: "/inbox", label: "AI Inbox", icon: <Tray />, permission: "ingestion:use" },
       { to: "/reports", label: "Reports", icon: <ChartBar /> },
     ],
@@ -143,8 +142,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { collapsed, toggle } = useSidebar();
-  const toggleChat = useChatStore((s) => s.toggle);
-  const chatOpen = useChatStore((s) => s.open);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   // A group vanishes entirely once the role can see none of its pages, so a
@@ -250,7 +247,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     title={
                       collapsed
                         ? countFor(item)
-                          ? `${item.label} — ${countFor(item)?.count} waiting`
+                          ? `${item.label}: ${countFor(item)?.count} waiting`
                           : item.label
                         : undefined
                     }
@@ -308,14 +305,16 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span className="hidden sm:inline">Search</span>
               <kbd className="hidden rounded border px-1 text-[10px] sm:inline">Ctrl K</kbd>
             </Button>
-            <Button
-              variant={chatOpen ? "secondary" : "outline"}
-              size="sm"
-              onClick={toggleChat}
-              title="AI assistant"
+            <Link
+              to="/assistant"
+              title="Ask the assistant"
+              className={cn(
+                "inline-flex h-8 items-center gap-2 rounded-md border border-input px-3 text-sm font-medium transition-colors hover:bg-accent",
+                pathname.startsWith("/assistant") && "bg-secondary",
+              )}
             >
-              <ClaudeIcon className="text-claude" /> Assistant
-            </Button>
+              <ClaudeIcon className="size-4 text-claude" /> Assistant
+            </Link>
             <NotificationBell />
             {user && (
               <div className="text-right">
@@ -337,7 +336,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
         <main className="min-h-0 flex-1 overflow-y-auto p-5">{children}</main>
       </div>
-      <ChatPanel />
       <CommandPalette destinations={paletteDestinations} />
     </div>
   );

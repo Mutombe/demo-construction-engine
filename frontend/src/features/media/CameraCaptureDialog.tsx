@@ -60,7 +60,7 @@ export function CameraCaptureDialog({
       })
       .catch(() => {
         if (!cancelled) {
-          setError("Camera unavailable — check browser permissions and try again");
+          setError("Camera unavailable. Check browser permissions and try again");
         }
       });
     return () => {
@@ -147,7 +147,7 @@ export function CameraCaptureDialog({
           <Input
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
-            placeholder="Caption (optional) — e.g. First floor slab poured"
+            placeholder="Caption (optional), e.g. First floor slab poured"
             maxLength={255}
           />
         )}

@@ -46,7 +46,7 @@ function ProcurementPage() {
         >
           {projects?.items.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.code} — {p.name}
+              {p.code} · {p.name}
             </option>
           ))}
         </Select>

@@ -76,7 +76,7 @@ export function QuoteCompare({
         <Button
           size="sm"
           disabled={!aiAvailable || compareMutation.isPending}
-          title={aiAvailable ? undefined : "AI not configured — add ANTHROPIC_API_KEY"}
+          title={aiAvailable ? undefined : "AI not configured. Add ANTHROPIC_API_KEY"}
           onClick={() => void analyze()}
         >
           <ClaudeIcon className="h-3.5 w-3.5" />

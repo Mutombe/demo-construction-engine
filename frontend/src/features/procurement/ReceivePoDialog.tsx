@@ -102,8 +102,8 @@ export function ReceivePoDialog({
       await queryClient.invalidateQueries();
       toast.success(
         destination === "store"
-          ? "PO received into the store — stock booked at PO prices"
-          : "PO received — actuals posted to the project budget",
+          ? "PO received into the store. Stock booked at PO prices"
+          : "PO received. Actuals posted to the project budget",
       );
       onOpenChange(false);
     } catch (err) {
@@ -178,7 +178,7 @@ export function ReceivePoDialog({
                         <option value="">Select stock item…</option>
                         {stock?.items.map((s) => (
                           <option key={s.id} value={s.id}>
-                            {s.code} — {s.name}
+                            {s.code} · {s.name}
                           </option>
                         ))}
                         <option value={NEW_ITEM}>＋ Create new stock item</option>

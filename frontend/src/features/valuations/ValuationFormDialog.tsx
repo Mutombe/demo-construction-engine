@@ -151,7 +151,7 @@ export function ValuationFormDialog({
                 grossNum > Number(summary.effective_contract_value) && (
                   <p className="text-xs font-medium text-warning">
                     Exceeds the adjusted contract value (
-                    {moneyExact(summary.effective_contract_value)}) — add variation items to
+                    {moneyExact(summary.effective_contract_value)}). Add variation items to
                     the BOQ to certify extra work.
                   </p>
                 )}

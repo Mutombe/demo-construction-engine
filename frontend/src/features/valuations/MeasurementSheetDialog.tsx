@@ -91,8 +91,8 @@ export function MeasurementSheetDialog({
       await queryClient.invalidateQueries();
       toast.success(
         lines.length === 0
-          ? "Sheet cleared — valuation reverts to single-figure entry"
-          : "Measurement saved — gross recomputed from the sheet",
+          ? "Sheet cleared. Valuation reverts to single-figure entry"
+          : "Measurement saved. Gross recomputed from the sheet",
       );
       onOpenChange(false);
     } catch (err) {
@@ -138,7 +138,7 @@ export function MeasurementSheetDialog({
                   <Fragment key={section.code}>
                     <tr className="border-t bg-muted/40">
                       <td colSpan={8} className="px-3 py-1.5 text-xs font-semibold uppercase">
-                        {section.code} — {section.title}
+                        {section.code} · {section.title}
                       </td>
                     </tr>
                     {section.items.map((item) => {

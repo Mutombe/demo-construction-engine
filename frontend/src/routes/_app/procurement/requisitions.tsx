@@ -139,7 +139,7 @@ function RequisitionsPage() {
     <div>
       <PageHeader
         title="Material Requests"
-        description="What site is waiting for — oldest requests first"
+        description="What site is waiting for, oldest first"
         actions={
           <Can perm="requisition:create">
             <Button onClick={() => setFormOpen(true)}>
@@ -188,7 +188,7 @@ function RequisitionsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && !data && <TableSkeleton columns={7} rows={5} />}
+              {isLoading && !data && <TableSkeleton columns={7} />}
               {!isLoading && items.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} className="p-0">
@@ -200,8 +200,9 @@ function RequisitionsPage() {
                   </TableCell>
                 </TableRow>
               )}
-              {items.map((requisition) => (
+              {items.map((requisition, rowIndex) => (
                 <ClickableRow
+                  index={rowIndex}
                   key={requisition.id}
                   to="/procurement/requisitions/$requisitionId"
                   params={{ requisitionId: requisition.id }}

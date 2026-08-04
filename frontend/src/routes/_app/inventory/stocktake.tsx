@@ -61,7 +61,7 @@ function StocktakePage() {
         data: { category: category || null, stock_item_ids: [] },
       });
       await refresh();
-      toast.success("Count started — expected quantities snapshotted");
+      toast.success("Count started. Expected quantities saved");
     } catch (err) {
       toast.error(errDetail(err));
     }
@@ -122,7 +122,7 @@ function StocktakePage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && !data && <TableSkeleton columns={6} rows={4} />}
+              {isLoading && !data && <TableSkeleton columns={6} />}
               {!isLoading && !data?.items.length && (
                 <TableRow>
                   <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
@@ -130,8 +130,9 @@ function StocktakePage() {
                   </TableCell>
                 </TableRow>
               )}
-              {data?.items.map((row) => (
+              {data?.items.map((row, rowIndex) => (
                 <ClickableRow
+                  index={rowIndex}
                   key={row.id}
                   to="/inventory/stocktake/$stocktakeId"
                   params={{ stocktakeId: row.id }}
@@ -247,7 +248,7 @@ function CountSheet({
         queryClient.invalidateQueries({ queryKey: ["/api/v1/stock-items"] }),
         onChanged(),
       ]);
-      toast.success("Stocktake approved — adjustments posted");
+      toast.success("Stocktake approved. Adjustments posted");
     } catch (err) {
       toast.error(errDetail(err));
     }

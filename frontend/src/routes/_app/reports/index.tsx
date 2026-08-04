@@ -32,7 +32,7 @@ function ExportButtons({
       const search = new URLSearchParams({ ...params, format }).toString();
       await downloadFile(`/api/v1/reports/${path}?${search}`, `${stem}.${format}`);
     } catch {
-      toast.error("Export failed — check the filters and try again");
+      toast.error("Export failed. Check the filters and try again");
     } finally {
       setBusy(false);
     }
@@ -100,7 +100,7 @@ function ReportsPage() {
       <option value="">All Projects</option>
       {projects?.items.map((p) => (
         <option key={p.id} value={p.id}>
-          {p.code} — {p.name}
+          {p.code} · {p.name}
         </option>
       ))}
     </>
@@ -131,7 +131,7 @@ function ReportsPage() {
               <option value="">Select Project…</option>
               {projects?.items.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.code} — {p.name}
+                  {p.code} · {p.name}
                 </option>
               ))}
             </Select>
@@ -140,7 +140,7 @@ function ReportsPage() {
 
         <ReportCard
           title="Material Reconciliation"
-          description="What the measured work should have consumed against what was actually issued — the wastage and shrinkage check."
+          description="What the measured work should have used against what was actually issued. The wastage and shrinkage check."
           footer={
             <ExportButtons
               path="material-reconciliation"
@@ -156,7 +156,7 @@ function ReportsPage() {
               <option value="">Select Project…</option>
               {projects?.items.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.code} — {p.name}
+                  {p.code} · {p.name}
                 </option>
               ))}
             </Select>
@@ -185,7 +185,7 @@ function ReportsPage() {
                 <option value="">Select Project…</option>
                 {projects?.items.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.code} — {p.name}
+                    {p.code} · {p.name}
                   </option>
                 ))}
               </Select>

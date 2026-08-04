@@ -191,7 +191,7 @@ function InventoryPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading && !data && <TableSkeleton columns={6} rows={6} />}
+            {isLoading && !data && <TableSkeleton columns={6} />}
             {!isLoading && !data?.items.length && (
               <TableRow>
                 <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
@@ -199,8 +199,9 @@ function InventoryPage() {
                 </TableCell>
               </TableRow>
             )}
-            {data?.items.map((item) => (
+            {data?.items.map((item, rowIndex) => (
               <ClickableRow
+                index={rowIndex}
                 key={item.id}
                 to="/inventory/$itemId"
                 params={{ itemId: item.id }}

@@ -10,7 +10,6 @@ import {
   StopCircle,
   TextAlignLeft,
   TextT,
-  X,
 } from "@phosphor-icons/react";
 import { useRouterState } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
@@ -83,7 +82,7 @@ function ActivityTrail({ msg, live }: { msg: ChatMsg; live: boolean }) {
           >
             <Check size={10} className={a.isError ? "text-destructive" : "text-success"} />
             {toolLabel(a.name)}
-            {a.isError && " — failed"}
+            {a.isError && " (failed)"}
           </div>
         ))}
       </div>
@@ -203,8 +202,8 @@ function AssistantMessage({
 
 /* --- panel ------------------------------------------------------------------ */
 
-export function ChatPanel() {
-  const { open, messages, isStreaming, phase, setOpen, setView, clear } = useChatStore();
+export function AssistantChat() {
+  const { messages, isStreaming, phase, setView, clear } = useChatStore();
   const { aiAvailable, loaded } = useAiStatus();
   const { send, stop, condense } = useChatStream();
   const [input, setInput] = useState("");
@@ -221,7 +220,6 @@ export function ChatPanel() {
     }
   });
 
-  if (!open) return null;
 
   const onScroll = () => {
     const el = scrollRef.current;
@@ -238,7 +236,7 @@ export function ChatPanel() {
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 flex w-[420px] flex-col border-l bg-card shadow-xl">
+    <div className="flex h-full flex-col overflow-hidden rounded-lg border bg-card">
       <div className="flex h-14 shrink-0 items-center justify-between border-b px-4">
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-claude/10">
@@ -259,16 +257,13 @@ export function ChatPanel() {
           >
             <ArrowCounterClockwise />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => setOpen(false)}>
-            <X />
-          </Button>
         </div>
       </div>
 
       <div
         ref={scrollRef}
         onScroll={onScroll}
-        className="relative flex-1 space-y-4 overflow-y-auto p-4"
+        className="relative flex-1 overflow-y-auto p-4"
       >
         {loaded && !aiAvailable && (
           <div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
@@ -284,7 +279,7 @@ export function ChatPanel() {
             <div>
               <p className="text-sm font-medium">How can I help with your projects?</p>
               <p className="mx-auto mt-1 max-w-[280px] text-xs text-muted-foreground">
-                I check your live data — budgets, BOQ, procurement, payroll, the AI Inbox —
+                I check your live data across budgets, BOQ, procurement, payroll and the AI Inbox,
                 before answering.
               </p>
             </div>

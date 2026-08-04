@@ -48,7 +48,7 @@ function ProgramTab() {
     try {
       await setBaseline.mutateAsync({ projectId });
       await refresh();
-      toast.success("Baseline saved — slippage now measured against it");
+      toast.success("Baseline saved. Slippage is measured against it");
     } catch (err) {
       toast.error(errDetail(err));
     }
@@ -78,7 +78,7 @@ function ProgramTab() {
   if (!data.tasks.length && !data.phases.length) {
     return (
       <div className="rounded-lg border bg-card p-10 text-center text-muted-foreground">
-        No phases or tasks scheduled yet — add them under the Tasks tab.
+        No phases or tasks scheduled yet. Add them under the Tasks tab.
       </div>
     );
   }

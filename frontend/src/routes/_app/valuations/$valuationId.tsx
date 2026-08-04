@@ -101,7 +101,7 @@ function ValuationDetailPage() {
               prefetch={() => getGetProjectQueryOptions(valuation.project_id)}
               className="text-sm"
             >
-              {valuation.project_code} — {valuation.project_name}
+              {valuation.project_code} · {valuation.project_name}
             </EntityLink>{" "}
             · period to {fmtDate(valuation.period_end)}
             {valuation.issued_date && <> · issued {fmtDate(valuation.issued_date)}</>}

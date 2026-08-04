@@ -98,7 +98,7 @@ export function PoFromQuoteDialog({
         </DialogHeader>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Line items and pricing are copied exactly from the accepted quote — the AI only
+            Line items and pricing are copied exactly from the accepted quote. The AI only
             drafts the commercial terms text.
           </p>
           <div className="space-y-1.5">
@@ -119,7 +119,7 @@ export function PoFromQuoteDialog({
                 variant="outline"
                 size="sm"
                 disabled={!aiAvailable || draftMutation.isPending}
-                title={aiAvailable ? undefined : "AI not configured — add ANTHROPIC_API_KEY"}
+                title={aiAvailable ? undefined : "AI not configured. Add ANTHROPIC_API_KEY"}
                 onClick={() => void draftTerms()}
               >
                 <ClaudeIcon className="h-3.5 w-3.5" />

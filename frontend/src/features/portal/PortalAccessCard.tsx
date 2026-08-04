@@ -45,7 +45,7 @@ export function PortalAccessCard({
       setLabel("");
       await queryClient.invalidateQueries();
       await navigator.clipboard.writeText(created.url).then(
-        () => toast.success("Portal link created — copied to clipboard"),
+        () => toast.success("Portal link created and copied to clipboard"),
         () => toast.success("Portal link created"),
       );
     } catch (err) {
@@ -83,13 +83,13 @@ export function PortalAccessCard({
       <CardContent className="space-y-3">
         <p className="text-xs text-muted-foreground">
           Share a read-only link with {clientName ?? "the client"}: live progress, phases and
-          issued payment certificates. The full link is shown once — treat it like a key.
+          issued payment certificates. The full link is shown once, so treat it like a key.
         </p>
 
         {freshUrl && (
           <div className="space-y-1 rounded-md border border-primary/40 bg-primary/5 p-2.5">
             <div className="text-xs font-medium text-primary">
-              New link — copy it now, it won't be shown again
+              New link. Copy it now, it won't be shown again
             </div>
             <div className="flex items-center gap-1.5">
               <Input readOnly value={freshUrl} className="h-8 font-mono text-xs" />

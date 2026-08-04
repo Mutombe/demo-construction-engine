@@ -69,11 +69,11 @@ export function BarcodeScannerDialog({
       return;
     }
     if (!detectorSupported) {
-      setCameraError("Live scanning is not supported in this browser — enter the code below");
+      setCameraError("Live scanning is not supported in this browser. Enter the code below");
       return;
     }
     if (!navigator.mediaDevices?.getUserMedia) {
-      setCameraError("No camera access — enter the code below");
+      setCameraError("No camera access. Enter the code below");
       return;
     }
 
@@ -117,7 +117,7 @@ export function BarcodeScannerDialog({
         }
         raf = requestAnimationFrame((t) => void tick(t));
       })
-      .catch(() => setCameraError("Camera unavailable — enter the code below"));
+      .catch(() => setCameraError("Camera unavailable. Enter the code below"));
 
     return () => {
       stopped = true;

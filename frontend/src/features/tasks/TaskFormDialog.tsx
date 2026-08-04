@@ -221,7 +221,7 @@ export function TaskFormDialog({
               <option value="">No dependency</option>
               {candidatePredecessors.map((t) => (
                 <option key={t.id} value={t.id}>
-                  {t.wbs_code ? `${t.wbs_code} — ` : ""}
+                  {t.wbs_code ? `${t.wbs_code} · ` : ""}
                   {t.name}
                 </option>
               ))}

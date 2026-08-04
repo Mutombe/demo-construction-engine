@@ -148,7 +148,7 @@ function SiteMapPage() {
     <div>
       <PageHeader
         title="Site Map"
-        description="Every pinned project — colour is status, the ring is live progress"
+        description="Every pinned project. Colour shows status, the ring shows progress"
       />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">

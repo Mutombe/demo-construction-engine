@@ -151,7 +151,7 @@ export function DiaryLabourDialog({
                 <option value="">Select worker…</option>
                 {workers?.items.map((w) => (
                   <option key={w.id} value={w.id}>
-                    {w.full_name} — {w.trade}
+                    {w.full_name} · {w.trade}
                   </option>
                 ))}
               </Select>

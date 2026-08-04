@@ -116,7 +116,7 @@ export function QuoteExtractDialog({
       setDetectedName(result.supplier_name ?? null);
       setAiUsed(true);
       if (result.currency_warning) {
-        toast.warning(`Quote appears to be in ${result.currency} — check before saving`);
+        toast.warning(`Quote appears to be in ${result.currency}. Check before saving`);
       }
       if (result.notes) toast.info(result.notes);
     } catch (err) {
@@ -172,7 +172,7 @@ export function QuoteExtractDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Record Quote — {rfq.doc_number}</DialogTitle>
+          <DialogTitle>Record Quote for {rfq.doc_number}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -189,7 +189,7 @@ export function QuoteExtractDialog({
               </Select>
               {detectedName && !supplierId && (
                 <p className="text-xs text-muted-foreground">
-                  AI detected: <span className="font-medium">{detectedName}</span> — pick the
+                  AI detected <span className="font-medium">{detectedName}</span>. Pick the
                   matching registry entry.
                 </p>
               )}
@@ -222,7 +222,7 @@ export function QuoteExtractDialog({
                 variant="outline"
                 size="sm"
                 disabled={!aiAvailable || rawText.length < 10 || extractMutation.isPending}
-                title={aiAvailable ? undefined : "AI not configured — add ANTHROPIC_API_KEY"}
+                title={aiAvailable ? undefined : "AI not configured. Add ANTHROPIC_API_KEY"}
                 onClick={() => void extract()}
               >
                 <ClaudeIcon className="h-3.5 w-3.5" />
@@ -264,7 +264,7 @@ export function QuoteExtractDialog({
                     value={line.rfq_item_id ?? ""}
                     onChange={(e) => updateLine(i, { rfq_item_id: e.target.value || null })}
                   >
-                    <option value="">— no RFQ line —</option>
+                    <option value="">No RFQ line</option>
                     {(rfq.items ?? []).map((item) => (
                       <option key={item.id} value={item.id}>
                         {item.description.slice(0, 30)}

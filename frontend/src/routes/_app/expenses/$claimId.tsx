@@ -90,7 +90,7 @@ function ExpenseClaimDetailPage() {
                 onClick={() =>
                   void act(
                     () => approveMutation.mutateAsync({ claimId }),
-                    "Claim approved — posted to the project ledger",
+                    "Claim approved and posted to the project ledger",
                   )
                 }
               >
@@ -166,7 +166,7 @@ function ExpenseClaimDetailPage() {
                 params={{ projectId: claim.project_id }}
                 prefetch={() => getGetProjectQueryOptions(claim.project_id)}
               >
-                {claim.project_code} — {claim.project_name}
+                {claim.project_code} · {claim.project_name}
               </EntityLink>
             </Meta>
             <Meta label="Claimant">{claim.claimant_name ?? "—"}</Meta>
@@ -212,7 +212,7 @@ function ExpenseClaimDetailPage() {
             {claim.status === "approved" && claim.cost_entry_id && (
               <p className="rounded-md border bg-muted/40 p-2 text-xs text-muted-foreground">
                 Posted to the project cost ledger with reference{" "}
-                <span className="font-mono">{claim.doc_number}</span> — see it in the{" "}
+                <span className="font-mono">{claim.doc_number}</span>, see it in the{" "}
                 <EntityLink
                   to="/projects/$projectId/boq"
                   params={{ projectId: claim.project_id }}

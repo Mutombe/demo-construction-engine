@@ -52,7 +52,7 @@ export function DropZone({ onFiles }: { onFiles: (files: File[]) => void }) {
             Drop invoices, receipts, delivery notes or quotes here
           </div>
           <div className="text-xs text-muted-foreground">
-            JPEG, PNG, WebP or PDF up to 15 MB — Claude classifies and extracts each one; nothing
+            JPEG, PNG, WebP or PDF up to 15 MB. Claude classifies and extracts each one; nothing
             posts without your approval.
           </div>
         </>

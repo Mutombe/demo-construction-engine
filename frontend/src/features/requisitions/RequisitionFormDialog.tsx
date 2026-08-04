@@ -49,7 +49,7 @@ export function RequisitionFormDialog({
   const boqItems = (boq?.sections ?? []).flatMap((section) =>
     (section.items ?? []).map((item) => ({
       id: item.id,
-      label: `${item.item_code} — ${item.description}`,
+      label: `${item.item_code} · ${item.description}`,
       unit: item.unit,
       description: item.description,
     })),
@@ -115,7 +115,7 @@ export function RequisitionFormDialog({
                 <Select value={projectId} onChange={(e) => setProjectId(e.target.value)}>
                   {projects?.items.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.code} — {p.name}
+                      {p.code} · {p.name}
                     </option>
                   ))}
                 </Select>
@@ -201,7 +201,7 @@ export function RequisitionFormDialog({
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Why it is needed and when — helps procurement prioritise"
+              placeholder="Why it is needed and when. Helps procurement prioritise"
             />
           </div>
         </div>

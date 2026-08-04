@@ -116,8 +116,9 @@ function SuppliersPage() {
                 </TableCell>
               </TableRow>
             )}
-            {data?.items.map((s) => (
+            {data?.items.map((s, rowIndex) => (
               <ClickableRow
+                index={rowIndex}
                 key={s.id}
                 to="/procurement/suppliers/$supplierId"
                 params={{ supplierId: s.id }}

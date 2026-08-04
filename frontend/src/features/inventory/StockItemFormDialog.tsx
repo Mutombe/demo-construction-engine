@@ -31,7 +31,7 @@ export function StockItemFormDialog({
   const createMutation = useCreateStockItem({
     mutation: optimistic(queryClient, {
       prefixes: ["/api/v1/stock-items"],
-      successToast: "Item created — record a goods-in to add stock",
+      successToast: "Item created. Record a goods-in to add stock",
       apply: (old, vars: { data: Record<string, unknown> }) =>
         addRow(() => ({
           id: tempId(),
@@ -144,7 +144,7 @@ export function StockItemFormDialog({
               value={trackingMode}
               onChange={(e) => setTrackingMode(e.target.value as TrackingMode)}
             >
-              <option value="none">None — just a quantity</option>
+              <option value="none">None, just a quantity</option>
               <option value="batch">Batch / lot with expiry</option>
               <option value="serial">Serial number per unit</option>
             </Select>
@@ -159,7 +159,7 @@ export function StockItemFormDialog({
               <Input
                 value={barcode}
                 onChange={(e) => setBarcode(e.target.value)}
-                placeholder="Scan or type — e.g. 6001234567890"
+                placeholder="Scan or type, e.g. 6001234567890"
                 className="font-mono"
                 maxLength={64}
               />

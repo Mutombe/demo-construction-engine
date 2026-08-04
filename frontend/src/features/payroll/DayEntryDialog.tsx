@@ -154,7 +154,7 @@ export function DayEntryDialog({
     void bulkMutation
       .mutateAsync({ data: { project_id: projectId, work_date: workDate, entries } })
       .then(() =>
-        toast.success(`Day recorded — ${workerCount} worker${workerCount === 1 ? "" : "s"}`),
+        toast.success(`Day recorded for ${workerCount} worker${workerCount === 1 ? "" : "s"}`),
       )
       .catch(() => undefined);
   };
@@ -173,7 +173,7 @@ export function DayEntryDialog({
                 <option value="">Select project…</option>
                 {projects?.items.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.code} — {p.name}
+                    {p.code} · {p.name}
                   </option>
                 ))}
               </Select>
@@ -185,7 +185,7 @@ export function DayEntryDialog({
           </div>
 
           <div className="flex items-center justify-between">
-            <Label>Crew — tab through quantities</Label>
+            <Label>Crew</Label>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => markAll("1")}>
                 Everyone Full Day

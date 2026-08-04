@@ -135,8 +135,9 @@ function ProjectsPage() {
                 </TableCell>
               </TableRow>
             )}
-            {data?.items.map((p) => (
+            {data?.items.map((p, rowIndex) => (
               <ClickableRow
+                index={rowIndex}
                 key={p.id}
                 to="/projects/$projectId"
                 params={{ projectId: p.id }}

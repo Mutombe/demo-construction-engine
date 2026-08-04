@@ -248,7 +248,7 @@ function DashboardPage() {
 
       <Card className="mb-4">
         <CardHeader className="flex-row items-center justify-between space-y-0">
-          <CardTitle>Revenue vs Cost — Last 6 Months</CardTitle>
+          <CardTitle>Revenue vs Cost, Last 6 Months</CardTitle>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-sm bg-muted-foreground/40" /> Cost
@@ -367,7 +367,7 @@ function DashboardPage() {
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="truncate text-sm font-medium">
-                    {a.item_code ? `${a.item_code} — ${a.description}` : a.project_name}
+                    {a.item_code ? `${a.item_code} · ${a.description}` : a.project_name}
                   </span>
                   <span
                     className={cn(

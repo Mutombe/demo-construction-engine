@@ -87,7 +87,7 @@ export function RfqWizard({
       setTitle(draft.title);
       setBody(draft.body);
       setAiUsed(true);
-      toast.success("Draft ready — review and edit before saving");
+      toast.success("Draft ready. Review and edit before saving");
     } catch (err) {
       toast.error(errDetail(err));
     }
@@ -123,7 +123,7 @@ export function RfqWizard({
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>
-            {step === 1 ? "New RFQ — Select BOQ Items" : "New RFQ — Document"}
+            {step === 1 ? "New RFQ: Select BOQ Items" : "New RFQ: Document"}
           </DialogTitle>
         </DialogHeader>
 
@@ -132,13 +132,13 @@ export function RfqWizard({
             <div className="max-h-96 space-y-3 overflow-y-auto pr-1">
               {!boq?.sections.length && (
                 <p className="text-sm text-muted-foreground">
-                  This project has no BOQ items yet — add them in the BOQ tab first.
+                  This project has no BOQ items yet. Add them in the BOQ tab first.
                 </p>
               )}
               {boq?.sections.map((section) => (
                 <div key={section.id}>
                   <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {section.code} — {section.title}
+                    {section.code} · {section.title}
                   </div>
                   <div className="space-y-1">
                     {(section.items ?? []).map((item) => (
@@ -217,7 +217,7 @@ export function RfqWizard({
                     variant="outline"
                     size="sm"
                     disabled={!aiAvailable || generateMutation.isPending}
-                    title={aiAvailable ? undefined : "AI not configured — add ANTHROPIC_API_KEY"}
+                    title={aiAvailable ? undefined : "AI not configured. Add ANTHROPIC_API_KEY"}
                     onClick={() => void draftWithAi()}
                   >
                     <ClaudeIcon className="h-3.5 w-3.5" />

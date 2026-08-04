@@ -70,7 +70,7 @@ function PayRunDetailPage() {
     try {
       await approveMutation.mutateAsync({ payRunId: runId });
       await queryClient.invalidateQueries();
-      toast.success("Pay run approved — labour costs posted");
+      toast.success("Pay run approved. Labour costs posted");
     } catch (err) {
       toast.error(errDetail(err));
     }

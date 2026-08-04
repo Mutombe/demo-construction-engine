@@ -132,7 +132,7 @@ function Scorecard({ scorecard }: { scorecard: SupplierScorecard }) {
               {scorecard.open_overdue_count} outstanding order
               {scorecard.open_overdue_count === 1 ? "" : "s"} past the promised date
             </span>{" "}
-            <span className="text-muted-foreground">— chase before ordering again.</span>
+            <span className="text-muted-foreground">Chase before ordering again.</span>
           </div>
         )}
       </CardContent>
@@ -239,8 +239,9 @@ function SupplierDetailPage() {
                     </TableCell>
                   </TableRow>
                 )}
-                {purchase_orders.map((po) => (
+                {purchase_orders.map((po, rowIndex) => (
                   <ClickableRow
+                    index={rowIndex}
                     key={po.id}
                     to="/procurement/pos/$poId"
                     params={{ poId: po.id }}
@@ -293,8 +294,9 @@ function SupplierDetailPage() {
                     </TableCell>
                   </TableRow>
                 )}
-                {quotes.map((quote) => (
+                {quotes.map((quote, rowIndex) => (
                   <ClickableRow
+                    index={rowIndex}
                     key={quote.id}
                     to="/procurement/rfqs/$rfqId"
                     params={{ rfqId: quote.rfq_id }}

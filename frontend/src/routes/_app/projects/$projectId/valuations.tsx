@@ -184,16 +184,17 @@ function ValuationsTab() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {valuationsLoading && !valuations && <TableSkeleton columns={10} rows={5} />}
+              {valuationsLoading && !valuations && <TableSkeleton columns={10} />}
               {!valuationsLoading && items.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={10} className="py-10 text-center text-muted-foreground">
-                    No valuations yet — create the first progress valuation to invoice the client.
+                    No valuations yet. Create the first progress valuation to invoice the client.
                   </TableCell>
                 </TableRow>
               )}
-              {items.map((v) => (
+              {items.map((v, rowIndex) => (
                 <ClickableRow
+                  index={rowIndex}
                   key={v.id}
                   to="/valuations/$valuationId"
                   params={{ valuationId: v.id }}

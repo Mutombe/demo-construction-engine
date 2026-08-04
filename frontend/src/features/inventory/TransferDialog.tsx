@@ -80,7 +80,7 @@ export function TransferDialog({
       await queryClient.invalidateQueries({ queryKey: ["/api/v1/stock-items"] });
       await queryClient.invalidateQueries({ queryKey: ["/api/v1/stock-transfers"] });
       await queryClient.invalidateQueries({ queryKey: ["/api/v1/stock-locations"] });
-      toast.success(`${result.doc_number} — ${result.quantity} ${item.unit} moved`);
+      toast.success(`${result.doc_number}: ${result.quantity} ${item.unit} moved`);
       onClose();
     } catch (err) {
       toast.error(errDetail(err));
@@ -94,7 +94,7 @@ export function TransferDialog({
           <DialogTitle>Transfer {item?.name}</DialogTitle>
         </DialogHeader>
         <p className="text-xs text-muted-foreground">
-          Moves material between stores. Nothing is spent — cost reaches a project only
+          Moves material between stores. Nothing is spent, because cost reaches a project only
           when the stock is issued.
         </p>
 

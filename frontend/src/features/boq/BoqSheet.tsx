@@ -55,7 +55,7 @@ export function BoqSheet({ projectId, tree }: { projectId: string; tree: BoqTree
         sectionId,
         data: {
           item_code: `${sectionCode}.${nextNum}`,
-          description: "New item — edit description",
+          description: "New item",
           unit: "nr",
           quantity: "0",
           rate: "0",
@@ -74,7 +74,7 @@ export function BoqSheet({ projectId, tree }: { projectId: string; tree: BoqTree
     try {
       await createSection.mutateAsync({
         projectId,
-        data: { code, title: "New section — rename me", sort_order: tree.sections.length + 1 },
+        data: { code, title: "New section", sort_order: tree.sections.length + 1 },
       });
       await invalidate();
     } catch (err) {
@@ -147,7 +147,7 @@ export function BoqSheet({ projectId, tree }: { projectId: string; tree: BoqTree
                 ) : (
                   <CaretDown className="h-4 w-4" />
                 )}
-                {section.code} — {section.title}
+                {section.code} · {section.title}
                 <span className="ml-2 text-xs font-normal text-muted-foreground">
                   {items.length} item{items.length === 1 ? "" : "s"}
                 </span>

@@ -46,7 +46,7 @@ function ClientsPage() {
     <div>
       <PageHeader
         title="Clients"
-        description="The people you build for — each client links to their projects and portal access"
+        description="Clients, their projects and portal access"
         actions={
           <Can perm="client:write">
             <Button
@@ -73,7 +73,7 @@ function ClientsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && !data && <TableSkeleton columns={5} rows={5} />}
+              {isLoading && !data && <TableSkeleton columns={5} />}
               {data?.items.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="p-0">
@@ -85,8 +85,9 @@ function ClientsPage() {
                   </TableCell>
                 </TableRow>
               )}
-              {data?.items.map((client) => (
+              {data?.items.map((client, rowIndex) => (
                 <ClickableRow
+                  index={rowIndex}
                   key={client.id}
                   to="/clients/$clientId"
                   params={{ clientId: client.id }}

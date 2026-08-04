@@ -392,7 +392,7 @@ export function MediaPanel({
             }
             hint={
               folder === "all" && !search
-                ? "Upload drawings, contracts and site photos — or take a photo straight from the device camera."
+                ? "Upload drawings, contracts and site photos, or take one with the camera."
                 : "Try another folder or clear the search."
             }
           />

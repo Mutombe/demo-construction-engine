@@ -246,7 +246,7 @@ function PoDetailPage() {
               <CardContent className="p-4 text-sm text-muted-foreground">
                 {po.received_to === "store" ? (
                   <>
-                    ✅ Delivered {fmtDate(po.received_date)} into the store —{" "}
+                    Delivered {fmtDate(po.received_date)} into the store,{" "}
                     <Link to="/inventory" className="underline">
                       stock booked at PO prices
                     </Link>{" "}
@@ -255,7 +255,7 @@ function PoDetailPage() {
                   </>
                 ) : (
                   <>
-                    ✅ Delivered {fmtDate(po.received_date)} — {items.length} cost entr
+                    ✅ Delivered {fmtDate(po.received_date)} · {items.length} cost entr
                     {items.length === 1 ? "y" : "ies"} posted against the project budget with
                     reference <span className="font-mono">{po.doc_number}</span>.
                   </>

@@ -128,8 +128,9 @@ function ClientDetailPage() {
                     </TableCell>
                   </TableRow>
                 )}
-                {projects?.items.map((project) => (
+                {projects?.items.map((project, rowIndex) => (
                   <ClickableRow
+                    index={rowIndex}
                     key={project.id}
                     to="/projects/$projectId"
                     params={{ projectId: project.id }}

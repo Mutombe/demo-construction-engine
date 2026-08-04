@@ -32,6 +32,7 @@ export function ClickableRow({
   search,
   prefetch,
   disabled,
+  index,
   className,
   children,
   ...props
@@ -39,10 +40,12 @@ export function ClickableRow({
   to: string;
   params?: Record<string, string>;
   search?: Record<string, unknown>;
-  /** orval getGetXQueryOptions(id) factory — fetched on hover so the click lands instantly */
+  /** orval getGetXQueryOptions(id) factory, fetched on hover so the click lands instantly */
   prefetch?: () => AnyQueryOptions;
   /** e.g. optimistic placeholder rows aren't navigable yet */
   disabled?: boolean;
+  /** Row position, which staggers the reveal so rows land in reading order */
+  index?: number;
   children: ReactNode;
 } & HTMLAttributes<HTMLTableRowElement>) {
   const navigate = useNavigate();
@@ -60,8 +63,15 @@ export function ClickableRow({
       className={cn(
         !disabled && "cursor-pointer focus-visible:bg-muted/60 focus-visible:outline-none",
         "transition-colors",
+        index !== undefined && "row-progressive",
         className,
       )}
+      style={
+        index !== undefined
+          // Capped: past a dozen rows a longer delay reads as lag, not progress
+          ? ({ "--row-index": Math.min(index, 12) } as React.CSSProperties)
+          : undefined
+      }
       onClick={go}
       onKeyDown={(e) => {
         if (e.key === "Enter" && e.target === e.currentTarget) go();

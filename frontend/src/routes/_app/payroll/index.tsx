@@ -182,7 +182,7 @@ function PayrollPage() {
               <EmptyState
                 icon={<CalendarPlus />}
                 title="No timesheets yet"
-                hint="Record a site day to capture who worked where — pay runs are built from these."
+                hint="Record a site day to capture who worked where. Pay runs are built from these."
                 action={
                   <Can perm="timesheet:write">
                     <Button size="sm" onClick={() => setDayDialog(true)}>
@@ -309,8 +309,9 @@ function PayrollPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {workers?.items.map((worker) => (
+                    {workers?.items.map((worker, rowIndex) => (
                       <ClickableRow
+                        index={rowIndex}
                         key={worker.id}
                         to="/payroll/workers/$workerId"
                         params={{ workerId: worker.id }}
@@ -413,8 +414,9 @@ function PayrollPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {runs?.items.map((run) => (
+                      {runs?.items.map((run, rowIndex) => (
                         <ClickableRow
+                          index={rowIndex}
                           key={run.id}
                           to="/payroll/runs/$runId"
                           params={{ runId: run.id }}

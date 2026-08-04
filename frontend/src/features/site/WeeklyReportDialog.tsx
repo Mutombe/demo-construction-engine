@@ -91,7 +91,7 @@ export function WeeklyReportDialog({
             </div>
             <Button
               disabled={!aiAvailable || generateMutation.isPending}
-              title={aiAvailable ? undefined : "AI not configured — add ANTHROPIC_API_KEY"}
+              title={aiAvailable ? undefined : "AI not configured. Add ANTHROPIC_API_KEY"}
               onClick={() => void generate()}
             >
               <ClaudeIcon />
@@ -114,7 +114,7 @@ export function WeeklyReportDialog({
             <div className="max-h-[55vh] overflow-y-auto rounded-md border bg-secondary/30 p-4">
               {period && (
                 <p className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">
-                  Period {fmtDate(period.start)} — {fmtDate(period.end)} · draft, review before
+                  Period {fmtDate(period.start)} · {fmtDate(period.end)} · draft, review before
                   sending
                 </p>
               )}

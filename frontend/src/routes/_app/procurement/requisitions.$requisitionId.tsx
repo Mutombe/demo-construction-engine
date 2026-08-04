@@ -262,7 +262,7 @@ function RequisitionDetailPage() {
                       </EntityLink>
                     ) : (
                       <span className="text-xs text-muted-foreground">
-                        not linked — priced by hand
+                        not linked, priced by hand
                       </span>
                     )}
                   </TableCell>

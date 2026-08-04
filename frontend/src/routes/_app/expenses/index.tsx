@@ -76,7 +76,7 @@ function ExpensesPage() {
     mutation: optimistic(queryClient, {
       prefixes: ["/api/v1/expenses"],
       invalidate: ["/api/v1/expenses", "/api/v1/projects", "/api/v1/dashboard"],
-      successToast: "Claim approved — cost posted to the project budget",
+      successToast: "Claim approved. Cost posted to the project budget",
       apply: (old, vars: { claimId: string }) =>
         patchRow(vars.claimId, { status: "approved" })(old),
     }),
@@ -187,7 +187,7 @@ function ExpensesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading && !data && <TableSkeleton columns={7} rows={6} />}
+            {isLoading && !data && <TableSkeleton columns={7} />}
             {!isLoading && !data?.items.length && (
               <TableRow>
                 <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">

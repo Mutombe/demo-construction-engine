@@ -51,7 +51,7 @@ export function ConvertToPoDialog({
         requisitionId: requisition.id,
         data: { supplier_id: supplierId, expected_delivery: expected || null },
       });
-      toast.success(`${po.doc_number} drafted — check prices, then issue`);
+      toast.success(`${po.doc_number} drafted. Check prices, then issue`);
       await onDone(po.id);
     } catch (err) {
       toast.error(errDetail(err));
@@ -66,7 +66,7 @@ export function ConvertToPoDialog({
         </DialogHeader>
         <p className="text-xs text-muted-foreground">
           Lines are priced from what this supplier last charged for the same BOQ item. The
-          order is created as a draft — review the prices before issuing it.
+          order is created as a draft, so review the prices before issuing it.
         </p>
         <div className="space-y-4">
           <div className="space-y-1.5">

@@ -209,3 +209,30 @@
     animation: none;
   }
 }
+
+/* --- Progressive row reveal -------------------------------------------------
+   Rows arrive top to bottom in reading order rather than the whole table
+   appearing at once, so the eye can start on row one while the rest lands.
+   The stagger is capped: past a dozen rows the delay would be felt as lag
+   rather than progress, which is the opposite of the point. */
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.row-progressive {
+  animation: row-in 220ms ease-out both;
+  animation-delay: calc(var(--row-index, 0) * 28ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row-progressive {
+    animation: none;
+  }
+}
