@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowCounterClockwise, CheckCircle, FileText, Plus } from "@phosphor-icons/react";
+import { ArrowCounterClockwise, CheckCircle, FileText, Plus, UsersThree } from "@phosphor-icons/react";
 import { ClaudeIcon } from "@/components/ui/claude-icon";
 import { useState } from "react";
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import { usePermission } from "@/features/auth/hooks";
 import { DiaryEntryDialog } from "@/features/site/DiaryEntryDialog";
+import { DiaryLabourDialog } from "@/features/site/DiaryLabourDialog";
 import { RaiseIssueDialog, ResolveIssueDialog } from "@/features/site/IssueDialogs";
 import { IssueStatusBadge, SeverityBadge, WeatherBadge } from "@/features/site/StatusBadges";
 import { WeeklyReportDialog } from "@/features/site/WeeklyReportDialog";
@@ -54,6 +55,7 @@ function SiteTab() {
 
   const [diaryDialog, setDiaryDialog] = useState(false);
   const [editingEntry, setEditingEntry] = useState<DiaryEntryRead | null>(null);
+  const [labourEntryId, setLabourEntryId] = useState<string | null>(null);
   const [issueDialog, setIssueDialog] = useState(false);
   const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [reportDialog, setReportDialog] = useState(false);
@@ -104,13 +106,14 @@ function SiteTab() {
                 <TableHead className="text-right">Labour</TableHead>
                 <TableHead>Work Done</TableHead>
                 <TableHead>Delays</TableHead>
+                <TableHead className="text-right">Timesheets</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {diaryLoading && !diary && <TableSkeleton columns={5} rows={4} />}
+              {diaryLoading && !diary && <TableSkeleton columns={6} rows={4} />}
               {!diaryLoading && !diary?.items.length && (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
                     No diary entries yet.
                   </TableCell>
                 </TableRow>
@@ -140,6 +143,20 @@ function SiteTab() {
                   <TableCell className="max-w-md truncate text-sm">{entry.work_done}</TableCell>
                   <TableCell className="max-w-48 truncate text-sm text-destructive">
                     {entry.delays ?? ""}
+                  </TableCell>
+                  <TableCell
+                    className="text-right"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Button
+                      variant={entry.timesheets_pushed ? "ghost" : "outline"}
+                      size="sm"
+                      title="Record the crew and push their timesheets"
+                      onClick={() => setLabourEntryId(entry.id)}
+                    >
+                      <UsersThree />
+                      {entry.timesheets_pushed ? "In payroll" : "Labour"}
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -235,6 +252,12 @@ function SiteTab() {
         </CardContent>
       </Card>
 
+      <DiaryLabourDialog
+        entryId={labourEntryId}
+        onOpenChange={(open) => {
+          if (!open) setLabourEntryId(null);
+        }}
+      />
       <DiaryEntryDialog
         open={diaryDialog}
         onOpenChange={setDiaryDialog}

@@ -7,6 +7,7 @@ from app.common.pagination import PageParamsDep
 from app.common.schemas import Page
 from app.core.deps import DbDep, require_roles
 from app.modules.inventory import service
+from app.common.enums import StocktakeStatus
 from app.modules.inventory.schemas import (
     AdjustRequest,
     GoodsInRequest,
@@ -18,6 +19,10 @@ from app.modules.inventory.schemas import (
     StockItemRead,
     StockItemUpdate,
     StockMovementRead,
+    StocktakeCountSet,
+    StocktakeCreate,
+    StocktakeDetail,
+    StocktakeRead,
 )
 
 router = APIRouter(tags=["inventory"])
@@ -121,3 +126,60 @@ def adjust_stock(
     item_id: uuid.UUID, body: AdjustRequest, db: DbDep, user=Depends(inv_write_user)
 ) -> StockItemRead:
     return service.item_read(service.adjust(db, item_id, body, user.id))
+
+
+# --- Stocktake ---------------------------------------------------------------
+
+
+@router.get("/stocktakes", response_model=Page[StocktakeRead])
+def list_stocktakes(
+    db: DbDep, params: PageParamsDep, status: StocktakeStatus | None = None
+) -> Page[StocktakeRead]:
+    rows, total = service.list_stocktakes(db, params.page, params.page_size, status)
+    return Page(
+        items=[service.stocktake_read(s) for s in rows],
+        total=total,
+        page=params.page,
+        page_size=params.page_size,
+    )
+
+
+@router.post("/stocktakes", response_model=StocktakeDetail, status_code=201)
+def create_stocktake(
+    body: StocktakeCreate, db: DbDep, user=Depends(inv_write_user)
+) -> StocktakeDetail:
+    stocktake = service.create_stocktake(db, body, user.id)
+    return service.stocktake_read(stocktake, detail=True)
+
+
+@router.get("/stocktakes/{stocktake_id}", response_model=StocktakeDetail)
+def get_stocktake(stocktake_id: uuid.UUID, db: DbDep) -> StocktakeDetail:
+    return service.stocktake_read(service.get_stocktake(db, stocktake_id), detail=True)
+
+
+@router.put("/stocktakes/{stocktake_id}/counts", response_model=StocktakeDetail)
+def set_stocktake_counts(
+    stocktake_id: uuid.UUID,
+    body: StocktakeCountSet,
+    db: DbDep,
+    _=Depends(inv_issue_user),
+) -> StocktakeDetail:
+    """Counting is a site job, so issue-level access is enough to record it;
+    approving the variance is not."""
+    stocktake = service.set_stocktake_counts(db, stocktake_id, body)
+    return service.stocktake_read(stocktake, detail=True)
+
+
+@router.post("/stocktakes/{stocktake_id}/approve", response_model=StocktakeDetail)
+def approve_stocktake(
+    stocktake_id: uuid.UUID, db: DbDep, user=Depends(inv_write_user)
+) -> StocktakeDetail:
+    stocktake = service.approve_stocktake(db, stocktake_id, user.id)
+    return service.stocktake_read(stocktake, detail=True)
+
+
+@router.post("/stocktakes/{stocktake_id}/cancel", response_model=StocktakeDetail)
+def cancel_stocktake(
+    stocktake_id: uuid.UUID, db: DbDep, _=Depends(inv_write_user)
+) -> StocktakeDetail:
+    return service.stocktake_read(service.cancel_stocktake(db, stocktake_id), detail=True)

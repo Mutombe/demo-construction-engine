@@ -1,9 +1,20 @@
 import uuid
 from datetime import date
+from decimal import Decimal
 
-from sqlalchemy import Date, Enum, ForeignKey, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy import (
+    Date,
+    Enum,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.common.enums import IssueSeverity, IssueStatus, WeatherCondition
 from app.common.models import AuditMixin, TimestampMixin, UUIDPrimaryKeyMixin
@@ -30,6 +41,10 @@ class SiteDiaryEntry(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
     delays: Mapped[str | None] = mapped_column(Text)
     notes: Mapped[str | None] = mapped_column(Text)
 
+    labour: Mapped[list["SiteDiaryLabour"]] = relationship(
+        back_populates="entry", cascade="all, delete-orphan"
+    )
+
 
 class SiteIssue(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
     __tablename__ = "site_issues"
@@ -50,3 +65,28 @@ class SiteIssue(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
     raised_date: Mapped[date] = mapped_column(Date, default=date.today)
     resolved_date: Mapped[date | None] = mapped_column(Date)
     resolution_notes: Mapped[str | None] = mapped_column(Text)
+
+
+class SiteDiaryLabour(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """Who worked on site that day, recorded once in the diary.
+
+    The same fact used to be entered twice — once by site in the diary, once
+    by payroll on a timesheet. These rows are the single entry; pushing them
+    creates the timesheets through the normal payroll service.
+    """
+
+    __tablename__ = "site_diary_labour"
+    __table_args__ = (UniqueConstraint("diary_entry_id", "worker_id"),)
+
+    diary_entry_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("site_diary_entries.id", ondelete="CASCADE"), index=True
+    )
+    worker_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("workers.id", ondelete="CASCADE"), index=True
+    )
+    quantity: Mapped[Decimal] = mapped_column(Numeric(5, 2))
+    overtime_quantity: Mapped[Decimal] = mapped_column(Numeric(5, 2), default=Decimal("0"))
+    notes: Mapped[str | None] = mapped_column(Text)
+
+    entry: Mapped["SiteDiaryEntry"] = relationship(back_populates="labour")
+    worker = relationship("Worker")

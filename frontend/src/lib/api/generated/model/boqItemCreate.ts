@@ -6,6 +6,7 @@
  */
 import type { BoqItemType } from './boqItemType.ts';
 import type { CostCategory } from './costCategory.ts';
+import type { VariationStatus } from './variationStatus.ts';
 
 export interface BoqItemCreate {
   /**
@@ -25,5 +26,6 @@ export interface BoqItemCreate {
   cost_category?: CostCategory;
   item_type?: BoqItemType;
   variation_ref?: string | null;
+  variation_status?: VariationStatus;
   sort_order?: number;
 }

@@ -5,7 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.common.enums import IssueSeverity, IssueStatus
-from app.core.exceptions import ConflictError, NotFoundError
+from app.core.exceptions import ConflictError, NotFoundError, ValidationFailedError
 from app.modules.projects.service import get_project
 from app.modules.site.models import SiteDiaryEntry, SiteIssue
 from app.modules.site.schemas import (
@@ -170,3 +170,133 @@ def reopen_issue(db: Session, issue_id: uuid.UUID) -> SiteIssue:
     issue.resolved_date = None
     issue.resolution_notes = None
     return issue
+
+
+# --- Diary labour -> timesheets ---------------------------------------------
+
+
+def diary_labour_read(line):
+    from app.modules.site.schemas import DiaryLabourRead
+
+    read = DiaryLabourRead.model_validate(line)
+    if line.worker:
+        read.worker_name = line.worker.full_name
+        read.trade = line.worker.trade
+    return read
+
+
+def _timesheets_exist(db: Session, entry) -> bool:
+    """Have this diary's labour lines already been pushed to payroll?"""
+    from app.modules.payroll.models import Timesheet
+
+    worker_ids = [line.worker_id for line in entry.labour]
+    if not worker_ids:
+        return False
+    count = db.scalar(
+        select(func.count())
+        .select_from(Timesheet)
+        .where(
+            Timesheet.project_id == entry.project_id,
+            Timesheet.work_date == entry.entry_date,
+            Timesheet.worker_id.in_(worker_ids),
+        )
+    ) or 0
+    return count == len(worker_ids)
+
+
+def diary_entry_read(db: Session, entry):
+    from app.modules.site.schemas import DiaryEntryRead
+
+    read = DiaryEntryRead.model_validate(entry)
+    read.labour = [diary_labour_read(line) for line in entry.labour]
+    read.timesheets_pushed = _timesheets_exist(db, entry)
+    return read
+
+
+def set_diary_labour(db: Session, entry_id: uuid.UUID, data):
+    """Replace the day's labour list. Headcount follows the list so the two
+    can never disagree."""
+    from app.modules.payroll.service import get_worker
+    from app.modules.site.models import SiteDiaryLabour
+
+    entry = get_diary_entry(db, entry_id)
+    seen: set[uuid.UUID] = set()
+    entry.labour.clear()
+    db.flush()  # release the unique (entry, worker) keys before re-inserting
+    for spec in data.lines:
+        if spec.worker_id in seen:
+            raise ValidationFailedError("The same worker is listed twice")
+        seen.add(spec.worker_id)
+        get_worker(db, spec.worker_id)
+        if spec.quantity == 0 and spec.overtime_quantity == 0:
+            continue
+        entry.labour.append(
+            SiteDiaryLabour(
+                worker_id=spec.worker_id,
+                quantity=spec.quantity,
+                overtime_quantity=spec.overtime_quantity,
+                notes=spec.notes,
+            )
+        )
+    entry.labour_headcount = len(entry.labour)
+    db.flush()
+    return entry
+
+
+def push_diary_labour_to_timesheets(db: Session, entry_id: uuid.UUID, user_id: uuid.UUID):
+    """Create timesheets from the diary's labour lines — one entry, not two.
+
+    Time already locked into an approved pay run is left alone and reported
+    back rather than silently skipped or, worse, overwritten.
+    """
+    from app.modules.payroll.models import Timesheet
+    from app.modules.payroll.schemas import BulkEntry, TimesheetBulkCreate
+    from app.modules.payroll.service import bulk_create_timesheets
+    from app.modules.site.schemas import TimesheetPushResult
+
+    entry = get_diary_entry(db, entry_id)
+    if not entry.labour:
+        raise ValidationFailedError("No labour recorded on this diary entry")
+
+    existing = {
+        sheet.worker_id: sheet
+        for sheet in db.scalars(
+            select(Timesheet).where(
+                Timesheet.project_id == entry.project_id,
+                Timesheet.work_date == entry.entry_date,
+            )
+        )
+    }
+    locked, pushable = [], []
+    for line in entry.labour:
+        sheet = existing.get(line.worker_id)
+        if sheet is not None and sheet.pay_run_id is not None:
+            locked.append(line.worker.full_name if line.worker else str(line.worker_id))
+            continue
+        pushable.append(line)
+
+    created = sum(1 for line in pushable if line.worker_id not in existing)
+    updated = len(pushable) - created
+    if pushable:
+        bulk_create_timesheets(
+            db,
+            TimesheetBulkCreate(
+                project_id=entry.project_id,
+                work_date=entry.entry_date,
+                entries=[
+                    BulkEntry(
+                        worker_id=line.worker_id,
+                        quantity=line.quantity,
+                        overtime_quantity=line.overtime_quantity,
+                    )
+                    for line in pushable
+                ],
+            ),
+            user_id,
+        )
+    return TimesheetPushResult(
+        diary_entry_id=entry.id,
+        created=created,
+        updated=updated,
+        skipped_locked=locked,
+    )

@@ -1,8 +1,10 @@
 import uuid
+from datetime import date
 from decimal import Decimal
 
 from sqlalchemy import (
     Computed,
+    Date,
     Enum,
     ForeignKey,
     Integer,
@@ -14,7 +16,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.common.enums import BoqItemType, CostCategory
+from app.common.enums import BoqItemType, CostCategory, VariationStatus
 from app.common.models import AuditMixin, TimestampMixin, UUIDPrimaryKeyMixin
 from app.core.database import Base
 
@@ -70,6 +72,12 @@ class BoqItem(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
         default=BoqItemType.original,
     )
     variation_ref: Mapped[str | None] = mapped_column(String(30))
+    # Only meaningful for variation/omission items; ignored on original scope
+    variation_status: Mapped[VariationStatus] = mapped_column(
+        Enum(VariationStatus, name="variation_status", native_enum=True),
+        default=VariationStatus.proposed,
+    )
+    variation_approved_date: Mapped[date | None] = mapped_column(Date)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
 
     section: Mapped[BoqSection] = relationship(back_populates="items")

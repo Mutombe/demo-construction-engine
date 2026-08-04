@@ -4,6 +4,7 @@
  * Construction ERP API
  * OpenAPI spec version: 0.1.0
  */
+import type { DiaryLabourRead } from './diaryLabourRead.ts';
 import type { WeatherCondition } from './weatherCondition.ts';
 
 export interface DiaryEntryRead {
@@ -19,4 +20,6 @@ export interface DiaryEntryRead {
   id: string;
   project_id: string;
   created_at: string;
+  labour?: DiaryLabourRead[];
+  timesheets_pushed?: boolean;
 }

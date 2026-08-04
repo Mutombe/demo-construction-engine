@@ -57,9 +57,20 @@ def _latest_certified(db: Session, project_id: uuid.UUID) -> Valuation | None:
 
 
 def _boq_type_totals(db: Session, project_id: uuid.UUID) -> dict[BoqItemType, Decimal]:
+    """Variation and omission values, counting only what the client approved.
+
+    A proposed or rejected variation is not certifiable, so it must not move
+    the ceiling — that is the whole point of the variation register.
+    """
+    from app.common.enums import VariationStatus
+
     rows = db.execute(
         select(BoqItem.item_type, func.coalesce(func.sum(BoqItem.amount), 0))
-        .where(BoqItem.project_id == project_id)
+        .where(
+            BoqItem.project_id == project_id,
+            (BoqItem.item_type == BoqItemType.original)
+            | (BoqItem.variation_status == VariationStatus.approved),
+        )
         .group_by(BoqItem.item_type)
     ).all()
     return dict(rows)

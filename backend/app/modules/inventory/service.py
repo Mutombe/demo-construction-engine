@@ -370,3 +370,168 @@ def adjust(db: Session, item_id: uuid.UUID, data: AdjustRequest, user_id: uuid.U
     )
     db.flush()
     return item
+
+
+# --- Stocktake ---------------------------------------------------------------
+
+
+def _stocktake_line_read(line):
+    from app.modules.inventory.schemas import StocktakeLineRead
+
+    read = StocktakeLineRead.model_validate(line)
+    item = line.stock_item
+    if item:
+        read.code, read.name, read.unit = item.code, item.name, item.unit
+    if line.counted_quantity is not None:
+        read.variance_quantity = line.counted_quantity - line.expected_quantity
+        read.variance_value = (read.variance_quantity * line.unit_cost).quantize(CENT)
+    return read
+
+
+def stocktake_read(stocktake, detail: bool = False):
+    from app.modules.inventory.schemas import StocktakeDetail, StocktakeRead
+
+    lines = [_stocktake_line_read(line) for line in stocktake.lines]
+    cls = StocktakeDetail if detail else StocktakeRead
+    read = cls.model_validate(stocktake)
+    read.line_count = len(lines)
+    read.counted_count = sum(1 for line in lines if line.counted_quantity is not None)
+    read.variance_value = sum((line.variance_value for line in lines), Decimal("0"))
+    if detail:
+        read.lines = sorted(lines, key=lambda line: line.code)
+    return read
+
+
+def get_stocktake(db: Session, stocktake_id: uuid.UUID):
+    from app.modules.inventory.models import Stocktake
+
+    stocktake = db.get(Stocktake, stocktake_id)
+    if stocktake is None:
+        raise NotFoundError("Stocktake not found")
+    return stocktake
+
+
+def list_stocktakes(db: Session, page: int, page_size: int, status=None):
+    from app.modules.inventory.models import Stocktake
+
+    query = select(Stocktake)
+    if status is not None:
+        query = query.where(Stocktake.status == status)
+    total = db.scalar(select(func.count()).select_from(query.subquery())) or 0
+    rows = list(
+        db.scalars(
+            query.order_by(Stocktake.created_at.desc())
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+        )
+    )
+    return rows, total
+
+
+def create_stocktake(db: Session, data, user_id: uuid.UUID):
+    """Open a counting session, snapshotting today's expected quantities."""
+    from app.common.enums import StocktakeStatus
+    from app.modules.inventory.models import Stocktake, StocktakeLine
+
+    open_session = db.scalar(
+        select(Stocktake).where(Stocktake.status == StocktakeStatus.counting)
+    )
+    if open_session:
+        raise ConflictError(
+            f"A stocktake ({open_session.doc_number}) is already in progress — "
+            "approve or cancel it first"
+        )
+
+    query = select(StockItem).where(StockItem.is_active.is_(True))
+    if data.stock_item_ids:
+        query = query.where(StockItem.id.in_(data.stock_item_ids))
+    if data.category:
+        query = query.where(StockItem.category == data.category)
+    items = list(db.scalars(query.order_by(StockItem.code)))
+    if not items:
+        raise ValidationFailedError("No stock items match this stocktake")
+
+    stocktake = Stocktake(
+        doc_number=next_doc_number(db, Stocktake, "STK"),
+        count_date=data.count_date or date.today(),
+        notes=data.notes,
+        created_by=user_id,
+        lines=[
+            StocktakeLine(
+                stock_item_id=item.id,
+                expected_quantity=item.qty_on_hand,
+                unit_cost=item.unit_cost,
+            )
+            for item in items
+        ],
+    )
+    db.add(stocktake)
+    db.flush()
+    return stocktake
+
+
+def set_stocktake_counts(db: Session, stocktake_id: uuid.UUID, data):
+    """Record counted quantities. Lines left uncounted stay null and are
+    ignored at approval — a partial count must not zero the shelf."""
+    from app.common.enums import StocktakeStatus
+
+    stocktake = get_stocktake(db, stocktake_id)
+    if stocktake.status != StocktakeStatus.counting:
+        raise ConflictError("Only a stocktake in progress can be counted")
+
+    by_item = {line.stock_item_id: line for line in stocktake.lines}
+    for spec in data.lines:
+        line = by_item.get(spec.stock_item_id)
+        if line is None:
+            raise ValidationFailedError("Stock item is not part of this stocktake")
+        line.counted_quantity = spec.counted_quantity
+        line.notes = spec.notes
+    db.flush()
+    return stocktake
+
+
+def approve_stocktake(db: Session, stocktake_id: uuid.UUID, user_id: uuid.UUID):
+    """Post the counted variances as stock adjustments, in one transaction."""
+    from datetime import datetime, timezone
+
+    from app.common.enums import StocktakeStatus
+
+    stocktake = get_stocktake(db, stocktake_id)
+    if stocktake.status != StocktakeStatus.counting:
+        raise ConflictError("Only a stocktake in progress can be approved")
+    counted = [line for line in stocktake.lines if line.counted_quantity is not None]
+    if not counted:
+        raise ValidationFailedError("Nothing has been counted yet")
+
+    for line in counted:
+        variance = line.counted_quantity - line.expected_quantity
+        if variance == 0:
+            continue
+        adjust(
+            db,
+            line.stock_item_id,
+            AdjustRequest(
+                quantity=variance,
+                movement_date=stocktake.count_date,
+                notes=f"Stocktake {stocktake.doc_number}"
+                + (f": {line.notes}" if line.notes else ""),
+            ),
+            user_id,
+        )
+
+    stocktake.status = StocktakeStatus.approved
+    stocktake.approved_at = datetime.now(timezone.utc)
+    stocktake.approved_by = user_id
+    db.flush()
+    return stocktake
+
+
+def cancel_stocktake(db: Session, stocktake_id: uuid.UUID):
+    from app.common.enums import StocktakeStatus
+
+    stocktake = get_stocktake(db, stocktake_id)
+    if stocktake.status != StocktakeStatus.counting:
+        raise ConflictError("Only a stocktake in progress can be cancelled")
+    stocktake.status = StocktakeStatus.cancelled
+    db.flush()
+    return stocktake

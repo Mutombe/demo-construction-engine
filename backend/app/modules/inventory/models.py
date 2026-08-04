@@ -1,21 +1,23 @@
 import uuid
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 from sqlalchemy import (
     Boolean,
     Date,
+    DateTime,
     Enum,
     ForeignKey,
     Index,
     Numeric,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.common.enums import StockMovementType
+from app.common.enums import StockMovementType, StocktakeStatus
 from app.common.models import AuditMixin, TimestampMixin, UUIDPrimaryKeyMixin
 from app.core.database import Base
 
@@ -75,3 +77,50 @@ class StockMovement(Base, UUIDPrimaryKeyMixin, TimestampMixin):
 
     stock_item: Mapped[StockItem] = relationship()
     project = relationship("Project")
+
+
+class Stocktake(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
+    """A counting session: snapshot expected quantities, enter counts, review
+    the variance, then approve — which posts the adjustments in one go.
+
+    Counting against a snapshot (rather than live qty_on_hand) means movements
+    that happen mid-count do not silently change what the counter was told to
+    expect; the variance stays honest about the moment of the count.
+    """
+
+    __tablename__ = "stocktakes"
+
+    doc_number: Mapped[str] = mapped_column(String(20), unique=True)
+    status: Mapped[StocktakeStatus] = mapped_column(
+        Enum(StocktakeStatus, name="stocktake_status", native_enum=True),
+        default=StocktakeStatus.counting,
+    )
+    count_date: Mapped[date] = mapped_column(Date, default=date.today)
+    notes: Mapped[str | None] = mapped_column(Text)
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    approved_by: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL", use_alter=True)
+    )
+
+    lines: Mapped[list["StocktakeLine"]] = relationship(
+        back_populates="stocktake", cascade="all, delete-orphan"
+    )
+
+
+class StocktakeLine(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    __tablename__ = "stocktake_lines"
+    __table_args__ = (UniqueConstraint("stocktake_id", "stock_item_id"),)
+
+    stocktake_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("stocktakes.id", ondelete="CASCADE"), index=True
+    )
+    stock_item_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("stock_items.id", ondelete="RESTRICT"), index=True
+    )
+    expected_quantity: Mapped[Decimal] = mapped_column(Numeric(14, 3))
+    counted_quantity: Mapped[Decimal | None] = mapped_column(Numeric(14, 3))
+    unit_cost: Mapped[Decimal] = mapped_column(Numeric(14, 2))
+    notes: Mapped[str | None] = mapped_column(Text)
+
+    stocktake: Mapped[Stocktake] = relationship(back_populates="lines")
+    stock_item: Mapped[StockItem] = relationship()

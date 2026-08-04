@@ -548,6 +548,29 @@ def seed_riverside(db, users, clients) -> Project:
             "cost_category": CostCategory.plant,
             "item_type": "variation",
             "variation_ref": "VO-01",
+            # Client signed this one off, so it counts toward the ceiling
+            "variation_status": "approved",
+            "variation_approved_date": TODAY - timedelta(days=21),
+        },
+    )
+
+    # A second VO still awaiting the client's decision, so the register shows
+    # both states and the ceiling only moves for the approved one
+    items["B.8"], _ = get_or_create(
+        db,
+        BoqItem,
+        project_id=project.id,
+        section_id=sections["B"].id,
+        item_code="B.8",
+        defaults={
+            "description": "VO-02: Additional dewatering to north trenches",
+            "unit": "week",
+            "quantity": Decimal("4"),
+            "rate": Decimal("850.00"),
+            "cost_category": CostCategory.plant,
+            "item_type": "variation",
+            "variation_ref": "VO-02",
+            "variation_status": "proposed",
         },
     )
 

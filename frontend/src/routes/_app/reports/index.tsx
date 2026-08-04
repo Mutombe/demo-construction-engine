@@ -87,6 +87,7 @@ const COST_SOURCES = [
 function ReportsPage() {
   const { data: projects } = useListProjects({ page_size: 100 });
   const [costProject, setCostProject] = useState("");
+  const [reconProject, setReconProject] = useState("");
   const [ledgerProject, setLedgerProject] = useState("");
   const [ledgerSource, setLedgerSource] = useState("");
   const [registerProject, setRegisterProject] = useState("");
@@ -127,6 +128,31 @@ function ReportsPage() {
           <div className="space-y-1.5">
             <Label>Project (required)</Label>
             <Select value={costProject} onChange={(e) => setCostProject(e.target.value)}>
+              <option value="">Select Project…</option>
+              {projects?.items.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.code} — {p.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+        </ReportCard>
+
+        <ReportCard
+          title="Material Reconciliation"
+          description="What the measured work should have consumed against what was actually issued — the wastage and shrinkage check."
+          footer={
+            <ExportButtons
+              path="material-reconciliation"
+              params={reconProject ? { project_id: reconProject } : {}}
+              disabled={!reconProject}
+              stem="material_reconciliation"
+            />
+          }
+        >
+          <div className="space-y-1.5">
+            <Label>Project (required)</Label>
+            <Select value={reconProject} onChange={(e) => setReconProject(e.target.value)}>
               <option value="">Select Project…</option>
               {projects?.items.map((p) => (
                 <option key={p.id} value={p.id}>

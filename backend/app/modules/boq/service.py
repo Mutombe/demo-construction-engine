@@ -1,10 +1,11 @@
 import uuid
+from datetime import date
 from decimal import Decimal
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.common.enums import BoqItemType, PoStatus
+from app.common.enums import BoqItemType, PoStatus, VariationStatus
 from app.core.exceptions import ConflictError, NotFoundError, ValidationFailedError
 from app.modules.boq.models import BoqItem, BoqSection
 from app.modules.boq.schemas import (
@@ -18,6 +19,9 @@ from app.modules.boq.schemas import (
     BoqTree,
     CategoryTotal,
     SectionTotal,
+    VariationDecision,
+    VariationRegister,
+    VariationRow,
 )
 from app.modules.costs import service as costs_service
 from app.modules.costs.models import CostEntry
@@ -306,3 +310,70 @@ def boq_summary(db: Session, project_id: uuid.UUID) -> BoqSummary:
         by_category=by_category,
         by_section=by_section,
     )
+
+
+# --- Variation register -----------------------------------------------------
+
+
+def variation_register(db: Session, project_id: uuid.UUID) -> VariationRegister:
+    """Variations and omissions with their approval state and running totals."""
+    from app.modules.valuations.service import effective_contract_value
+
+    project = get_project(db, project_id)
+    rows_raw = db.execute(
+        select(BoqItem, BoqSection.code)
+        .join(BoqSection, BoqSection.id == BoqItem.section_id)
+        .where(
+            BoqItem.project_id == project_id,
+            BoqItem.item_type != BoqItemType.original,
+        )
+        .order_by(BoqItem.variation_ref, BoqSection.code, BoqItem.item_code)
+    ).all()
+
+    rows: list[VariationRow] = []
+    totals = {
+        (VariationStatus.approved, BoqItemType.variation): ZERO,
+        (VariationStatus.approved, BoqItemType.omission): ZERO,
+        (VariationStatus.proposed, BoqItemType.variation): ZERO,
+        (VariationStatus.proposed, BoqItemType.omission): ZERO,
+    }
+    rejected = ZERO
+    for item, section_code in rows_raw:
+        read = VariationRow.model_validate(item)
+        read.section_code = section_code
+        rows.append(read)
+        if item.variation_status == VariationStatus.rejected:
+            rejected += item.amount
+        else:
+            totals[(item.variation_status, item.item_type)] += item.amount
+
+    return VariationRegister(
+        project_id=project_id,
+        contract_value=project.contract_value,
+        rows=rows,
+        approved_additions=totals[(VariationStatus.approved, BoqItemType.variation)],
+        approved_omissions=totals[(VariationStatus.approved, BoqItemType.omission)],
+        proposed_additions=totals[(VariationStatus.proposed, BoqItemType.variation)],
+        proposed_omissions=totals[(VariationStatus.proposed, BoqItemType.omission)],
+        rejected_total=rejected,
+        effective_contract_value=effective_contract_value(db, project),
+    )
+
+
+def decide_variation(
+    db: Session, item_id: uuid.UUID, data: VariationDecision
+) -> BoqItem:
+    """Approve or reject a variation. Approving it makes the work certifiable."""
+    item = get_item(db, item_id)
+    if item.item_type == BoqItemType.original:
+        raise ValidationFailedError(
+            "Only variation and omission items have an approval state"
+        )
+    item.variation_status = data.status
+    item.variation_approved_date = (
+        (data.approved_date or date.today())
+        if data.status == VariationStatus.approved
+        else None
+    )
+    db.flush()
+    return item

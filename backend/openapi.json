@@ -1996,6 +1996,112 @@
     }
    }
   },
+  "/api/v1/projects/{project_id}/variations": {
+   "get": {
+    "tags": [
+     "boq"
+    ],
+    "summary": "Get Variation Register",
+    "operationId": "get_variation_register",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "project_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Project Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/VariationRegister"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/boq-items/{item_id}/variation-status": {
+   "post": {
+    "tags": [
+     "boq"
+    ],
+    "summary": "Decide Variation",
+    "operationId": "decide_variation",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "item_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Item Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/VariationDecision"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/BoqItemRead"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/v1/projects/{project_id}/boq/summary": {
    "get": {
     "tags": [
@@ -4925,6 +5031,113 @@
     }
    }
   },
+  "/api/v1/diary/{entry_id}/labour": {
+   "put": {
+    "tags": [
+     "site"
+    ],
+    "summary": "Set Diary Labour",
+    "operationId": "set_diary_labour",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "entry_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Entry Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DiaryLabourSet"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/DiaryEntryRead"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/diary/{entry_id}/push-timesheets": {
+   "post": {
+    "tags": [
+     "site"
+    ],
+    "summary": "Push Diary Labour To Timesheets",
+    "description": "Turn the day's diary labour into timesheets so the same fact is only\never entered once.",
+    "operationId": "push_diary_labour_to_timesheets",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "entry_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Entry Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/TimesheetPushResult"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/v1/projects/{project_id}/issues": {
    "get": {
     "tags": [
@@ -6306,6 +6519,330 @@
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/StockItemRead"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/stocktakes": {
+   "get": {
+    "tags": [
+     "inventory"
+    ],
+    "summary": "List Stocktakes",
+    "operationId": "list_stocktakes",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "status",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "$ref": "#/components/schemas/StocktakeStatus"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     },
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Page Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Page_StocktakeRead_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "inventory"
+    ],
+    "summary": "Create Stocktake",
+    "operationId": "create_stocktake",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/StocktakeCreate"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/StocktakeDetail"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/stocktakes/{stocktake_id}": {
+   "get": {
+    "tags": [
+     "inventory"
+    ],
+    "summary": "Get Stocktake",
+    "operationId": "get_stocktake",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "stocktake_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Stocktake Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/StocktakeDetail"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/stocktakes/{stocktake_id}/counts": {
+   "put": {
+    "tags": [
+     "inventory"
+    ],
+    "summary": "Set Stocktake Counts",
+    "description": "Counting is a site job, so issue-level access is enough to record it;\napproving the variance is not.",
+    "operationId": "set_stocktake_counts",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "stocktake_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Stocktake Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/StocktakeCountSet"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/StocktakeDetail"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/stocktakes/{stocktake_id}/approve": {
+   "post": {
+    "tags": [
+     "inventory"
+    ],
+    "summary": "Approve Stocktake",
+    "operationId": "approve_stocktake",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "stocktake_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Stocktake Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/StocktakeDetail"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/stocktakes/{stocktake_id}/cancel": {
+   "post": {
+    "tags": [
+     "inventory"
+    ],
+    "summary": "Cancel Stocktake",
+    "operationId": "cancel_stocktake",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "stocktake_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Stocktake Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/StocktakeDetail"
         }
        }
       }
@@ -8925,6 +9462,66 @@
     }
    }
   },
+  "/api/v1/reports/material-reconciliation": {
+   "get": {
+    "tags": [
+     "reports"
+    ],
+    "summary": "Export Material Reconciliation",
+    "operationId": "export_material_reconciliation",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "project_id",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Project Id"
+      }
+     },
+     {
+      "name": "format",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "enum": [
+        "csv",
+        "xlsx"
+       ],
+       "type": "string",
+       "default": "csv",
+       "title": "Format"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/v1/reports/procurement-register": {
    "get": {
     "tags": [
@@ -10505,6 +11102,10 @@
       ],
       "title": "Variation Ref"
      },
+     "variation_status": {
+      "$ref": "#/components/schemas/VariationStatus",
+      "default": "proposed"
+     },
      "sort_order": {
       "type": "integer",
       "title": "Sort Order",
@@ -10569,6 +11170,10 @@
        }
       ],
       "title": "Variation Ref"
+     },
+     "variation_status": {
+      "$ref": "#/components/schemas/VariationStatus",
+      "default": "proposed"
      },
      "sort_order": {
       "type": "integer",
@@ -10732,6 +11337,16 @@
        }
       ],
       "title": "Variation Ref"
+     },
+     "variation_status": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/VariationStatus"
+       },
+       {
+        "type": "null"
+       }
+      ]
      },
      "sort_order": {
       "anyOf": [
@@ -12361,6 +12976,19 @@
       "type": "string",
       "format": "date-time",
       "title": "Created At"
+     },
+     "labour": {
+      "items": {
+       "$ref": "#/components/schemas/DiaryLabourRead"
+      },
+      "type": "array",
+      "title": "Labour",
+      "default": []
+     },
+     "timesheets_pushed": {
+      "type": "boolean",
+      "title": "Timesheets Pushed",
+      "default": false
      }
     },
     "type": "object",
@@ -12457,6 +13085,141 @@
     },
     "type": "object",
     "title": "DiaryEntryUpdate"
+   },
+   "DiaryLabourLine": {
+    "properties": {
+     "worker_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Worker Id"
+     },
+     "quantity": {
+      "anyOf": [
+       {
+        "type": "number",
+        "minimum": 0.0
+       },
+       {
+        "type": "string",
+        "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+       }
+      ],
+      "title": "Quantity"
+     },
+     "overtime_quantity": {
+      "anyOf": [
+       {
+        "type": "number",
+        "minimum": 0.0
+       },
+       {
+        "type": "string",
+        "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+       }
+      ],
+      "title": "Overtime Quantity",
+      "default": "0"
+     },
+     "notes": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notes"
+     }
+    },
+    "type": "object",
+    "required": [
+     "worker_id",
+     "quantity"
+    ],
+    "title": "DiaryLabourLine"
+   },
+   "DiaryLabourRead": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "worker_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Worker Id"
+     },
+     "worker_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Worker Name"
+     },
+     "trade": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Trade"
+     },
+     "quantity": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Quantity"
+     },
+     "overtime_quantity": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Overtime Quantity"
+     },
+     "notes": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notes"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "worker_id",
+     "quantity",
+     "overtime_quantity",
+     "notes"
+    ],
+    "title": "DiaryLabourRead"
+   },
+   "DiaryLabourSet": {
+    "properties": {
+     "lines": {
+      "items": {
+       "$ref": "#/components/schemas/DiaryLabourLine"
+      },
+      "type": "array",
+      "title": "Lines"
+     }
+    },
+    "type": "object",
+    "required": [
+     "lines"
+    ],
+    "title": "DiaryLabourSet"
    },
    "ExpenseCategory": {
     "type": "string",
@@ -14920,6 +15683,37 @@
      "page_size"
     ],
     "title": "Page[StockMovementRead]"
+   },
+   "Page_StocktakeRead_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/StocktakeRead"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "total",
+     "page",
+     "page_size"
+    ],
+    "title": "Page[StocktakeRead]"
    },
    "Page_SupplierRead_": {
     "properties": {
@@ -20862,6 +21656,388 @@
     ],
     "title": "StockMovementType"
    },
+   "StocktakeCountLine": {
+    "properties": {
+     "stock_item_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Stock Item Id"
+     },
+     "counted_quantity": {
+      "anyOf": [
+       {
+        "type": "number",
+        "minimum": 0.0
+       },
+       {
+        "type": "string",
+        "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+       }
+      ],
+      "title": "Counted Quantity"
+     },
+     "notes": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notes"
+     }
+    },
+    "type": "object",
+    "required": [
+     "stock_item_id",
+     "counted_quantity"
+    ],
+    "title": "StocktakeCountLine"
+   },
+   "StocktakeCountSet": {
+    "properties": {
+     "lines": {
+      "items": {
+       "$ref": "#/components/schemas/StocktakeCountLine"
+      },
+      "type": "array",
+      "title": "Lines"
+     }
+    },
+    "type": "object",
+    "required": [
+     "lines"
+    ],
+    "title": "StocktakeCountSet"
+   },
+   "StocktakeCreate": {
+    "properties": {
+     "count_date": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Count Date"
+     },
+     "notes": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notes"
+     },
+     "stock_item_ids": {
+      "items": {
+       "type": "string",
+       "format": "uuid"
+      },
+      "type": "array",
+      "title": "Stock Item Ids"
+     },
+     "category": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Category"
+     }
+    },
+    "type": "object",
+    "title": "StocktakeCreate"
+   },
+   "StocktakeDetail": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "doc_number": {
+      "type": "string",
+      "title": "Doc Number"
+     },
+     "status": {
+      "$ref": "#/components/schemas/StocktakeStatus"
+     },
+     "count_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Count Date"
+     },
+     "notes": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notes"
+     },
+     "approved_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Approved At"
+     },
+     "created_by": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Created By"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "line_count": {
+      "type": "integer",
+      "title": "Line Count",
+      "default": 0
+     },
+     "counted_count": {
+      "type": "integer",
+      "title": "Counted Count",
+      "default": 0
+     },
+     "variance_value": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Variance Value",
+      "default": "0"
+     },
+     "lines": {
+      "items": {
+       "$ref": "#/components/schemas/StocktakeLineRead"
+      },
+      "type": "array",
+      "title": "Lines",
+      "default": []
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "doc_number",
+     "status",
+     "count_date",
+     "notes",
+     "approved_at",
+     "created_by",
+     "created_at"
+    ],
+    "title": "StocktakeDetail"
+   },
+   "StocktakeLineRead": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "stock_item_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Stock Item Id"
+     },
+     "code": {
+      "type": "string",
+      "title": "Code",
+      "default": ""
+     },
+     "name": {
+      "type": "string",
+      "title": "Name",
+      "default": ""
+     },
+     "unit": {
+      "type": "string",
+      "title": "Unit",
+      "default": ""
+     },
+     "expected_quantity": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Expected Quantity"
+     },
+     "counted_quantity": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Counted Quantity"
+     },
+     "unit_cost": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Unit Cost"
+     },
+     "variance_quantity": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Variance Quantity",
+      "default": "0"
+     },
+     "variance_value": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Variance Value",
+      "default": "0"
+     },
+     "notes": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notes"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "stock_item_id",
+     "expected_quantity",
+     "counted_quantity",
+     "unit_cost",
+     "notes"
+    ],
+    "title": "StocktakeLineRead"
+   },
+   "StocktakeRead": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "doc_number": {
+      "type": "string",
+      "title": "Doc Number"
+     },
+     "status": {
+      "$ref": "#/components/schemas/StocktakeStatus"
+     },
+     "count_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Count Date"
+     },
+     "notes": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notes"
+     },
+     "approved_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Approved At"
+     },
+     "created_by": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Created By"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "line_count": {
+      "type": "integer",
+      "title": "Line Count",
+      "default": 0
+     },
+     "counted_count": {
+      "type": "integer",
+      "title": "Counted Count",
+      "default": 0
+     },
+     "variance_value": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Variance Value",
+      "default": "0"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "doc_number",
+     "status",
+     "count_date",
+     "notes",
+     "approved_at",
+     "created_by",
+     "created_at"
+    ],
+    "title": "StocktakeRead"
+   },
+   "StocktakeStatus": {
+    "type": "string",
+    "enum": [
+     "counting",
+     "approved",
+     "cancelled"
+    ],
+    "title": "StocktakeStatus"
+   },
    "SupplierActivity": {
     "properties": {
      "supplier": {
@@ -22170,6 +23346,38 @@
     ],
     "title": "TimesheetCreate"
    },
+   "TimesheetPushResult": {
+    "properties": {
+     "diary_entry_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Diary Entry Id"
+     },
+     "created": {
+      "type": "integer",
+      "title": "Created"
+     },
+     "updated": {
+      "type": "integer",
+      "title": "Updated"
+     },
+     "skipped_locked": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Skipped Locked"
+     }
+    },
+    "type": "object",
+    "required": [
+     "diary_entry_id",
+     "created",
+     "updated",
+     "skipped_locked"
+    ],
+    "title": "TimesheetPushResult"
+   },
    "TimesheetRead": {
     "properties": {
      "id": {
@@ -23035,6 +24243,210 @@
     },
     "type": "object",
     "title": "ValuationUpdate"
+   },
+   "VariationDecision": {
+    "properties": {
+     "status": {
+      "$ref": "#/components/schemas/VariationStatus"
+     },
+     "approved_date": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Approved Date"
+     }
+    },
+    "type": "object",
+    "required": [
+     "status"
+    ],
+    "title": "VariationDecision"
+   },
+   "VariationRegister": {
+    "properties": {
+     "project_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Project Id"
+     },
+     "contract_value": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Contract Value"
+     },
+     "rows": {
+      "items": {
+       "$ref": "#/components/schemas/VariationRow"
+      },
+      "type": "array",
+      "title": "Rows"
+     },
+     "approved_additions": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Approved Additions"
+     },
+     "approved_omissions": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Approved Omissions"
+     },
+     "proposed_additions": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Proposed Additions"
+     },
+     "proposed_omissions": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Proposed Omissions"
+     },
+     "rejected_total": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Rejected Total"
+     },
+     "effective_contract_value": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Effective Contract Value"
+     }
+    },
+    "type": "object",
+    "required": [
+     "project_id",
+     "contract_value",
+     "rows",
+     "approved_additions",
+     "approved_omissions",
+     "proposed_additions",
+     "proposed_omissions",
+     "rejected_total",
+     "effective_contract_value"
+    ],
+    "title": "VariationRegister",
+    "description": "Every variation and omission on a project with its approval state.\n\nOnly the approved totals move the certifiable contract value; proposed\nwork is visible but not yet money."
+   },
+   "VariationRow": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "section_code": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Section Code"
+     },
+     "item_code": {
+      "type": "string",
+      "title": "Item Code"
+     },
+     "description": {
+      "type": "string",
+      "title": "Description"
+     },
+     "unit": {
+      "type": "string",
+      "title": "Unit"
+     },
+     "quantity": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Quantity"
+     },
+     "rate": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Rate"
+     },
+     "amount": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Amount"
+     },
+     "item_type": {
+      "$ref": "#/components/schemas/BoqItemType"
+     },
+     "variation_ref": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Variation Ref"
+     },
+     "variation_status": {
+      "$ref": "#/components/schemas/VariationStatus"
+     },
+     "variation_approved_date": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Variation Approved Date"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "item_code",
+     "description",
+     "unit",
+     "quantity",
+     "rate",
+     "amount",
+     "item_type",
+     "variation_ref",
+     "variation_status",
+     "variation_approved_date"
+    ],
+    "title": "VariationRow"
+   },
+   "VariationStatus": {
+    "type": "string",
+    "enum": [
+     "proposed",
+     "approved",
+     "rejected"
+    ],
+    "title": "VariationStatus",
+    "description": "Lifecycle of a variation or omission on the BOQ.\n\nOnly approved variations move the certifiable contract value \u2014 a variation\nthe client has not signed off is not money you can invoice."
    },
    "WeatherCondition": {
     "type": "string",

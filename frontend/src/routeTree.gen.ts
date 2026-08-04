@@ -21,6 +21,7 @@ import { Route as AppExpensesClaimIdRouteImport } from './routes/_app/expenses/$
 import { Route as AppInboxIndexRouteImport } from './routes/_app/inbox/index'
 import { Route as AppInventoryIndexRouteImport } from './routes/_app/inventory/index'
 import { Route as AppInventoryItemIdRouteImport } from './routes/_app/inventory/$itemId'
+import { Route as AppInventoryStocktakeRouteImport } from './routes/_app/inventory/stocktake'
 import { Route as AppPayrollIndexRouteImport } from './routes/_app/payroll/index'
 import { Route as AppProcurementIndexRouteImport } from './routes/_app/procurement/index'
 import { Route as AppProcurementRequisitionsRouteImport } from './routes/_app/procurement/requisitions'
@@ -101,6 +102,11 @@ const AppInventoryIndexRoute = AppInventoryIndexRouteImport.update({
 const AppInventoryItemIdRoute = AppInventoryItemIdRouteImport.update({
   id: '/inventory/$itemId',
   path: '/inventory/$itemId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInventoryStocktakeRoute = AppInventoryStocktakeRouteImport.update({
+  id: '/inventory/stocktake',
+  path: '/inventory/stocktake',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPayrollIndexRoute = AppPayrollIndexRouteImport.update({
@@ -233,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/clients/$clientId': typeof AppClientsClientIdRoute
   '/expenses/$claimId': typeof AppExpensesClaimIdRoute
   '/inventory/$itemId': typeof AppInventoryItemIdRoute
+  '/inventory/stocktake': typeof AppInventoryStocktakeRoute
   '/procurement/requisitions': typeof AppProcurementRequisitionsRoute
   '/procurement/suppliers': typeof AppProcurementSuppliersRouteWithChildren
   '/projects/$projectId': typeof AppProjectsProjectIdRouteWithChildren
@@ -268,6 +275,7 @@ export interface FileRoutesByTo {
   '/clients/$clientId': typeof AppClientsClientIdRoute
   '/expenses/$claimId': typeof AppExpensesClaimIdRoute
   '/inventory/$itemId': typeof AppInventoryItemIdRoute
+  '/inventory/stocktake': typeof AppInventoryStocktakeRoute
   '/procurement/requisitions': typeof AppProcurementRequisitionsRoute
   '/procurement/suppliers': typeof AppProcurementSuppliersRouteWithChildren
   '/settings/users': typeof AppSettingsUsersRoute
@@ -304,6 +312,7 @@ export interface FileRoutesById {
   '/_app/clients/$clientId': typeof AppClientsClientIdRoute
   '/_app/expenses/$claimId': typeof AppExpensesClaimIdRoute
   '/_app/inventory/$itemId': typeof AppInventoryItemIdRoute
+  '/_app/inventory/stocktake': typeof AppInventoryStocktakeRoute
   '/_app/procurement/requisitions': typeof AppProcurementRequisitionsRoute
   '/_app/procurement/suppliers': typeof AppProcurementSuppliersRouteWithChildren
   '/_app/projects/$projectId': typeof AppProjectsProjectIdRouteWithChildren
@@ -341,6 +350,7 @@ export interface FileRouteTypes {
     | '/clients/$clientId'
     | '/expenses/$claimId'
     | '/inventory/$itemId'
+    | '/inventory/stocktake'
     | '/procurement/requisitions'
     | '/procurement/suppliers'
     | '/projects/$projectId'
@@ -376,6 +386,7 @@ export interface FileRouteTypes {
     | '/clients/$clientId'
     | '/expenses/$claimId'
     | '/inventory/$itemId'
+    | '/inventory/stocktake'
     | '/procurement/requisitions'
     | '/procurement/suppliers'
     | '/settings/users'
@@ -411,6 +422,7 @@ export interface FileRouteTypes {
     | '/_app/clients/$clientId'
     | '/_app/expenses/$claimId'
     | '/_app/inventory/$itemId'
+    | '/_app/inventory/stocktake'
     | '/_app/procurement/requisitions'
     | '/_app/procurement/suppliers'
     | '/_app/projects/$projectId'
@@ -529,6 +541,13 @@ declare module '@tanstack/react-router' {
       path: '/inventory/$itemId'
       fullPath: '/inventory/$itemId'
       preLoaderRoute: typeof AppInventoryItemIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/inventory/stocktake': {
+      id: '/_app/inventory/stocktake'
+      path: '/inventory/stocktake'
+      fullPath: '/inventory/stocktake'
+      preLoaderRoute: typeof AppInventoryStocktakeRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/payroll/': {
@@ -734,6 +753,7 @@ interface AppRouteChildren {
   AppClientsClientIdRoute: typeof AppClientsClientIdRoute
   AppExpensesClaimIdRoute: typeof AppExpensesClaimIdRoute
   AppInventoryItemIdRoute: typeof AppInventoryItemIdRoute
+  AppInventoryStocktakeRoute: typeof AppInventoryStocktakeRoute
   AppProcurementRequisitionsRoute: typeof AppProcurementRequisitionsRoute
   AppProcurementSuppliersRoute: typeof AppProcurementSuppliersRouteWithChildren
   AppProjectsProjectIdRoute: typeof AppProjectsProjectIdRouteWithChildren
@@ -759,6 +779,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppClientsClientIdRoute: AppClientsClientIdRoute,
   AppExpensesClaimIdRoute: AppExpensesClaimIdRoute,
   AppInventoryItemIdRoute: AppInventoryItemIdRoute,
+  AppInventoryStocktakeRoute: AppInventoryStocktakeRoute,
   AppProcurementRequisitionsRoute: AppProcurementRequisitionsRoute,
   AppProcurementSuppliersRoute: AppProcurementSuppliersRouteWithChildren,
   AppProjectsProjectIdRoute: AppProjectsProjectIdRouteWithChildren,

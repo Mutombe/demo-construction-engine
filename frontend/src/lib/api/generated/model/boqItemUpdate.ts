@@ -6,6 +6,7 @@
  */
 import type { BoqItemType } from './boqItemType.ts';
 import type { CostCategory } from './costCategory.ts';
+import type { VariationStatus } from './variationStatus.ts';
 
 export interface BoqItemUpdate {
   item_code?: string | null;
@@ -16,5 +17,6 @@ export interface BoqItemUpdate {
   cost_category?: CostCategory | null;
   item_type?: BoqItemType | null;
   variation_ref?: string | null;
+  variation_status?: VariationStatus | null;
   sort_order?: number | null;
 }

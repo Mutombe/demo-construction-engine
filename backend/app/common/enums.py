@@ -47,6 +47,18 @@ class BoqItemType(StrEnum):
     omission = "omission"
 
 
+class VariationStatus(StrEnum):
+    """Lifecycle of a variation or omission on the BOQ.
+
+    Only approved variations move the certifiable contract value — a variation
+    the client has not signed off is not money you can invoice.
+    """
+
+    proposed = "proposed"
+    approved = "approved"
+    rejected = "rejected"
+
+
 class CostSource(StrEnum):
     manual = "manual"
     expense = "expense"
@@ -96,6 +108,12 @@ class StockMovementType(StrEnum):
     goods_in = "goods_in"
     issue = "issue"
     adjustment = "adjustment"
+
+
+class StocktakeStatus(StrEnum):
+    counting = "counting"
+    approved = "approved"
+    cancelled = "cancelled"
 
 
 class ValuationStatus(StrEnum):

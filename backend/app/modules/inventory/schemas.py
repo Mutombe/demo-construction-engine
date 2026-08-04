@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.common.enums import StockMovementType
+from app.common.enums import StockMovementType, StocktakeStatus
 
 
 class StockItemBase(BaseModel):
@@ -119,3 +119,60 @@ class StockMovementRead(BaseModel):
     reference: str | None
     notes: str | None
     created_at: datetime
+
+
+# --- Stocktake ---------------------------------------------------------------
+
+
+class StocktakeCreate(BaseModel):
+    count_date: date | None = None
+    notes: str | None = None
+    # Empty means "count everything active"
+    stock_item_ids: list[uuid.UUID] = Field(default_factory=list)
+    category: str | None = None  # cycle-count one category at a time
+
+
+class StocktakeCountLine(BaseModel):
+    stock_item_id: uuid.UUID
+    counted_quantity: Decimal = Field(ge=0)
+    notes: str | None = None
+
+
+class StocktakeCountSet(BaseModel):
+    lines: list[StocktakeCountLine]
+
+
+class StocktakeLineRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    stock_item_id: uuid.UUID
+    code: str = ""
+    name: str = ""
+    unit: str = ""
+    expected_quantity: Decimal
+    counted_quantity: Decimal | None
+    unit_cost: Decimal
+    variance_quantity: Decimal = Decimal("0")
+    variance_value: Decimal = Decimal("0")
+    notes: str | None
+
+
+class StocktakeRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    doc_number: str
+    status: StocktakeStatus
+    count_date: date
+    notes: str | None
+    approved_at: datetime | None
+    created_by: uuid.UUID | None
+    created_at: datetime
+    line_count: int = 0
+    counted_count: int = 0
+    variance_value: Decimal = Decimal("0")
+
+
+class StocktakeDetail(StocktakeRead):
+    lines: list[StocktakeLineRead] = []

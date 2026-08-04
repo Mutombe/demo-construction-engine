@@ -14,6 +14,8 @@ from app.modules.boq.schemas import (
     BoqSectionUpdate,
     BoqSummary,
     BoqTree,
+    VariationDecision,
+    VariationRegister,
 )
 
 router = APIRouter(tags=["boq"])
@@ -24,6 +26,21 @@ boq_write = Depends(require_roles(UserRole.project_manager))
 @router.get("/projects/{project_id}/boq", response_model=BoqTree)
 def get_boq(project_id: uuid.UUID, db: DbDep) -> BoqTree:
     return service.get_boq_tree(db, project_id)
+
+
+@router.get("/projects/{project_id}/variations", response_model=VariationRegister)
+def get_variation_register(project_id: uuid.UUID, db: DbDep) -> VariationRegister:
+    return service.variation_register(db, project_id)
+
+
+@router.post("/boq-items/{item_id}/variation-status", response_model=BoqItemRead)
+def decide_variation(
+    item_id: uuid.UUID,
+    body: VariationDecision,
+    db: DbDep,
+    _=Depends(require_roles(UserRole.project_manager)),
+) -> BoqItemRead:
+    return BoqItemRead.model_validate(service.decide_variation(db, item_id, body))
 
 
 @router.get("/projects/{project_id}/boq/summary", response_model=BoqSummary)

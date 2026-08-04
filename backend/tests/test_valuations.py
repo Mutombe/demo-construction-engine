@@ -328,22 +328,26 @@ def test_measurement_guards(client, db):
 
 
 def test_variations_raise_ceiling_omissions_lower_it(client, db):
-    from app.common.enums import BoqItemType
+    from app.common.enums import BoqItemType, VariationStatus
     from tests.factories import make_boq_item, make_boq_section
 
     headers = _pm(db)
     project = make_project(db, contract_value=Decimal("100000"))
     section = make_boq_section(db, project)
     # +20000 variation, -5000 omission -> effective ceiling 115000
+    # Approved from the outset: this test is about the arithmetic, and the
+    # approval gate itself is covered in test_m10_controls.py
     make_boq_item(
         db, section, description="Extra retaining wall", unit="m",
         quantity=Decimal("200"), rate=Decimal("100"),
         item_type=BoqItemType.variation, variation_ref="VO-001",
+        variation_status=VariationStatus.approved,
     )
     make_boq_item(
         db, section, description="Omitted paving", unit="m2",
         quantity=Decimal("50"), rate=Decimal("100"),
         item_type=BoqItemType.omission, variation_ref="VO-002",
+        variation_status=VariationStatus.approved,
     )
 
     assert _create(client, headers, project.id, "115000").status_code == 201
@@ -360,7 +364,7 @@ def test_variations_raise_ceiling_omissions_lower_it(client, db):
 
 
 def test_measurement_context_shows_variations_and_omissions(client, db):
-    from app.common.enums import BoqItemType
+    from app.common.enums import BoqItemType, VariationStatus
     from tests.factories import make_boq_item, make_boq_section
 
     headers = _pm(db)
@@ -370,11 +374,13 @@ def test_measurement_context_shows_variations_and_omissions(client, db):
         db, section, description="Extra footing", unit="m3",
         quantity=Decimal("10"), rate=Decimal("150"),
         item_type=BoqItemType.variation, variation_ref="VO-001",
+        variation_status=VariationStatus.approved,
     )
     om = make_boq_item(
         db, section, description="Omitted kerbs", unit="m",
         quantity=Decimal("20"), rate=Decimal("50"),
         item_type=BoqItemType.omission, variation_ref="VO-002",
+        variation_status=VariationStatus.approved,
     )
     val = _create(client, headers, project.id, "1").json()
 

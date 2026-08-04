@@ -12,10 +12,12 @@ from app.modules.site.schemas import (
     DiaryEntryCreate,
     DiaryEntryRead,
     DiaryEntryUpdate,
+    DiaryLabourSet,
     SiteIssueCreate,
     SiteIssueRead,
     SiteIssueResolve,
     SiteIssueUpdate,
+    TimesheetPushResult,
 )
 
 router = APIRouter(tags=["site"])
@@ -52,7 +54,22 @@ def create_diary_entry(
 
 @router.get("/diary/{entry_id}", response_model=DiaryEntryRead)
 def get_diary_entry(entry_id: uuid.UUID, db: DbDep) -> DiaryEntryRead:
-    return DiaryEntryRead.model_validate(service.get_diary_entry(db, entry_id))
+    return service.diary_entry_read(db, service.get_diary_entry(db, entry_id))
+
+
+@router.put("/diary/{entry_id}/labour", response_model=DiaryEntryRead,
+            dependencies=[site_write])
+def set_diary_labour(entry_id: uuid.UUID, body: DiaryLabourSet, db: DbDep) -> DiaryEntryRead:
+    return service.diary_entry_read(db, service.set_diary_labour(db, entry_id, body))
+
+
+@router.post("/diary/{entry_id}/push-timesheets", response_model=TimesheetPushResult)
+def push_diary_labour_to_timesheets(
+    entry_id: uuid.UUID, db: DbDep, user=Depends(site_user)
+) -> TimesheetPushResult:
+    """Turn the day's diary labour into timesheets so the same fact is only
+    ever entered once."""
+    return service.push_diary_labour_to_timesheets(db, entry_id, user.id)
 
 
 @router.patch("/diary/{entry_id}", response_model=DiaryEntryRead, dependencies=[site_write])

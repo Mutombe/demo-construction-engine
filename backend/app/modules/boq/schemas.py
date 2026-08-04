@@ -1,9 +1,10 @@
 import uuid
+from datetime import date
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.common.enums import BoqItemType, CostCategory
+from app.common.enums import BoqItemType, CostCategory, VariationStatus
 
 
 class BoqItemBase(BaseModel):
@@ -15,6 +16,7 @@ class BoqItemBase(BaseModel):
     cost_category: CostCategory = CostCategory.material
     item_type: BoqItemType = BoqItemType.original
     variation_ref: str | None = Field(default=None, max_length=30)
+    variation_status: VariationStatus = VariationStatus.proposed
     sort_order: int = 0
 
 
@@ -31,6 +33,7 @@ class BoqItemUpdate(BaseModel):
     cost_category: CostCategory | None = None
     item_type: BoqItemType | None = None
     variation_ref: str | None = Field(default=None, max_length=30)
+    variation_status: VariationStatus | None = None
     sort_order: int | None = None
 
 
@@ -105,3 +108,43 @@ class BoqSummary(BaseModel):
     unallocated_actual: Decimal
     by_category: list[CategoryTotal]
     by_section: list[SectionTotal]
+
+
+class VariationDecision(BaseModel):
+    status: VariationStatus
+    approved_date: date | None = None
+
+
+class VariationRow(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    section_code: str | None = None
+    item_code: str
+    description: str
+    unit: str
+    quantity: Decimal
+    rate: Decimal
+    amount: Decimal
+    item_type: BoqItemType
+    variation_ref: str | None
+    variation_status: VariationStatus
+    variation_approved_date: date | None
+
+
+class VariationRegister(BaseModel):
+    """Every variation and omission on a project with its approval state.
+
+    Only the approved totals move the certifiable contract value; proposed
+    work is visible but not yet money.
+    """
+
+    project_id: uuid.UUID
+    contract_value: Decimal | None
+    rows: list[VariationRow]
+    approved_additions: Decimal
+    approved_omissions: Decimal
+    proposed_additions: Decimal
+    proposed_omissions: Decimal
+    rejected_total: Decimal
+    effective_contract_value: Decimal | None
