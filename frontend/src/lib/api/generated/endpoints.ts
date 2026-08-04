@@ -45,6 +45,7 @@ import type {
   CompanyOverview,
   CompanySettingsRead,
   CompanySettingsUpdate,
+  ConvertToPo,
   CostEntryCreate,
   CostEntryRead,
   CostEntryUpdate,
@@ -87,6 +88,7 @@ import type {
   ListPayRunsParams,
   ListProjectsParams,
   ListPurchaseOrdersParams,
+  ListRequisitionsParams,
   ListRfqsParams,
   ListSiteIssuesParams,
   ListStockItemsParams,
@@ -114,6 +116,7 @@ import type {
   PagePayRunRead,
   PagePoRead,
   PageProjectListItem,
+  PageRequisitionRead,
   PageRfqRead,
   PageSiteIssueRead,
   PageStockItemRead,
@@ -144,6 +147,7 @@ import type {
   PortalProjectDetail,
   PortalSummary,
   PortalValuation,
+  ProcurementPulse,
   ProjectCreate,
   ProjectListItem,
   ProjectMapPin,
@@ -156,6 +160,12 @@ import type {
   QuoteExtractionOut,
   QuoteRead,
   QuoteUpdate,
+  ReorderRequest,
+  ReorderResult,
+  ReorderSuggestions,
+  RequisitionCreate,
+  RequisitionDetail,
+  RequisitionRead,
   RevenueSummary,
   RfqCreate,
   RfqDetail,
@@ -4136,6 +4146,103 @@ export function useFinancialTrend<TData = Awaited<ReturnType<typeof financialTre
 
 
 /**
+ * Open requisitions, overdue deliveries and low stock in one call.
+ *
+ * Reading it also fires the (deduped) overdue-delivery notifications, so the
+ * alert lands without needing a scheduler in this deployment.
+ * @summary Procurement Pulse
+ */
+export const procurementPulse = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<ProcurementPulse>(
+      {url: `/api/v1/dashboard/procurement-pulse`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getProcurementPulseQueryKey = () => {
+    return [
+    `/api/v1/dashboard/procurement-pulse`
+    ] as const;
+    }
+
+
+export const getProcurementPulseQueryOptions = <TData = Awaited<ReturnType<typeof procurementPulse>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof procurementPulse>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getProcurementPulseQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof procurementPulse>>> = ({ signal }) => procurementPulse(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof procurementPulse>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ProcurementPulseQueryResult = NonNullable<Awaited<ReturnType<typeof procurementPulse>>>
+export type ProcurementPulseQueryError = unknown
+
+
+export function useProcurementPulse<TData = Awaited<ReturnType<typeof procurementPulse>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof procurementPulse>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof procurementPulse>>,
+          TError,
+          Awaited<ReturnType<typeof procurementPulse>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useProcurementPulse<TData = Awaited<ReturnType<typeof procurementPulse>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof procurementPulse>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof procurementPulse>>,
+          TError,
+          Awaited<ReturnType<typeof procurementPulse>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useProcurementPulse<TData = Awaited<ReturnType<typeof procurementPulse>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof procurementPulse>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Procurement Pulse
+ */
+
+export function useProcurementPulse<TData = Awaited<ReturnType<typeof procurementPulse>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof procurementPulse>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getProcurementPulseQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
  * @summary Budget Alerts
  */
 export const budgetAlerts = (
@@ -6121,6 +6228,451 @@ export function useDownloadPurchaseOrderPdf<TData = Awaited<ReturnType<typeof do
 
 
 /**
+ * @summary List Requisitions
+ */
+export const listRequisitions = (
+    params?: ListRequisitionsParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<PageRequisitionRead>(
+      {url: `/api/v1/requisitions`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getListRequisitionsQueryKey = (params?: ListRequisitionsParams,) => {
+    return [
+    `/api/v1/requisitions`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListRequisitionsQueryOptions = <TData = Awaited<ReturnType<typeof listRequisitions>>, TError = HTTPValidationError>(params?: ListRequisitionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRequisitions>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListRequisitionsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listRequisitions>>> = ({ signal }) => listRequisitions(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listRequisitions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListRequisitionsQueryResult = NonNullable<Awaited<ReturnType<typeof listRequisitions>>>
+export type ListRequisitionsQueryError = HTTPValidationError
+
+
+export function useListRequisitions<TData = Awaited<ReturnType<typeof listRequisitions>>, TError = HTTPValidationError>(
+ params: undefined |  ListRequisitionsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRequisitions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listRequisitions>>,
+          TError,
+          Awaited<ReturnType<typeof listRequisitions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListRequisitions<TData = Awaited<ReturnType<typeof listRequisitions>>, TError = HTTPValidationError>(
+ params?: ListRequisitionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRequisitions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listRequisitions>>,
+          TError,
+          Awaited<ReturnType<typeof listRequisitions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListRequisitions<TData = Awaited<ReturnType<typeof listRequisitions>>, TError = HTTPValidationError>(
+ params?: ListRequisitionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRequisitions>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Requisitions
+ */
+
+export function useListRequisitions<TData = Awaited<ReturnType<typeof listRequisitions>>, TError = HTTPValidationError>(
+ params?: ListRequisitionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRequisitions>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListRequisitionsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Create Requisition
+ */
+export const createRequisition = (
+    projectId: string,
+    requisitionCreate: RequisitionCreate,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<RequisitionDetail>(
+      {url: `/api/v1/projects/${projectId}/requisitions`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: requisitionCreate, signal
+    },
+      );
+    }
+
+
+
+
+export const getCreateRequisitionMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRequisition>>, TError,{projectId: string;data: RequisitionCreate}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof createRequisition>>, TError,{projectId: string;data: RequisitionCreate}, TContext> => {
+
+const mutationKey = ['createRequisition'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createRequisition>>, {projectId: string;data: RequisitionCreate}> = (props) => {
+          const {projectId,data} = props ?? {};
+
+          return  createRequisition(projectId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateRequisitionMutationResult = NonNullable<Awaited<ReturnType<typeof createRequisition>>>
+    export type CreateRequisitionMutationBody = RequisitionCreate
+    export type CreateRequisitionMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Requisition
+ */
+export const useCreateRequisition = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRequisition>>, TError,{projectId: string;data: RequisitionCreate}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createRequisition>>,
+        TError,
+        {projectId: string;data: RequisitionCreate},
+        TContext
+      > => {
+      return useMutation(getCreateRequisitionMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Get Requisition
+ */
+export const getRequisition = (
+    requisitionId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<RequisitionDetail>(
+      {url: `/api/v1/requisitions/${requisitionId}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetRequisitionQueryKey = (requisitionId: string,) => {
+    return [
+    `/api/v1/requisitions/${requisitionId}`
+    ] as const;
+    }
+
+
+export const getGetRequisitionQueryOptions = <TData = Awaited<ReturnType<typeof getRequisition>>, TError = HTTPValidationError>(requisitionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequisition>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRequisitionQueryKey(requisitionId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRequisition>>> = ({ signal }) => getRequisition(requisitionId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: requisitionId !== null && requisitionId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRequisition>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetRequisitionQueryResult = NonNullable<Awaited<ReturnType<typeof getRequisition>>>
+export type GetRequisitionQueryError = HTTPValidationError
+
+
+export function useGetRequisition<TData = Awaited<ReturnType<typeof getRequisition>>, TError = HTTPValidationError>(
+ requisitionId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequisition>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRequisition>>,
+          TError,
+          Awaited<ReturnType<typeof getRequisition>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetRequisition<TData = Awaited<ReturnType<typeof getRequisition>>, TError = HTTPValidationError>(
+ requisitionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequisition>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRequisition>>,
+          TError,
+          Awaited<ReturnType<typeof getRequisition>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetRequisition<TData = Awaited<ReturnType<typeof getRequisition>>, TError = HTTPValidationError>(
+ requisitionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequisition>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Requisition
+ */
+
+export function useGetRequisition<TData = Awaited<ReturnType<typeof getRequisition>>, TError = HTTPValidationError>(
+ requisitionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequisition>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetRequisitionQueryOptions(requisitionId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Cancel Requisition
+ */
+export const cancelRequisition = (
+    requisitionId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<RequisitionRead>(
+      {url: `/api/v1/requisitions/${requisitionId}/cancel`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getCancelRequisitionMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelRequisition>>, TError,{requisitionId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof cancelRequisition>>, TError,{requisitionId: string}, TContext> => {
+
+const mutationKey = ['cancelRequisition'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cancelRequisition>>, {requisitionId: string}> = (props) => {
+          const {requisitionId} = props ?? {};
+
+          return  cancelRequisition(requisitionId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CancelRequisitionMutationResult = NonNullable<Awaited<ReturnType<typeof cancelRequisition>>>
+
+    export type CancelRequisitionMutationError = HTTPValidationError
+
+    /**
+ * @summary Cancel Requisition
+ */
+export const useCancelRequisition = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelRequisition>>, TError,{requisitionId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof cancelRequisition>>,
+        TError,
+        {requisitionId: string},
+        TContext
+      > => {
+      return useMutation(getCancelRequisitionMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Convert Requisition To Rfq
+ */
+export const convertRequisitionToRfq = (
+    requisitionId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<RfqDetail>(
+      {url: `/api/v1/requisitions/${requisitionId}/convert-to-rfq`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getConvertRequisitionToRfqMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof convertRequisitionToRfq>>, TError,{requisitionId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof convertRequisitionToRfq>>, TError,{requisitionId: string}, TContext> => {
+
+const mutationKey = ['convertRequisitionToRfq'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof convertRequisitionToRfq>>, {requisitionId: string}> = (props) => {
+          const {requisitionId} = props ?? {};
+
+          return  convertRequisitionToRfq(requisitionId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConvertRequisitionToRfqMutationResult = NonNullable<Awaited<ReturnType<typeof convertRequisitionToRfq>>>
+
+    export type ConvertRequisitionToRfqMutationError = HTTPValidationError
+
+    /**
+ * @summary Convert Requisition To Rfq
+ */
+export const useConvertRequisitionToRfq = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof convertRequisitionToRfq>>, TError,{requisitionId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof convertRequisitionToRfq>>,
+        TError,
+        {requisitionId: string},
+        TContext
+      > => {
+      return useMutation(getConvertRequisitionToRfqMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Convert Requisition To Po
+ */
+export const convertRequisitionToPo = (
+    requisitionId: string,
+    convertToPo: ConvertToPo,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<PoDetail>(
+      {url: `/api/v1/requisitions/${requisitionId}/convert-to-po`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: convertToPo, signal
+    },
+      );
+    }
+
+
+
+
+export const getConvertRequisitionToPoMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof convertRequisitionToPo>>, TError,{requisitionId: string;data: ConvertToPo}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof convertRequisitionToPo>>, TError,{requisitionId: string;data: ConvertToPo}, TContext> => {
+
+const mutationKey = ['convertRequisitionToPo'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof convertRequisitionToPo>>, {requisitionId: string;data: ConvertToPo}> = (props) => {
+          const {requisitionId,data} = props ?? {};
+
+          return  convertRequisitionToPo(requisitionId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConvertRequisitionToPoMutationResult = NonNullable<Awaited<ReturnType<typeof convertRequisitionToPo>>>
+    export type ConvertRequisitionToPoMutationBody = ConvertToPo
+    export type ConvertRequisitionToPoMutationError = HTTPValidationError
+
+    /**
+ * @summary Convert Requisition To Po
+ */
+export const useConvertRequisitionToPo = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof convertRequisitionToPo>>, TError,{requisitionId: string;data: ConvertToPo}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof convertRequisitionToPo>>,
+        TError,
+        {requisitionId: string;data: ConvertToPo},
+        TContext
+      > => {
+      return useMutation(getConvertRequisitionToPoMutationOptions(options), queryClient);
+    }
+
+/**
  * @summary List Diary Entries
  */
 export const listDiaryEntries = (
@@ -7632,6 +8184,164 @@ export const useCreateStockItem = <TError = HTTPValidationError,
         TContext
       > => {
       return useMutation(getCreateStockItemMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Get Reorder Suggestions
+ */
+export const getReorderSuggestions = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<ReorderSuggestions>(
+      {url: `/api/v1/stock-items/reorder-suggestions`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetReorderSuggestionsQueryKey = () => {
+    return [
+    `/api/v1/stock-items/reorder-suggestions`
+    ] as const;
+    }
+
+
+export const getGetReorderSuggestionsQueryOptions = <TData = Awaited<ReturnType<typeof getReorderSuggestions>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getReorderSuggestions>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetReorderSuggestionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getReorderSuggestions>>> = ({ signal }) => getReorderSuggestions(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getReorderSuggestions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetReorderSuggestionsQueryResult = NonNullable<Awaited<ReturnType<typeof getReorderSuggestions>>>
+export type GetReorderSuggestionsQueryError = unknown
+
+
+export function useGetReorderSuggestions<TData = Awaited<ReturnType<typeof getReorderSuggestions>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getReorderSuggestions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getReorderSuggestions>>,
+          TError,
+          Awaited<ReturnType<typeof getReorderSuggestions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetReorderSuggestions<TData = Awaited<ReturnType<typeof getReorderSuggestions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getReorderSuggestions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getReorderSuggestions>>,
+          TError,
+          Awaited<ReturnType<typeof getReorderSuggestions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetReorderSuggestions<TData = Awaited<ReturnType<typeof getReorderSuggestions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getReorderSuggestions>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Reorder Suggestions
+ */
+
+export function useGetReorderSuggestions<TData = Awaited<ReturnType<typeof getReorderSuggestions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getReorderSuggestions>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetReorderSuggestionsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Create Reorder Pos
+ */
+export const createReorderPos = (
+    reorderRequest: ReorderRequest,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<ReorderResult>(
+      {url: `/api/v1/stock-items/reorder`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: reorderRequest, signal
+    },
+      );
+    }
+
+
+
+
+export const getCreateReorderPosMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createReorderPos>>, TError,{data: ReorderRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof createReorderPos>>, TError,{data: ReorderRequest}, TContext> => {
+
+const mutationKey = ['createReorderPos'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createReorderPos>>, {data: ReorderRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createReorderPos(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateReorderPosMutationResult = NonNullable<Awaited<ReturnType<typeof createReorderPos>>>
+    export type CreateReorderPosMutationBody = ReorderRequest
+    export type CreateReorderPosMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Reorder Pos
+ */
+export const useCreateReorderPos = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createReorderPos>>, TError,{data: ReorderRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createReorderPos>>,
+        TError,
+        {data: ReorderRequest},
+        TContext
+      > => {
+      return useMutation(getCreateReorderPosMutationOptions(options), queryClient);
     }
 
 /**

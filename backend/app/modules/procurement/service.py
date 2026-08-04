@@ -21,6 +21,8 @@ from app.modules.procurement.models import (
 )
 from app.modules.procurement.schemas import (
     PoCreate,
+    PoDetail,
+    PoRead,
     PoReceive,
     PoUpdate,
     QuoteCreate,
@@ -410,6 +412,87 @@ def get_po(db: Session, po_id: uuid.UUID) -> PurchaseOrder:
     return po
 
 
+def overdue_days(po: PurchaseOrder, today: date | None = None) -> int:
+    """Days an issued PO is past its expected delivery date (0 when on time).
+
+    Only issued POs count: drafts have not been sent to the supplier, and
+    received/cancelled ones have landed.
+    """
+    if po.status != PoStatus.issued or po.expected_delivery is None:
+        return 0
+    return max(0, ((today or date.today()) - po.expected_delivery).days)
+
+
+def po_read(po: PurchaseOrder) -> PoRead:
+    read = PoRead.model_validate(po)
+    read.supplier_name = po.supplier.name if po.supplier else None
+    read.project_code = po.project.code if po.project else read.project_code
+    read.days_overdue = overdue_days(po)
+    read.is_overdue = read.days_overdue > 0
+    return read
+
+
+def po_detail(db: Session, po_id: uuid.UUID) -> PoDetail:
+    po = get_po(db, po_id)
+    detail = PoDetail.model_validate(po)
+    detail.supplier_name = po.supplier.name if po.supplier else None
+    detail.project_name = po.project.name if po.project else None
+    detail.project_code = po.project.code if po.project else None
+    detail.days_overdue = overdue_days(po)
+    detail.is_overdue = detail.days_overdue > 0
+    return detail
+
+
+def overdue_pos(db: Session, limit: int = 50) -> list[PurchaseOrder]:
+    """Issued POs past their expected delivery, worst delay first."""
+    return list(
+        db.scalars(
+            select(PurchaseOrder)
+            .options(joinedload(PurchaseOrder.supplier), joinedload(PurchaseOrder.project))
+            .where(
+                PurchaseOrder.status == PoStatus.issued,
+                PurchaseOrder.expected_delivery.is_not(None),
+                PurchaseOrder.expected_delivery < date.today(),
+            )
+            .order_by(PurchaseOrder.expected_delivery.asc())
+            .limit(limit)
+        )
+    )
+
+
+def notify_overdue_deliveries(db: Session) -> int:
+    """Notify procurement about newly-overdue POs; returns how many fired.
+
+    Deduped by notification type+link so a PO is flagged once, not daily.
+    """
+    from app.modules.notifications.models import Notification
+
+    fired = 0
+    for po in overdue_pos(db):
+        link = f"/procurement/pos/{po.id}"
+        already = db.scalar(
+            select(Notification.id).where(
+                Notification.type == "po_overdue", Notification.link_path == link
+            )
+        )
+        if already:
+            continue
+        from app.common.enums import UserRole
+        from app.modules.notifications import service as notifications
+
+        days = overdue_days(po)
+        notifications.notify_roles(
+            db,
+            [UserRole.procurement_officer, UserRole.project_manager, UserRole.admin],
+            "po_overdue",
+            f"{po.doc_number} is {days} day{'s' if days != 1 else ''} overdue",
+            f"{po.supplier.name if po.supplier else ''} — expected {po.expected_delivery}",
+            link=link,
+        )
+        fired += 1
+    return fired
+
+
 def create_po(
     db: Session, project_id: uuid.UUID, data: PoCreate, created_by: uuid.UUID
 ) -> PurchaseOrder:
@@ -643,14 +726,7 @@ def supplier_activity(db: Session, supplier_id: uuid.UUID):
         select(func.count()).select_from(Quote).where(Quote.supplier_id == supplier_id)
     ) or 0
 
-    from app.modules.procurement.schemas import PoRead
-
-    po_reads = []
-    for po in pos:
-        read = PoRead.model_validate(po)
-        read.supplier_name = supplier.name
-        read.project_code = po.project.code if po.project else None
-        po_reads.append(read)
+    po_reads = [po_read(po) for po in pos]
 
     return SupplierActivity(
         supplier=SupplierRead.model_validate(supplier),
@@ -670,4 +746,92 @@ def supplier_activity(db: Session, supplier_id: uuid.UUID):
         totals=SupplierActivityTotals(
             po_count=po_count, po_value=po_value, quote_count=quote_count
         ),
+        scorecard=supplier_scorecard(db, supplier_id),
+    )
+
+
+def _avg(values: list[Decimal], places: str = "0.1") -> Decimal | None:
+    if not values:
+        return None
+    return (sum(values) / len(values)).quantize(Decimal(places))
+
+
+def supplier_scorecard(db: Session, supplier_id: uuid.UUID):
+    """Delivery reliability, responsiveness and price behaviour for one supplier.
+
+    Every metric is derived from orders/quotes already recorded — no new data
+    entry — so it is honest about small samples by returning None rather than
+    a misleading 0%.
+    """
+    from app.modules.procurement.schemas import SupplierScorecard
+
+    delivered = list(
+        db.scalars(
+            select(PurchaseOrder).where(
+                PurchaseOrder.supplier_id == supplier_id,
+                PurchaseOrder.status == PoStatus.received,
+                PurchaseOrder.expected_delivery.is_not(None),
+                PurchaseOrder.received_date.is_not(None),
+            )
+        )
+    )
+    delays = [
+        Decimal((po.received_date - po.expected_delivery).days) for po in delivered
+    ]
+    on_time = sum(1 for d in delays if d <= 0)
+    on_time_pct = (
+        (Decimal(on_time) * 100 / len(delays)).quantize(Decimal("0.1")) if delays else None
+    )
+
+    open_overdue = db.scalar(
+        select(func.count())
+        .select_from(PurchaseOrder)
+        .where(
+            PurchaseOrder.supplier_id == supplier_id,
+            PurchaseOrder.status == PoStatus.issued,
+            PurchaseOrder.expected_delivery.is_not(None),
+            PurchaseOrder.expected_delivery < date.today(),
+        )
+    ) or 0
+
+    # Responsiveness: days from RFQ issue (created_at) to quote received
+    response_rows = db.execute(
+        select(Quote.received_date, Rfq.created_at)
+        .join(Rfq, Quote.rfq_id == Rfq.id)
+        .where(Quote.supplier_id == supplier_id)
+    ).all()
+    responses = [
+        Decimal((received - created.date()).days)
+        for received, created in response_rows
+        if received is not None and created is not None
+    ]
+
+    # Price behaviour: PO line price vs the quote line it was created from
+    variance_rows = db.execute(
+        select(PoItem.unit_price, QuoteItem.unit_price)
+        .join(PurchaseOrder, PoItem.po_id == PurchaseOrder.id)
+        .join(Quote, PurchaseOrder.quote_id == Quote.id)
+        .join(
+            QuoteItem,
+            (QuoteItem.quote_id == Quote.id)
+            & (QuoteItem.description == PoItem.description),
+        )
+        .where(PurchaseOrder.supplier_id == supplier_id)
+    ).all()
+    variances = [
+        ((po_price - quote_price) * 100 / quote_price)
+        for po_price, quote_price in variance_rows
+        if quote_price and quote_price != 0
+    ]
+
+    return SupplierScorecard(
+        delivered_count=len(delivered),
+        on_time_count=on_time,
+        on_time_pct=on_time_pct,
+        avg_delay_days=_avg([d for d in delays if d > 0]),
+        open_overdue_count=open_overdue,
+        quoted_rfq_count=len(responses),
+        avg_quote_response_days=_avg(responses),
+        priced_line_count=len(variances),
+        avg_price_variance_pct=_avg(variances, "0.01"),
     )

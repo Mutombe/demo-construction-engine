@@ -14,6 +14,8 @@ from app.modules.dashboard.schemas import (
     DeadlineItem,
     FinancialTotals,
     FinancialTrend,
+    OverdueDelivery,
+    ProcurementPulse,
     ProjectHealth,
     TrendMonth,
 )
@@ -281,4 +283,44 @@ def financial_trend(
             portfolio_outstanding=invoiced - paid_total,
             portfolio_cost=total_cost,
         ),
+    )
+
+
+def procurement_pulse(db: Session) -> ProcurementPulse:
+    """Where procurement is losing time: unactioned requests, late deliveries,
+    and stock that has fallen through its reorder level."""
+    from app.modules.inventory.models import StockItem
+    from app.modules.procurement.service import overdue_days, overdue_pos
+    from app.modules.requisitions.service import open_requisition_stats
+
+    open_count, oldest_days = open_requisition_stats(db)
+    pos = overdue_pos(db)
+    low_stock = db.scalar(
+        select(func.count())
+        .select_from(StockItem)
+        .where(
+            StockItem.is_active.is_(True),
+            StockItem.qty_on_hand <= StockItem.reorder_level,
+        )
+    ) or 0
+
+    return ProcurementPulse(
+        open_requisitions=open_count,
+        oldest_requisition_days=oldest_days,
+        overdue_deliveries=len(pos),
+        overdue_value=sum((po.total_amount for po in pos), ZERO),
+        low_stock_items=low_stock,
+        deliveries=[
+            OverdueDelivery(
+                po_id=po.id,
+                doc_number=po.doc_number,
+                supplier_name=po.supplier.name if po.supplier else None,
+                project_id=po.project_id,
+                project_name=po.project.name if po.project else None,
+                expected_delivery=po.expected_delivery,
+                days_overdue=overdue_days(po),
+                total_amount=po.total_amount,
+            )
+            for po in pos
+        ],
     )

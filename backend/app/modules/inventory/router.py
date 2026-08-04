@@ -11,6 +11,9 @@ from app.modules.inventory.schemas import (
     AdjustRequest,
     GoodsInRequest,
     IssueRequest,
+    ReorderRequest,
+    ReorderResult,
+    ReorderSuggestions,
     StockItemCreate,
     StockItemRead,
     StockItemUpdate,
@@ -56,6 +59,18 @@ def create_stock_item(
     body: StockItemCreate, db: DbDep, user=Depends(inv_write_user)
 ) -> StockItemRead:
     return service.item_read(service.create_item(db, body, user.id))
+
+
+@router.get("/stock-items/reorder-suggestions", response_model=ReorderSuggestions)
+def get_reorder_suggestions(db: DbDep) -> ReorderSuggestions:
+    return service.reorder_suggestions(db)
+
+
+@router.post("/stock-items/reorder", response_model=ReorderResult, status_code=201)
+def create_reorder_pos(
+    body: ReorderRequest, db: DbDep, user=Depends(inv_write_user)
+) -> ReorderResult:
+    return service.create_reorder_pos(db, body, user.id)
 
 
 # NOTE: declared before /stock-items/{item_id} so the path never hits the UUID route

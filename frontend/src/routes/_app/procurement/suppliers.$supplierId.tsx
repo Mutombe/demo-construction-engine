@@ -26,13 +26,119 @@ import {
   getGetSupplierActivityQueryOptions,
   useGetSupplierActivity,
 } from "@/lib/api/generated/endpoints";
+import type { SupplierScorecard } from "@/lib/api/generated/model";
 import { fmtDate, money, moneyExact } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/procurement/suppliers/$supplierId")({
   component: SupplierDetailPage,
   loader: ({ context: { queryClient }, params }) =>
     queryClient.ensureQueryData(getGetSupplierActivityQueryOptions(params.supplierId)),
 });
+
+function Metric({
+  label,
+  value,
+  hint,
+  tone = "default",
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  tone?: "default" | "good" | "bad";
+}) {
+  return (
+    <div className="rounded-md border p-3">
+      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div
+        className={cn(
+          "mt-0.5 text-lg font-semibold tabular-nums",
+          tone === "good" && "text-success",
+          tone === "bad" && "text-destructive",
+        )}
+      >
+        {value}
+      </div>
+      {hint && <div className="text-xs text-muted-foreground">{hint}</div>}
+    </div>
+  );
+}
+
+/** Performance the supplier has actually delivered, not what they promised.
+ *  Metrics with no history read "—" rather than a misleading zero. */
+function Scorecard({ scorecard }: { scorecard: SupplierScorecard }) {
+  const onTime = scorecard.on_time_pct;
+  const variance = scorecard.avg_price_variance_pct;
+
+  return (
+    <Card className="mb-4">
+      <CardHeader>
+        <CardTitle>Scorecard</CardTitle>
+      </CardHeader>
+      <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Metric
+          label="On-time delivery"
+          value={onTime === null || onTime === undefined ? "—" : `${Number(onTime)}%`}
+          hint={
+            scorecard.delivered_count > 0
+              ? `${scorecard.on_time_count} of ${scorecard.delivered_count} deliveries`
+              : "no deliveries with a due date yet"
+          }
+          tone={
+            onTime === null || onTime === undefined
+              ? "default"
+              : Number(onTime) >= 80
+                ? "good"
+                : "bad"
+          }
+        />
+        <Metric
+          label="Average delay"
+          value={
+            scorecard.avg_delay_days === null || scorecard.avg_delay_days === undefined
+              ? "—"
+              : `${Number(scorecard.avg_delay_days)} days`
+          }
+          hint="across late deliveries only"
+          tone={Number(scorecard.avg_delay_days ?? 0) > 0 ? "bad" : "default"}
+        />
+        <Metric
+          label="Quote response"
+          value={
+            scorecard.avg_quote_response_days === null ||
+            scorecard.avg_quote_response_days === undefined
+              ? "—"
+              : `${Number(scorecard.avg_quote_response_days)} days`
+          }
+          hint={`${scorecard.quoted_rfq_count} quote${scorecard.quoted_rfq_count === 1 ? "" : "s"} returned`}
+        />
+        <Metric
+          label="Price vs quote"
+          value={
+            variance === null || variance === undefined
+              ? "—"
+              : `${Number(variance) > 0 ? "+" : ""}${Number(variance)}%`
+          }
+          hint={
+            scorecard.priced_line_count > 0
+              ? `${scorecard.priced_line_count} ordered line${scorecard.priced_line_count === 1 ? "" : "s"}`
+              : "no quote-backed orders yet"
+          }
+          tone={Number(variance ?? 0) > 0 ? "bad" : "default"}
+        />
+        {scorecard.open_overdue_count > 0 && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm sm:col-span-2 xl:col-span-4">
+            <span className="font-medium text-destructive">
+              {scorecard.open_overdue_count} outstanding order
+              {scorecard.open_overdue_count === 1 ? "" : "s"} past the promised date
+            </span>{" "}
+            <span className="text-muted-foreground">— chase before ordering again.</span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 function SupplierDetailPage() {
   const { supplierId } = Route.useParams();
@@ -102,6 +208,8 @@ function SupplierDetailPage() {
         <StatCard label="PO value" value={money(totals.po_value)} tone="brand" />
         <StatCard label="Quotes received" value={totals.quote_count} icon={<FileText />} />
       </div>
+
+      <Scorecard scorecard={activity.scorecard} />
 
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>

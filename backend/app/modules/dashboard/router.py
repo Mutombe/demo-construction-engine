@@ -10,6 +10,7 @@ from app.modules.dashboard.schemas import (
     CompanyOverview,
     DeadlineItem,
     FinancialTrend,
+    ProcurementPulse,
 )
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -32,6 +33,20 @@ def financial_trend(
     project_id: uuid.UUID | None = None,
 ) -> FinancialTrend:
     return service.financial_trend(db, months, project_id)
+
+
+@router.get("/procurement-pulse", response_model=ProcurementPulse)
+def procurement_pulse(db: DbDep) -> ProcurementPulse:
+    """Open requisitions, overdue deliveries and low stock in one call.
+
+    Reading it also fires the (deduped) overdue-delivery notifications, so the
+    alert lands without needing a scheduler in this deployment.
+    """
+    from app.modules.procurement.service import notify_overdue_deliveries
+
+    pulse = service.procurement_pulse(db)
+    notify_overdue_deliveries(db)
+    return pulse
 
 
 @router.get("/budget-alerts", response_model=list[BudgetAlert])

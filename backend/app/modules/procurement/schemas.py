@@ -224,6 +224,9 @@ class PoRead(BaseModel):
     total_amount: Decimal
     created_at: datetime
     project_code: str | None = None
+    # Delivery tracking: issued and past its expected delivery date
+    is_overdue: bool = False
+    days_overdue: int = 0
 
 
 class PoDetail(PoRead):
@@ -264,8 +267,26 @@ class SupplierActivityTotals(BaseModel):
     quote_count: int
 
 
+class SupplierScorecard(BaseModel):
+    """Performance metrics derived from this supplier's own order history."""
+
+    # Delivery reliability
+    delivered_count: int  # received POs that had an expected date
+    on_time_count: int
+    on_time_pct: Decimal | None  # None when there is nothing to judge yet
+    avg_delay_days: Decimal | None  # mean lateness across delivered POs
+    open_overdue_count: int
+    # Responsiveness: RFQ issued -> quote received
+    quoted_rfq_count: int
+    avg_quote_response_days: Decimal | None
+    # Price behaviour: PO line price vs the quote line it came from
+    priced_line_count: int
+    avg_price_variance_pct: Decimal | None
+
+
 class SupplierActivity(BaseModel):
     supplier: SupplierRead
     purchase_orders: list[PoRead]
     quotes: list[SupplierQuoteActivity]
     totals: SupplierActivityTotals
+    scorecard: SupplierScorecard

@@ -56,6 +56,143 @@ def list_items(
     return items, total
 
 
+def _last_delivery(db: Session, item_id: uuid.UUID):
+    """The most recent goods-in for an item that came from a purchase order.
+
+    Store receipts stamp the PO number into StockMovement.reference, which is
+    the only link between stock and procurement — this walks it back to the
+    supplier so reordering knows who to buy from and at what price.
+    """
+    from app.modules.procurement.models import PurchaseOrder
+
+    row = db.execute(
+        select(StockMovement, PurchaseOrder)
+        .join(PurchaseOrder, StockMovement.reference == PurchaseOrder.doc_number)
+        .where(
+            StockMovement.stock_item_id == item_id,
+            StockMovement.movement_type == StockMovementType.goods_in,
+        )
+        .order_by(StockMovement.movement_date.desc(), StockMovement.created_at.desc())
+        .limit(1)
+    ).first()
+    return row if row is None else (row[0], row[1])
+
+
+def reorder_suggestions(db: Session):
+    """Low-stock items with a suggested top-up quantity, supplier and price.
+
+    Suggested quantity tops the item back up to twice its reorder level, so a
+    reorder is worth placing rather than immediately triggering again.
+    """
+    from app.modules.inventory.schemas import ReorderSuggestion, ReorderSuggestions
+
+    items = list(
+        db.scalars(
+            select(StockItem)
+            .where(
+                StockItem.is_active.is_(True),
+                StockItem.qty_on_hand <= StockItem.reorder_level,
+            )
+            .order_by(StockItem.code)
+        )
+    )
+    suggestions = []
+    total = Decimal("0")
+    without_supplier = 0
+    for item in items:
+        target = item.reorder_level * 2
+        quantity = (target - item.qty_on_hand).quantize(Decimal("0.001"))
+        if quantity <= 0:
+            quantity = item.reorder_level or Decimal("1")
+        last = _last_delivery(db, item.id)
+        movement, po = last if last else (None, None)
+        unit_cost = (movement.unit_cost if movement else item.unit_cost) or Decimal("0")
+        estimated = (quantity * unit_cost).quantize(CENT)
+        if po is None:
+            without_supplier += 1
+        suggestions.append(
+            ReorderSuggestion(
+                stock_item_id=item.id,
+                code=item.code,
+                name=item.name,
+                unit=item.unit,
+                qty_on_hand=item.qty_on_hand,
+                reorder_level=item.reorder_level,
+                suggested_quantity=quantity,
+                last_unit_cost=unit_cost,
+                estimated_cost=estimated,
+                supplier_id=po.supplier_id if po else None,
+                supplier_name=po.supplier.name if po and po.supplier else None,
+                last_po_number=po.doc_number if po else None,
+                last_ordered=po.order_date if po else None,
+            )
+        )
+        total += estimated
+    return ReorderSuggestions(
+        items=suggestions,
+        total_estimated_cost=total.quantize(CENT),
+        without_supplier=without_supplier,
+    )
+
+
+def create_reorder_pos(db: Session, data, user_id: uuid.UUID):
+    """Draft one PO per supplier for the chosen low-stock items.
+
+    Drafts only — a human reviews prices and issues them, matching the rule
+    used for AI-generated documents.
+    """
+    from app.common.doc_numbers import next_doc_number
+    from app.modules.inventory.schemas import ReorderResult
+    from app.modules.procurement.models import PoItem, PurchaseOrder
+
+    get_project(db, data.project_id)
+    suggestions = {s.stock_item_id: s for s in reorder_suggestions(db).items}
+
+    by_supplier: dict[uuid.UUID, list] = {}
+    skipped: list[str] = []
+    for item_id in data.stock_item_ids:
+        suggestion = suggestions.get(item_id)
+        if suggestion is None:
+            item = get_item(db, item_id)
+            skipped.append(item.code)
+            continue
+        if suggestion.supplier_id is None:
+            skipped.append(suggestion.code)
+            continue
+        by_supplier.setdefault(suggestion.supplier_id, []).append(suggestion)
+
+    po_ids, po_numbers = [], []
+    for supplier_id, lines in by_supplier.items():
+        total = Decimal("0")
+        po_items = []
+        for line in lines:
+            po_items.append(
+                PoItem(
+                    description=f"{line.code} — {line.name}",
+                    unit=line.unit,
+                    quantity=line.suggested_quantity,
+                    unit_price=line.last_unit_cost,
+                )
+            )
+            total += line.suggested_quantity * line.last_unit_cost
+        po = PurchaseOrder(
+            project_id=data.project_id,
+            supplier_id=supplier_id,
+            doc_number=next_doc_number(db, PurchaseOrder, "PO"),
+            expected_delivery=data.expected_delivery,
+            notes="Stock reorder raised from low-stock levels — receive into the store.",
+            total_amount=total.quantize(CENT),
+            created_by=user_id,
+            items=po_items,
+        )
+        db.add(po)
+        db.flush()
+        po_ids.append(po.id)
+        po_numbers.append(po.doc_number)
+
+    return ReorderResult(po_ids=po_ids, po_numbers=po_numbers, skipped_items=skipped)
+
+
 def get_item(db: Session, item_id: uuid.UUID) -> StockItem:
     item = db.get(StockItem, item_id)
     if item is None:

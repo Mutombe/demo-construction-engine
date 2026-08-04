@@ -42,6 +42,7 @@ class BoqItemRead(BoqItemBase):
     project_id: uuid.UUID
     amount: Decimal
     actual_total: Decimal = Decimal("0")  # filled by service from cost_entries
+    committed_total: Decimal = Decimal("0")  # issued POs not yet received
 
 
 class BoqSectionBase(BaseModel):
@@ -81,6 +82,7 @@ class CategoryTotal(BaseModel):
     cost_category: CostCategory
     budget: Decimal
     actual: Decimal
+    committed: Decimal = Decimal("0")
 
 
 class SectionTotal(BaseModel):
@@ -89,6 +91,7 @@ class SectionTotal(BaseModel):
     title: str
     budget: Decimal
     actual: Decimal
+    committed: Decimal = Decimal("0")
 
 
 class BoqSummary(BaseModel):
@@ -98,6 +101,7 @@ class BoqSummary(BaseModel):
     omission_total: Decimal
     budget_total: Decimal  # original + variation (omissions excluded)
     actual_total: Decimal
+    committed_total: Decimal = Decimal("0")
     unallocated_actual: Decimal
     by_category: list[CategoryTotal]
     by_section: list[SectionTotal]

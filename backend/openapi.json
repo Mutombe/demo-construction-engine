@@ -2682,6 +2682,33 @@
     }
    }
   },
+  "/api/v1/dashboard/procurement-pulse": {
+   "get": {
+    "tags": [
+     "dashboard"
+    ],
+    "summary": "Procurement Pulse",
+    "description": "Open requisitions, overdue deliveries and low stock in one call.\n\nReading it also fires the (deduped) overdue-delivery notifications, so the\nalert lands without needing a scheduler in this deployment.",
+    "operationId": "procurement_pulse",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ProcurementPulse"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ]
+   }
+  },
   "/api/v1/dashboard/budget-alerts": {
    "get": {
     "tags": [
@@ -4079,6 +4106,360 @@
     }
    }
   },
+  "/api/v1/requisitions": {
+   "get": {
+    "tags": [
+     "requisitions"
+    ],
+    "summary": "List Requisitions",
+    "operationId": "list_requisitions",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "project_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "uuid"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Project Id"
+      }
+     },
+     {
+      "name": "status",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "$ref": "#/components/schemas/RequisitionStatus"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     },
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Page Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Page_RequisitionRead_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/projects/{project_id}/requisitions": {
+   "post": {
+    "tags": [
+     "requisitions"
+    ],
+    "summary": "Create Requisition",
+    "operationId": "create_requisition",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "project_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Project Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RequisitionCreate"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RequisitionDetail"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/requisitions/{requisition_id}": {
+   "get": {
+    "tags": [
+     "requisitions"
+    ],
+    "summary": "Get Requisition",
+    "operationId": "get_requisition",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "requisition_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Requisition Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RequisitionDetail"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/requisitions/{requisition_id}/cancel": {
+   "post": {
+    "tags": [
+     "requisitions"
+    ],
+    "summary": "Cancel Requisition",
+    "operationId": "cancel_requisition",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "requisition_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Requisition Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RequisitionRead"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/requisitions/{requisition_id}/convert-to-rfq": {
+   "post": {
+    "tags": [
+     "requisitions"
+    ],
+    "summary": "Convert Requisition To Rfq",
+    "operationId": "convert_requisition_to_rfq",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "requisition_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Requisition Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RfqDetail"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/requisitions/{requisition_id}/convert-to-po": {
+   "post": {
+    "tags": [
+     "requisitions"
+    ],
+    "summary": "Convert Requisition To Po",
+    "operationId": "convert_requisition_to_po",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "requisition_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Requisition Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ConvertToPo"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PoDetail"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/v1/projects/{project_id}/diary": {
    "get": {
     "tags": [
@@ -5311,6 +5692,78 @@
       }
      }
     }
+   }
+  },
+  "/api/v1/stock-items/reorder-suggestions": {
+   "get": {
+    "tags": [
+     "inventory"
+    ],
+    "summary": "Get Reorder Suggestions",
+    "operationId": "get_reorder_suggestions",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ReorderSuggestions"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ]
+   }
+  },
+  "/api/v1/stock-items/reorder": {
+   "post": {
+    "tags": [
+     "inventory"
+    ],
+    "summary": "Create Reorder Pos",
+    "operationId": "create_reorder_pos",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ReorderRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ReorderResult"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ]
    }
   },
   "/api/v1/stock-items/by-barcode/{barcode}": {
@@ -10945,6 +11398,43 @@
     ],
     "title": "ComparisonMatrix"
    },
+   "ConvertToPo": {
+    "properties": {
+     "supplier_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Supplier Id"
+     },
+     "expected_delivery": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Expected Delivery"
+     },
+     "notes": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notes"
+     }
+    },
+    "type": "object",
+    "required": [
+     "supplier_id"
+    ],
+    "title": "ConvertToPo"
+   },
    "CostCategory": {
     "type": "string",
     "enum": [
@@ -13424,6 +13914,72 @@
     ],
     "title": "NotificationRead"
    },
+   "OverdueDelivery": {
+    "properties": {
+     "po_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Po Id"
+     },
+     "doc_number": {
+      "type": "string",
+      "title": "Doc Number"
+     },
+     "supplier_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Supplier Name"
+     },
+     "project_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Project Id"
+     },
+     "project_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Project Name"
+     },
+     "expected_delivery": {
+      "type": "string",
+      "format": "date",
+      "title": "Expected Delivery"
+     },
+     "days_overdue": {
+      "type": "integer",
+      "title": "Days Overdue"
+     },
+     "total_amount": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Total Amount"
+     }
+    },
+    "type": "object",
+    "required": [
+     "po_id",
+     "doc_number",
+     "supplier_name",
+     "project_id",
+     "project_name",
+     "expected_delivery",
+     "days_overdue",
+     "total_amount"
+    ],
+    "title": "OverdueDelivery"
+   },
    "Page_ClientRead_": {
     "properties": {
      "items": {
@@ -13733,6 +14289,37 @@
      "page_size"
     ],
     "title": "Page[ProjectListItem]"
+   },
+   "Page_RequisitionRead_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/RequisitionRead"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "total",
+     "page",
+     "page_size"
+    ],
+    "title": "Page[RequisitionRead]"
    },
    "Page_RfqRead_": {
     "properties": {
@@ -15036,6 +15623,16 @@
       ],
       "title": "Project Code"
      },
+     "is_overdue": {
+      "type": "boolean",
+      "title": "Is Overdue",
+      "default": false
+     },
+     "days_overdue": {
+      "type": "integer",
+      "title": "Days Overdue",
+      "default": 0
+     },
      "terms": {
       "anyOf": [
        {
@@ -15336,6 +15933,16 @@
        }
       ],
       "title": "Project Code"
+     },
+     "is_overdue": {
+      "type": "boolean",
+      "title": "Is Overdue",
+      "default": false
+     },
+     "days_overdue": {
+      "type": "integer",
+      "title": "Days Overdue",
+      "default": 0
      }
     },
     "type": "object",
@@ -16033,6 +16640,49 @@
      "paid_date"
     ],
     "title": "PortalValuation"
+   },
+   "ProcurementPulse": {
+    "properties": {
+     "open_requisitions": {
+      "type": "integer",
+      "title": "Open Requisitions"
+     },
+     "oldest_requisition_days": {
+      "type": "integer",
+      "title": "Oldest Requisition Days"
+     },
+     "overdue_deliveries": {
+      "type": "integer",
+      "title": "Overdue Deliveries"
+     },
+     "overdue_value": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Overdue Value"
+     },
+     "low_stock_items": {
+      "type": "integer",
+      "title": "Low Stock Items"
+     },
+     "deliveries": {
+      "items": {
+       "$ref": "#/components/schemas/OverdueDelivery"
+      },
+      "type": "array",
+      "title": "Deliveries"
+     }
+    },
+    "type": "object",
+    "required": [
+     "open_requisitions",
+     "oldest_requisition_days",
+     "overdue_deliveries",
+     "overdue_value",
+     "low_stock_items",
+     "deliveries"
+    ],
+    "title": "ProcurementPulse",
+    "description": "The procurement-delay dashboard: what is waiting and what is late."
    },
    "ProjectAllocation": {
     "properties": {
@@ -17717,6 +18367,680 @@
     ],
     "title": "Recommendation"
    },
+   "ReorderRequest": {
+    "properties": {
+     "project_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Project Id"
+     },
+     "stock_item_ids": {
+      "items": {
+       "type": "string",
+       "format": "uuid"
+      },
+      "type": "array",
+      "minItems": 1,
+      "title": "Stock Item Ids"
+     },
+     "expected_delivery": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Expected Delivery"
+     }
+    },
+    "type": "object",
+    "required": [
+     "project_id",
+     "stock_item_ids"
+    ],
+    "title": "ReorderRequest",
+    "description": "Raise draft POs for these stock items, grouped by their usual supplier."
+   },
+   "ReorderResult": {
+    "properties": {
+     "po_ids": {
+      "items": {
+       "type": "string",
+       "format": "uuid"
+      },
+      "type": "array",
+      "title": "Po Ids"
+     },
+     "po_numbers": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Po Numbers"
+     },
+     "skipped_items": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Skipped Items"
+     }
+    },
+    "type": "object",
+    "required": [
+     "po_ids",
+     "po_numbers",
+     "skipped_items"
+    ],
+    "title": "ReorderResult"
+   },
+   "ReorderSuggestion": {
+    "properties": {
+     "stock_item_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Stock Item Id"
+     },
+     "code": {
+      "type": "string",
+      "title": "Code"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "unit": {
+      "type": "string",
+      "title": "Unit"
+     },
+     "qty_on_hand": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Qty On Hand"
+     },
+     "reorder_level": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Reorder Level"
+     },
+     "suggested_quantity": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Suggested Quantity"
+     },
+     "last_unit_cost": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Last Unit Cost"
+     },
+     "estimated_cost": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Estimated Cost"
+     },
+     "supplier_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Supplier Id"
+     },
+     "supplier_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Supplier Name"
+     },
+     "last_po_number": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Po Number"
+     },
+     "last_ordered": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Ordered"
+     }
+    },
+    "type": "object",
+    "required": [
+     "stock_item_id",
+     "code",
+     "name",
+     "unit",
+     "qty_on_hand",
+     "reorder_level",
+     "suggested_quantity",
+     "last_unit_cost",
+     "estimated_cost",
+     "supplier_id",
+     "supplier_name",
+     "last_po_number",
+     "last_ordered"
+    ],
+    "title": "ReorderSuggestion",
+    "description": "One low-stock item with the supplier and price its last delivery came at."
+   },
+   "ReorderSuggestions": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/ReorderSuggestion"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "total_estimated_cost": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Total Estimated Cost"
+     },
+     "without_supplier": {
+      "type": "integer",
+      "title": "Without Supplier"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "total_estimated_cost",
+     "without_supplier"
+    ],
+    "title": "ReorderSuggestions"
+   },
+   "RequisitionCreate": {
+    "properties": {
+     "needed_by": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Needed By"
+     },
+     "notes": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notes"
+     },
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/RequisitionItemCreate"
+      },
+      "type": "array",
+      "minItems": 1,
+      "title": "Items"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items"
+    ],
+    "title": "RequisitionCreate"
+   },
+   "RequisitionDetail": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "project_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Project Id"
+     },
+     "doc_number": {
+      "type": "string",
+      "title": "Doc Number"
+     },
+     "status": {
+      "$ref": "#/components/schemas/RequisitionStatus"
+     },
+     "needed_by": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Needed By"
+     },
+     "notes": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notes"
+     },
+     "actioned_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Actioned At"
+     },
+     "rfq_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Rfq Id"
+     },
+     "po_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Po Id"
+     },
+     "created_by": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Created By"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "age_days": {
+      "type": "integer",
+      "title": "Age Days",
+      "default": 0
+     },
+     "is_urgent": {
+      "type": "boolean",
+      "title": "Is Urgent",
+      "default": false
+     },
+     "item_count": {
+      "type": "integer",
+      "title": "Item Count",
+      "default": 0
+     },
+     "project_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Project Name"
+     },
+     "project_code": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Project Code"
+     },
+     "requested_by_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Requested By Name"
+     },
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/RequisitionItemRead"
+      },
+      "type": "array",
+      "title": "Items",
+      "default": []
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "project_id",
+     "doc_number",
+     "status",
+     "needed_by",
+     "notes",
+     "actioned_at",
+     "rfq_id",
+     "po_id",
+     "created_by",
+     "created_at"
+    ],
+    "title": "RequisitionDetail"
+   },
+   "RequisitionItemCreate": {
+    "properties": {
+     "boq_item_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Boq Item Id"
+     },
+     "description": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Description"
+     },
+     "unit": {
+      "type": "string",
+      "maxLength": 20,
+      "minLength": 1,
+      "title": "Unit"
+     },
+     "quantity": {
+      "anyOf": [
+       {
+        "type": "number",
+        "exclusiveMinimum": 0.0
+       },
+       {
+        "type": "string",
+        "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+       }
+      ],
+      "title": "Quantity"
+     }
+    },
+    "type": "object",
+    "required": [
+     "description",
+     "unit",
+     "quantity"
+    ],
+    "title": "RequisitionItemCreate"
+   },
+   "RequisitionItemRead": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "boq_item_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Boq Item Id"
+     },
+     "description": {
+      "type": "string",
+      "title": "Description"
+     },
+     "unit": {
+      "type": "string",
+      "title": "Unit"
+     },
+     "quantity": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Quantity"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "boq_item_id",
+     "description",
+     "unit",
+     "quantity"
+    ],
+    "title": "RequisitionItemRead"
+   },
+   "RequisitionRead": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "project_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Project Id"
+     },
+     "doc_number": {
+      "type": "string",
+      "title": "Doc Number"
+     },
+     "status": {
+      "$ref": "#/components/schemas/RequisitionStatus"
+     },
+     "needed_by": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Needed By"
+     },
+     "notes": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notes"
+     },
+     "actioned_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Actioned At"
+     },
+     "rfq_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Rfq Id"
+     },
+     "po_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Po Id"
+     },
+     "created_by": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Created By"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "age_days": {
+      "type": "integer",
+      "title": "Age Days",
+      "default": 0
+     },
+     "is_urgent": {
+      "type": "boolean",
+      "title": "Is Urgent",
+      "default": false
+     },
+     "item_count": {
+      "type": "integer",
+      "title": "Item Count",
+      "default": 0
+     },
+     "project_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Project Name"
+     },
+     "project_code": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Project Code"
+     },
+     "requested_by_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Requested By Name"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "project_id",
+     "doc_number",
+     "status",
+     "needed_by",
+     "notes",
+     "actioned_at",
+     "rfq_id",
+     "po_id",
+     "created_by",
+     "created_at"
+    ],
+    "title": "RequisitionRead"
+   },
+   "RequisitionStatus": {
+    "type": "string",
+    "enum": [
+     "open",
+     "actioned",
+     "cancelled"
+    ],
+    "title": "RequisitionStatus"
+   },
    "RevenueSummary": {
     "properties": {
      "project_id": {
@@ -18962,6 +20286,9 @@
      },
      "totals": {
       "$ref": "#/components/schemas/SupplierActivityTotals"
+     },
+     "scorecard": {
+      "$ref": "#/components/schemas/SupplierScorecard"
      }
     },
     "type": "object",
@@ -18969,7 +20296,8 @@
      "supplier",
      "purchase_orders",
      "quotes",
-     "totals"
+     "totals",
+     "scorecard"
     ],
     "title": "SupplierActivity"
    },
@@ -19265,6 +20593,92 @@
      "created_at"
     ],
     "title": "SupplierRead"
+   },
+   "SupplierScorecard": {
+    "properties": {
+     "delivered_count": {
+      "type": "integer",
+      "title": "Delivered Count"
+     },
+     "on_time_count": {
+      "type": "integer",
+      "title": "On Time Count"
+     },
+     "on_time_pct": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "On Time Pct"
+     },
+     "avg_delay_days": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Avg Delay Days"
+     },
+     "open_overdue_count": {
+      "type": "integer",
+      "title": "Open Overdue Count"
+     },
+     "quoted_rfq_count": {
+      "type": "integer",
+      "title": "Quoted Rfq Count"
+     },
+     "avg_quote_response_days": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Avg Quote Response Days"
+     },
+     "priced_line_count": {
+      "type": "integer",
+      "title": "Priced Line Count"
+     },
+     "avg_price_variance_pct": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Avg Price Variance Pct"
+     }
+    },
+    "type": "object",
+    "required": [
+     "delivered_count",
+     "on_time_count",
+     "on_time_pct",
+     "avg_delay_days",
+     "open_overdue_count",
+     "quoted_rfq_count",
+     "avg_quote_response_days",
+     "priced_line_count",
+     "avg_price_variance_pct"
+    ],
+    "title": "SupplierScorecard",
+    "description": "Performance metrics derived from this supplier's own order history."
    },
    "SupplierUpdate": {
     "properties": {

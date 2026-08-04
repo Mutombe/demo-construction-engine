@@ -75,3 +75,25 @@ class FinancialTotals(BaseModel):
 class FinancialTrend(BaseModel):
     months: list[TrendMonth]
     totals: FinancialTotals
+
+
+class OverdueDelivery(BaseModel):
+    po_id: uuid.UUID
+    doc_number: str
+    supplier_name: str | None
+    project_id: uuid.UUID
+    project_name: str | None
+    expected_delivery: date
+    days_overdue: int
+    total_amount: Decimal
+
+
+class ProcurementPulse(BaseModel):
+    """The procurement-delay dashboard: what is waiting and what is late."""
+
+    open_requisitions: int
+    oldest_requisition_days: int
+    overdue_deliveries: int
+    overdue_value: Decimal
+    low_stock_items: int
+    deliveries: list[OverdueDelivery]

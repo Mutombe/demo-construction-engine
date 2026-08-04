@@ -11,6 +11,7 @@ from app.modules.notifications import models as notifications_models  # noqa: F4
 from app.modules.payroll import models as payroll_models  # noqa: F401
 from app.modules.portal import models as portal_models  # noqa: F401
 from app.modules.procurement import models as procurement_models  # noqa: F401
+from app.modules.requisitions import models as requisitions_models  # noqa: F401
 from app.modules.projects import models as projects_models  # noqa: F401
 from app.modules.site import models as site_models  # noqa: F401
 from app.modules.tasks import models as tasks_models  # noqa: F401

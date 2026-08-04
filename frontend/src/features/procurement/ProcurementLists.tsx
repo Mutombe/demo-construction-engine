@@ -1,6 +1,7 @@
 import { keepPreviousData } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EntityLink } from "@/components/ui/linked-row";
 import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
@@ -101,9 +102,17 @@ export function PoList({ projectId }: { projectId: string }) {
               </div>
               <div className="mt-0.5 text-xs text-muted-foreground">
                 Ordered {fmtDate(po.order_date)} · {money(po.total_amount)}
+                {po.expected_delivery && !po.is_overdue && (
+                  <> · due {fmtDate(po.expected_delivery)}</>
+                )}
               </div>
             </div>
-            <PoStatusBadge status={po.status ?? "draft"} />
+            <div className="flex shrink-0 items-center gap-1.5">
+              {po.is_overdue && (
+                <Badge variant="destructive">{po.days_overdue}d late</Badge>
+              )}
+              <PoStatusBadge status={po.status ?? "draft"} />
+            </div>
           </Link>
         ))}
         <PaginationBar

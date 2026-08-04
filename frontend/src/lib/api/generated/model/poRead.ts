@@ -24,4 +24,6 @@ export interface PoRead {
   total_amount: string;
   created_at: string;
   project_code?: string | null;
+  is_overdue?: boolean;
+  days_overdue?: number;
 }

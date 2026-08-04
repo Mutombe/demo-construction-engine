@@ -1,6 +1,6 @@
 import { keepPreviousData } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowLineDown, ArrowLineUp, Barcode, DownloadSimple, MagnifyingGlass, PencilSimple, Plus, Wrench } from "@phosphor-icons/react";
+import { ArrowLineDown, ArrowLineUp, Barcode, DownloadSimple, MagnifyingGlass, PencilSimple, Plus, ShoppingCart, Wrench } from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "@/lib/toast";
 import { z } from "zod";
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { usePermission } from "@/features/auth/hooks";
 import { BarcodeScannerDialog } from "@/features/inventory/BarcodeScannerDialog";
+import { ReorderDialog } from "@/features/inventory/ReorderDialog";
 import { MovementDialog, type MovementKind } from "@/features/inventory/MovementDialogs";
 import { StockItemFormDialog } from "@/features/inventory/StockItemFormDialog";
 import { downloadFile } from "@/lib/api/download";
@@ -55,6 +56,7 @@ function InventoryPage() {
   const canWrite = usePermission("inventory:write");
   const canIssue = usePermission("inventory:issue");
   const [scanOpen, setScanOpen] = useState(false);
+  const [reorderOpen, setReorderOpen] = useState(false);
 
   const onScanned = async (code: string) => {
     try {
@@ -108,6 +110,9 @@ function InventoryPage() {
               <DownloadSimple /> Export
             </Button>
             <Can perm="inventory:write">
+              <Button variant="outline" onClick={() => setReorderOpen(true)}>
+                <ShoppingCart /> Reorder
+              </Button>
               <Button
                 onClick={() => {
                   setEditing(null);
@@ -264,6 +269,7 @@ function InventoryPage() {
         title="Find Item by Barcode"
         hint="Scanning opens the matching stock item."
       />
+      <ReorderDialog open={reorderOpen} onOpenChange={setReorderOpen} />
       <StockItemFormDialog open={itemDialog} onOpenChange={setItemDialog} item={editing} />
       <MovementDialog
         kind={movement?.kind ?? null}

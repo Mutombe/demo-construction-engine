@@ -4,7 +4,7 @@ from decimal import Decimal
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.common.enums import BoqItemType
+from app.common.enums import BoqItemType, PoStatus
 from app.core.exceptions import ConflictError, NotFoundError, ValidationFailedError
 from app.modules.boq.models import BoqItem, BoqSection
 from app.modules.boq.schemas import (
@@ -19,7 +19,9 @@ from app.modules.boq.schemas import (
     CategoryTotal,
     SectionTotal,
 )
+from app.modules.costs import service as costs_service
 from app.modules.costs.models import CostEntry
+from app.modules.procurement.models import PoItem, PurchaseOrder
 from app.modules.projects.service import get_project
 
 ZERO = Decimal("0")
@@ -42,6 +44,7 @@ def get_boq_tree(db: Session, project_id: uuid.UUID) -> BoqTree:
         .order_by(BoqSection.sort_order, BoqSection.code)
     ).all()
     actuals = _item_actuals(db, project_id)
+    committed = costs_service.committed_by_boq_item(db, project_id)
 
     section_reads: list[BoqSectionRead] = []
     grand_total = ZERO
@@ -51,6 +54,7 @@ def get_boq_tree(db: Session, project_id: uuid.UUID) -> BoqTree:
         for item in section.items:
             read = BoqItemRead.model_validate(item)
             read.actual_total = actuals.get(item.id, ZERO)
+            read.committed_total = committed.get(item.id, ZERO)
             item_reads.append(read)
             if item.item_type != BoqItemType.omission:
                 subtotal += item.amount
@@ -210,6 +214,18 @@ def boq_summary(db: Session, project_id: uuid.UUID) -> BoqSummary:
             .group_by(BoqItem.cost_category)
         ).all()
     )
+    category_committed = dict(
+        db.execute(
+            select(BoqItem.cost_category, func.sum(PoItem.amount))
+            .join(PoItem, PoItem.boq_item_id == BoqItem.id)
+            .join(PurchaseOrder, PoItem.po_id == PurchaseOrder.id)
+            .where(
+                PurchaseOrder.project_id == project_id,
+                PurchaseOrder.status == PoStatus.issued,
+            )
+            .group_by(BoqItem.cost_category)
+        ).all()
+    )
     category_actual = dict(
         db.execute(
             select(BoqItem.cost_category, func.sum(CostEntry.amount))
@@ -223,8 +239,12 @@ def boq_summary(db: Session, project_id: uuid.UUID) -> BoqSummary:
             cost_category=cat,
             budget=category_budget.get(cat, ZERO),
             actual=category_actual.get(cat, ZERO),
+            committed=category_committed.get(cat, ZERO),
         )
-        for cat in sorted(set(category_budget) | set(category_actual), key=lambda c: c.value)
+        for cat in sorted(
+            set(category_budget) | set(category_actual) | set(category_committed),
+            key=lambda c: c.value,
+        )
     ]
 
     section_rows = db.execute(
@@ -250,6 +270,18 @@ def boq_summary(db: Session, project_id: uuid.UUID) -> BoqSummary:
             .group_by(BoqItem.section_id)
         ).all()
     )
+    section_committed = dict(
+        db.execute(
+            select(BoqItem.section_id, func.sum(PoItem.amount))
+            .join(PoItem, PoItem.boq_item_id == BoqItem.id)
+            .join(PurchaseOrder, PoItem.po_id == PurchaseOrder.id)
+            .where(
+                PurchaseOrder.project_id == project_id,
+                PurchaseOrder.status == PoStatus.issued,
+            )
+            .group_by(BoqItem.section_id)
+        ).all()
+    )
     by_section = [
         SectionTotal(
             section_id=sid,
@@ -257,6 +289,7 @@ def boq_summary(db: Session, project_id: uuid.UUID) -> BoqSummary:
             title=title,
             budget=budget,
             actual=section_actual.get(sid, ZERO),
+            committed=section_committed.get(sid, ZERO),
         )
         for sid, code, title, budget in section_rows
     ]
@@ -268,6 +301,7 @@ def boq_summary(db: Session, project_id: uuid.UUID) -> BoqSummary:
         omission_total=omission,
         budget_total=original + variation,
         actual_total=actual_total,
+        committed_total=costs_service.committed_total(db, project_id),
         unallocated_actual=unallocated,
         by_category=by_category,
         by_section=by_section,

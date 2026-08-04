@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { Bank, Buildings, CalendarDots, Wallet, Warning } from "@phosphor-icons/react";
+import { Bank, Buildings, CalendarDots, ClipboardText, Package, Truck, Wallet, Warning } from "@phosphor-icons/react";
 import {
   Bar,
   BarChart,
@@ -22,7 +22,9 @@ import {
   useDeadlines,
   useFinancialTrend,
   useOverview,
+  useProcurementPulse,
 } from "@/lib/api/generated/endpoints";
+import type { ProcurementPulse } from "@/lib/api/generated/model";
 import { fmtDate, money, pct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -69,11 +71,124 @@ function monthLabel(key: string): string {
   });
 }
 
+/** The procurement-delay panel: what site is waiting for, what suppliers are
+ *  late with, and what stock has fallen through its reorder level. Hidden
+ *  entirely when everything is clear so it never becomes wallpaper. */
+function ProcurementPulseCard({ pulse }: { pulse: ProcurementPulse | undefined }) {
+  if (!pulse) return null;
+  const nothingToShow =
+    pulse.open_requisitions === 0 &&
+    pulse.overdue_deliveries === 0 &&
+    pulse.low_stock_items === 0;
+  if (nothingToShow) return null;
+
+  return (
+    <Card className="mb-4">
+      <CardHeader>
+        <CardTitle>Procurement Pulse</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Link
+            to="/procurement/requisitions"
+            search={{ page: 1, status: "open" }}
+            className="flex items-center gap-3 rounded-md border p-3 transition-colors hover:bg-accent"
+          >
+            <ClipboardText
+              className={cn(
+                "size-5",
+                pulse.open_requisitions > 0 ? "text-warning" : "text-muted-foreground",
+              )}
+            />
+            <div>
+              <div className="text-lg font-semibold tabular-nums">
+                {pulse.open_requisitions}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                open material request{pulse.open_requisitions === 1 ? "" : "s"}
+                {pulse.oldest_requisition_days > 0 &&
+                  ` · oldest ${pulse.oldest_requisition_days}d`}
+              </div>
+            </div>
+          </Link>
+
+          <div
+            className={cn(
+              "flex items-center gap-3 rounded-md border p-3",
+              pulse.overdue_deliveries > 0 && "border-destructive/40",
+            )}
+          >
+            <Truck
+              className={cn(
+                "size-5",
+                pulse.overdue_deliveries > 0 ? "text-destructive" : "text-muted-foreground",
+              )}
+            />
+            <div>
+              <div className="text-lg font-semibold tabular-nums">
+                {pulse.overdue_deliveries}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                overdue deliver{pulse.overdue_deliveries === 1 ? "y" : "ies"}
+                {pulse.overdue_deliveries > 0 && ` · ${money(pulse.overdue_value)} tied up`}
+              </div>
+            </div>
+          </div>
+
+          <Link
+            to="/inventory"
+            search={{ page: 1 }}
+            className="flex items-center gap-3 rounded-md border p-3 transition-colors hover:bg-accent"
+          >
+            <Package
+              className={cn(
+                "size-5",
+                pulse.low_stock_items > 0 ? "text-warning" : "text-muted-foreground",
+              )}
+            />
+            <div>
+              <div className="text-lg font-semibold tabular-nums">{pulse.low_stock_items}</div>
+              <div className="text-xs text-muted-foreground">
+                item{pulse.low_stock_items === 1 ? "" : "s"} below reorder level
+              </div>
+            </div>
+          </Link>
+        </div>
+
+        {pulse.deliveries.length > 0 && (
+          <div className="mt-3 space-y-1.5">
+            {pulse.deliveries.slice(0, 4).map((delivery) => (
+              <Link
+                key={delivery.po_id}
+                to="/procurement/pos/$poId"
+                params={{ poId: delivery.po_id }}
+                className="flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-accent"
+              >
+                <span className="min-w-0 truncate">
+                  <span className="font-mono text-xs text-muted-foreground">
+                    {delivery.doc_number}
+                  </span>{" "}
+                  {delivery.supplier_name ?? "—"}
+                  <span className="text-muted-foreground"> · {delivery.project_name}</span>
+                </span>
+                <span className="shrink-0 font-medium text-destructive">
+                  {delivery.days_overdue}d late
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function DashboardPage() {
   const { data: overview, isLoading } = useOverview();
   const { data: deadlines, isLoading: deadlinesLoading } = useDeadlines({ days: 21 });
   const { data: alerts, isLoading: alertsLoading } = useBudgetAlerts({ threshold_pct: 90 });
   const { data: trend } = useFinancialTrend({ months: 6 });
+  const { data: pulse } = useProcurementPulse();
 
   if (isLoading || !overview) {
     return <PageSkeleton rows={6} />;
@@ -123,6 +238,8 @@ function DashboardPage() {
           tone={overview.overdue_tasks > 0 ? "danger" : "default"}
         />
       </div>
+
+      <ProcurementPulseCard pulse={pulse} />
 
       <Card className="mb-4">
         <CardHeader className="flex-row items-center justify-between space-y-0">

@@ -44,6 +44,44 @@ class StockItemRead(StockItemBase):
     created_at: datetime
 
 
+class ReorderSuggestion(BaseModel):
+    """One low-stock item with the supplier and price its last delivery came at."""
+
+    stock_item_id: uuid.UUID
+    code: str
+    name: str
+    unit: str
+    qty_on_hand: Decimal
+    reorder_level: Decimal
+    suggested_quantity: Decimal
+    last_unit_cost: Decimal
+    estimated_cost: Decimal
+    supplier_id: uuid.UUID | None
+    supplier_name: str | None
+    last_po_number: str | None
+    last_ordered: date | None
+
+
+class ReorderSuggestions(BaseModel):
+    items: list[ReorderSuggestion]
+    total_estimated_cost: Decimal
+    without_supplier: int  # need a supplier picked by hand
+
+
+class ReorderRequest(BaseModel):
+    """Raise draft POs for these stock items, grouped by their usual supplier."""
+
+    project_id: uuid.UUID
+    stock_item_ids: list[uuid.UUID] = Field(min_length=1)
+    expected_delivery: date | None = None
+
+
+class ReorderResult(BaseModel):
+    po_ids: list[uuid.UUID]
+    po_numbers: list[str]
+    skipped_items: list[str]  # codes with no known supplier
+
+
 class GoodsInRequest(BaseModel):
     quantity: Decimal = Field(gt=0)
     unit_cost: Decimal = Field(ge=0)

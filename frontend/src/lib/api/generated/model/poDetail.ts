@@ -25,6 +25,8 @@ export interface PoDetail {
   total_amount: string;
   created_at: string;
   project_code?: string | null;
+  is_overdue?: boolean;
+  days_overdue?: number;
   terms: string | null;
   notes: string | null;
   items?: PoItemRead[];

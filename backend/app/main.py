@@ -20,6 +20,7 @@ from app.modules.payroll.router import router as payroll_router
 from app.modules.portal.router import links_router as portal_links_router
 from app.modules.portal.router import portal_router
 from app.modules.procurement.router import router as procurement_router
+from app.modules.requisitions.router import router as requisitions_router
 from app.modules.projects.router import router as projects_router
 from app.modules.reports.router import router as reports_router
 from app.modules.site.router import router as site_router
@@ -64,6 +65,7 @@ def create_app() -> FastAPI:
     protected.include_router(costs_router)
     protected.include_router(dashboard_router)
     protected.include_router(procurement_router)
+    protected.include_router(requisitions_router)
     protected.include_router(site_router)
     protected.include_router(expenses_router)
     protected.include_router(inventory_router)

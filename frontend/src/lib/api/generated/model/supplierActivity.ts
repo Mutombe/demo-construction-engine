@@ -8,10 +8,12 @@ import type { PoRead } from './poRead.ts';
 import type { SupplierActivityTotals } from './supplierActivityTotals.ts';
 import type { SupplierQuoteActivity } from './supplierQuoteActivity.ts';
 import type { SupplierRead } from './supplierRead.ts';
+import type { SupplierScorecard } from './supplierScorecard.ts';
 
 export interface SupplierActivity {
   supplier: SupplierRead;
   purchase_orders: PoRead[];
   quotes: SupplierQuoteActivity[];
   totals: SupplierActivityTotals;
+  scorecard: SupplierScorecard;
 }

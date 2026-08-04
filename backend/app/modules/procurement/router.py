@@ -35,18 +35,7 @@ po_approve = Depends(require_roles(UserRole.procurement_officer, UserRole.projec
 proc_user = require_roles(UserRole.procurement_officer, UserRole.project_manager)
 
 
-def _po_read(po) -> PoRead:
-    read = PoRead.model_validate(po)
-    read.supplier_name = po.supplier.name if po.supplier else None
-    return read
-
-
-def _po_detail(po) -> PoDetail:
-    detail = PoDetail.model_validate(po)
-    detail.supplier_name = po.supplier.name if po.supplier else None
-    detail.project_name = po.project.name if po.project else None
-    detail.project_code = po.project.code if po.project else None
-    return detail
+_po_read = service.po_read
 
 
 # --- Suppliers --------------------------------------------------------------
@@ -186,34 +175,38 @@ def list_purchase_orders(project_id: uuid.UUID, db: DbDep, params: PageParamsDep
 def create_purchase_order(
     project_id: uuid.UUID, body: PoCreate, db: DbDep, user=Depends(proc_user)
 ) -> PoDetail:
-    return _po_detail(service.create_po(db, project_id, body, user.id))
+    return service.po_detail(db, service.create_po(db, project_id, body, user.id).id)
 
 
 @router.get("/purchase-orders/{po_id}", response_model=PoDetail)
 def get_purchase_order(po_id: uuid.UUID, db: DbDep) -> PoDetail:
-    return _po_detail(service.get_po(db, po_id))
+    return service.po_detail(db, po_id)
 
 
 @router.patch("/purchase-orders/{po_id}", response_model=PoDetail, dependencies=[proc_write])
 def update_purchase_order(po_id: uuid.UUID, body: PoUpdate, db: DbDep) -> PoDetail:
-    return _po_detail(service.update_po(db, po_id, body))
+    service.update_po(db, po_id, body)
+    return service.po_detail(db, po_id)
 
 
 @router.post("/purchase-orders/{po_id}/issue", response_model=PoDetail, dependencies=[po_approve])
 def issue_purchase_order(po_id: uuid.UUID, db: DbDep) -> PoDetail:
-    return _po_detail(service.issue_po(db, po_id))
+    service.issue_po(db, po_id)
+    return service.po_detail(db, po_id)
 
 
 @router.post("/purchase-orders/{po_id}/receive", response_model=PoDetail)
 def receive_purchase_order(
     po_id: uuid.UUID, body: PoReceive, db: DbDep, user=Depends(proc_user)
 ) -> PoDetail:
-    return _po_detail(service.receive_po(db, po_id, body, user.id))
+    service.receive_po(db, po_id, body, user.id)
+    return service.po_detail(db, po_id)
 
 
 @router.post("/purchase-orders/{po_id}/cancel", response_model=PoDetail, dependencies=[po_approve])
 def cancel_purchase_order(po_id: uuid.UUID, db: DbDep) -> PoDetail:
-    return _po_detail(service.cancel_po(db, po_id))
+    service.cancel_po(db, po_id)
+    return service.po_detail(db, po_id)
 
 
 @router.get("/purchase-orders/{po_id}/pdf")

@@ -154,6 +154,12 @@ class PayRunStatus(StrEnum):
     approved = "approved"
 
 
+class RequisitionStatus(StrEnum):
+    open = "open"
+    actioned = "actioned"
+    cancelled = "cancelled"
+
+
 class RfqStatus(StrEnum):
     draft = "draft"
     issued = "issued"

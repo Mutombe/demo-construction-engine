@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { AddressBook, Buildings, CaretDoubleLeft, CaretDoubleRight, ChartBar, Gear, HardHat, MapTrifold, Money, Package, Receipt, ShoppingCart, SignOut, SquaresFour, Tray } from "@phosphor-icons/react";
+import { AddressBook, Buildings, CaretDoubleLeft, CaretDoubleRight, ChartBar, ClipboardText, Gear, HardHat, MapTrifold, Money, Package, Receipt, ShoppingCart, SignOut, SquaresFour, Tray } from "@phosphor-icons/react";
 import { ClaudeIcon } from "@/components/ui/claude-icon";
 import type { ReactNode } from "react";
 import { create } from "zustand";
@@ -35,6 +35,7 @@ const NAV: NavItem[] = [
   { to: "/map", label: "Site Map", icon: <MapTrifold />, permission: "project:read" },
   { to: "/clients", label: "Clients", icon: <AddressBook />, permission: "project:read" },
   { to: "/procurement", label: "Procurement", icon: <ShoppingCart />, permission: "procurement:read" },
+  { to: "/procurement/requisitions", label: "Material Requests", icon: <ClipboardText />, permission: "procurement:read" },
   { to: "/expenses", label: "Expenses", icon: <Receipt />, permission: "expense:read" },
   { to: "/inventory", label: "Inventory", icon: <Package />, permission: "inventory:read" },
   { to: "/payroll", label: "Payroll", icon: <Money />, permission: "timesheet:write" },

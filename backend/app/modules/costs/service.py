@@ -1,9 +1,11 @@
 import uuid
 from datetime import date
+from decimal import Decimal
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.common.enums import PoStatus
 from app.core.exceptions import NotFoundError, ValidationFailedError
 from app.modules.boq.models import BoqItem
 from app.modules.costs.models import CostEntry
@@ -76,3 +78,54 @@ def update_entry(db: Session, entry_id: uuid.UUID, data: CostEntryUpdate) -> Cos
 
 def delete_entry(db: Session, entry_id: uuid.UUID) -> None:
     db.delete(get_entry(db, entry_id))
+
+
+# --- Committed costs ---------------------------------------------------------
+#
+# An ISSUED purchase order is money the company has promised but not yet spent.
+# Drafts are not commitments (nothing has been sent to the supplier) and
+# received orders have already become cost entries, so counting either would
+# double-count. Budget views that show only actuals report a project as
+# under budget while its commitments have already overrun it.
+
+
+def committed_by_boq_item(db: Session, project_id: uuid.UUID) -> dict[uuid.UUID, Decimal]:
+    from app.modules.procurement.models import PoItem, PurchaseOrder
+
+    rows = db.execute(
+        select(PoItem.boq_item_id, func.coalesce(func.sum(PoItem.amount), 0))
+        .join(PurchaseOrder, PoItem.po_id == PurchaseOrder.id)
+        .where(
+            PurchaseOrder.status == PoStatus.issued,
+            PurchaseOrder.project_id == project_id,
+            PoItem.boq_item_id.is_not(None),
+        )
+        .group_by(PoItem.boq_item_id)
+    ).all()
+    return {item_id: total for item_id, total in rows}
+
+
+def committed_total(db: Session, project_id: uuid.UUID) -> Decimal:
+    from app.modules.procurement.models import PoItem, PurchaseOrder
+
+    return db.scalar(
+        select(func.coalesce(func.sum(PoItem.amount), 0))
+        .join(PurchaseOrder, PoItem.po_id == PurchaseOrder.id)
+        .where(
+            PurchaseOrder.status == PoStatus.issued,
+            PurchaseOrder.project_id == project_id,
+        )
+    ) or Decimal("0")
+
+
+def committed_by_project(db: Session) -> dict[uuid.UUID, Decimal]:
+    """Portfolio-wide commitments, for the dashboard."""
+    from app.modules.procurement.models import PoItem, PurchaseOrder
+
+    rows = db.execute(
+        select(PurchaseOrder.project_id, func.coalesce(func.sum(PoItem.amount), 0))
+        .join(PoItem, PoItem.po_id == PurchaseOrder.id)
+        .where(PurchaseOrder.status == PoStatus.issued)
+        .group_by(PurchaseOrder.project_id)
+    ).all()
+    return {project_id: total for project_id, total in rows}

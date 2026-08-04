@@ -1482,6 +1482,55 @@ def seed_measurement(db, users) -> None:
         set_measurement(db, draft.id, MeasurementSet(lines=lines))
 
 
+def seed_requisitions(db, users) -> None:
+    """Site requests waiting on procurement, including one deliberately aged
+    so the aging queue demonstrates the delay it is meant to expose."""
+    from app.modules.requisitions.models import Requisition
+    from app.modules.requisitions.schemas import RequisitionCreate, RequisitionItemCreate
+    from app.modules.requisitions.service import create_requisition
+
+    if db.scalar(select(Requisition).limit(1)):
+        return
+
+    riverside = db.scalar(select(Project).where(Project.code == "PRJ-2026-001"))
+    warehouse = db.scalar(select(Project).where(Project.code == "PRJ-2026-002"))
+    specs = [
+        (
+            riverside,
+            5,  # days ago — well past the urgency threshold
+            "Slab pour Friday; site is down to half a day of cement.",
+            [("Cement 42.5N 50kg", "bag", "200"), ("River sand", "m3", "18")],
+        ),
+        (
+            warehouse,
+            1,
+            "Rebar for the pad bases, needed before the crew moves across.",
+            [("Rebar Y12 6m length", "length", "150")],
+        ),
+    ]
+    for project, days_ago, notes, lines in specs:
+        if project is None:
+            continue
+        requisition = create_requisition(
+            db,
+            project.id,
+            RequisitionCreate(
+                needed_by=TODAY + timedelta(days=3),
+                notes=notes,
+                items=[
+                    RequisitionItemCreate(
+                        description=description, unit=unit, quantity=Decimal(qty)
+                    )
+                    for description, unit, qty in lines
+                ],
+            ),
+            users["site_manager"].id,
+        )
+        # Backdate so the queue shows real ages rather than everything at zero
+        requisition.created_at = requisition.created_at - timedelta(days=days_ago)
+    db.flush()
+
+
 PROJECT_COORDS = {
     "PRJ-2026-001": (Decimal("-17.783200"), Decimal("31.088900")),  # Riverside Drive, Harare
     "PRJ-2026-002": (Decimal("-18.944600"), Decimal("32.623100")),  # Feruka, Mutare
@@ -1520,6 +1569,7 @@ def main() -> None:
         seed_purchase_orders(db, users)
         seed_payroll(db, users)
         seed_measurement(db, users)
+        seed_requisitions(db, users)
         seed_coordinates(db)
         portal_link = seed_portal_link(db, users)
         db.commit()
