@@ -13,6 +13,7 @@ import {
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { FLOATING_LAYER, useLayerDismissGuard } from "@/components/ui/floating-layer";
 import { useGlobalSearch } from "@/lib/api/generated/endpoints";
 import type { SearchHit } from "@/lib/api/generated/model";
 import { cn } from "@/lib/utils";
@@ -82,6 +83,7 @@ export function CommandPalette({
   const [debounced, setDebounced] = useState("");
   const [cursor, setCursor] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
 
   // Ctrl/Cmd+K anywhere, and Escape to leave.
   useEffect(() => {
@@ -192,13 +194,21 @@ export function CommandPalette({
       ?.scrollIntoView({ block: "nearest" });
   }, [cursor]);
 
+  useLayerDismissGuard(overlayRef, open);
+
   if (!open) return null;
 
   let lastGroup = "";
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 pt-[12vh]"
+      ref={overlayRef}
+      // z-50 put it level with dialogs, so Ctrl+K over an open modal opened it
+      // underneath. It sits above dialogs and below confirm/toasts.
+      className={cn(
+        "fixed inset-0 z-[1800] flex items-start justify-center bg-black/40 p-4 pt-[12vh]",
+        FLOATING_LAYER,
+      )}
       onClick={() => setOpen(false)}
     >
       <div

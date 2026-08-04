@@ -8,8 +8,9 @@
  */
 
 import { Question, Warning } from "@phosphor-icons/react";
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
+import { FLOATING_LAYER, useLayerDismissGuard } from "@/components/ui/floating-layer";
 import { cn } from "@/lib/utils";
 
 export interface ConfirmOptions {
@@ -48,6 +49,7 @@ function settle(ok: boolean) {
 }
 
 export function ConfirmHost() {
+  const overlayRef = useRef<HTMLDivElement>(null);
   const current = useSyncExternalStore(
     (listener) => {
       listeners.add(listener);
@@ -66,12 +68,18 @@ export function ConfirmHost() {
     return () => window.removeEventListener("keydown", onKey);
   }, [current]);
 
+  useLayerDismissGuard(overlayRef, !!current);
+
   if (!current) return null;
   const danger = current.tone === "danger";
 
   return (
     <div
-      className="fixed inset-0 z-[1900] flex items-center justify-center bg-black/40 p-4"
+      ref={overlayRef}
+      className={cn(
+        "fixed inset-0 z-[1900] flex items-center justify-center bg-black/40 p-4",
+        FLOATING_LAYER,
+      )}
       onClick={() => settle(false)}
       role="presentation"
     >

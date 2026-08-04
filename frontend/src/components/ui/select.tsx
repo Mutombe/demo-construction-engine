@@ -23,6 +23,7 @@ import {
   type SelectHTMLAttributes,
 } from "react";
 import { createPortal } from "react-dom";
+import { FLOATING_LAYER, useLayerDismissGuard } from "@/components/ui/floating-layer";
 import { cn } from "@/lib/utils";
 
 interface OptionSpec {
@@ -95,6 +96,8 @@ export function Select({ className, children, value, onChange, disabled, ...rest
     setOpen(false);
     triggerRef.current?.focus();
   };
+
+  useLayerDismissGuard(panelRef, open);
 
   // Close on outside interaction / viewport changes (position is fixed).
   useEffect(() => {
@@ -242,7 +245,10 @@ export function Select({ className, children, value, onChange, disabled, ...rest
             ref={panelRef}
             role="listbox"
             style={panelStyle}
-            className="dropdown-in z-[2100] overflow-y-auto rounded-md border bg-card py-1 shadow-lg"
+            className={cn(
+              "dropdown-in z-[2100] overflow-y-auto rounded-md border bg-card py-1 shadow-lg",
+              FLOATING_LAYER,
+            )}
           >
             {options.map((option, index) => {
               const selected = option.value === String(value ?? "");
