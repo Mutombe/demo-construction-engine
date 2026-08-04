@@ -2,6 +2,7 @@ import { useQueryClient, type FetchQueryOptions } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useRef, type HTMLAttributes, type ReactNode } from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
+import { Tooltip } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 /* Every record is a destination; every row that represents one navigates to it.
@@ -100,6 +101,7 @@ export function EntityLink({
   search,
   prefetch,
   className,
+  title,
   children,
 }: {
   to: string;
@@ -107,10 +109,12 @@ export function EntityLink({
   search?: Record<string, unknown>;
   prefetch?: () => AnyQueryOptions;
   className?: string;
+  /** Says where the link goes, for codes whose destination is not obvious. */
+  title?: string;
   children: ReactNode;
 }) {
   const onIntent = usePrefetchOnIntent(prefetch);
-  return (
+  const link = (
     <Link
       to={to}
       params={params as never}
@@ -126,4 +130,5 @@ export function EntityLink({
       {children}
     </Link>
   );
+  return title ? <Tooltip content={title}>{link}</Tooltip> : link;
 }

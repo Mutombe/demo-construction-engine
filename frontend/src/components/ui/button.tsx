@@ -1,5 +1,6 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { forwardRef, type ButtonHTMLAttributes } from "react";
+import { Tooltip } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
@@ -29,10 +30,19 @@ export interface ButtonProps
   extends ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {}
 
+/** A `title` renders as a real tooltip rather than the native one.
+ *
+ * Handled here instead of at every call site so the ~70 existing icon-only
+ * buttons all gain a styled, keyboard-reachable hint at once. The wrapped
+ * child is a plain <button>, not this component, so there is no recursion.
+ */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, ...props }, ref) => (
-    <button ref={ref} className={cn(buttonVariants({ variant, size }), className)} {...props} />
-  ),
+  ({ className, variant, size, title, ...props }, ref) => {
+    const button = (
+      <button ref={ref} className={cn(buttonVariants({ variant, size }), className)} {...props} />
+    );
+    return title ? <Tooltip content={title}>{button}</Tooltip> : button;
+  },
 );
 Button.displayName = "Button";
 

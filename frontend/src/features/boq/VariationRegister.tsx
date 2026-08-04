@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { confirmDialog } from "@/components/ui/confirm";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EntityLink } from "@/components/ui/linked-row";
 import { CardListSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -155,8 +156,14 @@ export function VariationRegister({ projectId }: { projectId: string }) {
                   <TableCell className="font-mono text-xs">
                     {row.variation_ref ?? "—"}
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    {row.section_code}·{row.item_code}
+                  <TableCell className="font-mono text-xs">
+                    <EntityLink
+                      to="/projects/$projectId/boq"
+                      params={{ projectId }}
+                      title="Open this line in the bill of quantities"
+                    >
+                      {row.section_code}·{row.item_code}
+                    </EntityLink>
                   </TableCell>
                   <TableCell
                     className={cn(

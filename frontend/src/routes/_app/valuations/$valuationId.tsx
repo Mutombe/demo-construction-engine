@@ -215,7 +215,19 @@ function ValuationDetailPage() {
               <TableBody>
                 {(valuation.lines ?? []).map((line) => (
                   <TableRow key={line.id}>
-                    <TableCell className="font-mono text-xs">{line.item_code}</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {valuation.project_id ? (
+                        <EntityLink
+                          to="/projects/$projectId/boq"
+                          params={{ projectId: valuation.project_id }}
+                          title="Open this line in the bill of quantities"
+                        >
+                          {line.item_code}
+                        </EntityLink>
+                      ) : (
+                        line.item_code
+                      )}
+                    </TableCell>
                     <TableCell className="max-w-72 truncate" title={line.description}>
                       {line.description}
                     </TableCell>

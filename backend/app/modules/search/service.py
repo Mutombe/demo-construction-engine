@@ -179,7 +179,7 @@ def search(db: Session, query: str, user: User) -> SearchResults:
             label=r.project.name if r.project else "Material request",
             sublabel=r.status.value,
             code=r.doc_number,
-            url="/procurement/requisitions",
+            url=f"/procurement/requisitions/{r.id}",
         ),
     )
 

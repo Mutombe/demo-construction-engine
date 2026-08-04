@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { confirmDialog } from "@/components/ui/confirm";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ClickableRow } from "@/components/ui/linked-row";
 import { Input } from "@/components/ui/input";
 import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import { CardListSkeleton, TableSkeleton } from "@/components/ui/skeleton";
@@ -26,6 +27,7 @@ import {
   useApproveStocktake,
   useCancelStocktake,
   useCreateStocktake,
+  getGetStocktakeQueryOptions,
   useGetStocktake,
   useListStocktakes,
   useSetStocktakeCounts,
@@ -129,7 +131,12 @@ function StocktakePage() {
                 </TableRow>
               )}
               {data?.items.map((row) => (
-                <TableRow key={row.id}>
+                <ClickableRow
+                  key={row.id}
+                  to="/inventory/stocktake/$stocktakeId"
+                  params={{ stocktakeId: row.id }}
+                  prefetch={() => getGetStocktakeQueryOptions(row.id)}
+                >
                   <TableCell className="font-mono text-xs">{row.doc_number}</TableCell>
                   <TableCell>{fmtDate(row.count_date)}</TableCell>
                   <TableCell>
@@ -156,7 +163,7 @@ function StocktakePage() {
                   >
                     {moneyExact(row.variance_value)}
                   </TableCell>
-                </TableRow>
+                </ClickableRow>
               ))}
             </TableBody>
           </Table>
