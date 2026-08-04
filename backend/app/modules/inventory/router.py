@@ -1,12 +1,14 @@
 import uuid
+from decimal import Decimal
+from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from app.common.enums import UserRole
 from app.common.pagination import PageParamsDep
 from app.common.schemas import Page
 from app.core.deps import DbDep, require_roles
-from app.modules.inventory import service
+from app.modules.inventory import analytics, service
 from app.common.enums import StocktakeStatus
 from app.modules.inventory.schemas import (
     AdjustRequest,
@@ -31,6 +33,9 @@ from app.modules.inventory.schemas import (
     ExpiryReport,
     RecallTrace,
     StockBatchRead,
+    ConsumptionTrend,
+    DemandForecast,
+    InventoryAnalytics,
     TransferRequest,
 )
 
@@ -274,3 +279,38 @@ def trace_batch(batch_number: str, db: DbDep) -> RecallTrace:
     """Where a lot went: what is left on the shelf, and which projects got the
     rest."""
     return service.recall_trace(db, batch_number)
+
+
+# --- Analytics and forecasting ------------------------------------------------
+
+
+@router.get("/stock-analytics", response_model=InventoryAnalytics)
+def get_inventory_analytics(
+    db: DbDep,
+    days: Annotated[int, Query(ge=7, le=730)] = 90,
+    carrying_rate: Annotated[float, Query(ge=0, le=1)] = 0.25,
+    dead_after_days: Annotated[int, Query(ge=7, le=730)] = 90,
+) -> InventoryAnalytics:
+    """Turnover, ageing, carrying cost and dead stock over a window."""
+    return analytics.inventory_analytics(
+        db, days, Decimal(str(carrying_rate)), dead_after_days
+    )
+
+
+@router.get("/stock-forecast", response_model=DemandForecast)
+def get_demand_forecast(
+    db: DbDep,
+    days: Annotated[int, Query(ge=14, le=730)] = 90,
+    safety_days: Annotated[int, Query(ge=0, le=90)] = 7,
+) -> DemandForecast:
+    """Consumption rate, days of cover and what to reorder before it runs out."""
+    return analytics.demand_forecast(db, days, safety_days)
+
+
+@router.get("/stock-items/{item_id}/consumption", response_model=ConsumptionTrend)
+def get_item_consumption(
+    item_id: uuid.UUID,
+    db: DbDep,
+    months: Annotated[int, Query(ge=2, le=24)] = 6,
+) -> ConsumptionTrend:
+    return analytics.item_consumption_trend(db, item_id, months)

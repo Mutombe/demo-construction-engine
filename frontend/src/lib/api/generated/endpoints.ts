@@ -47,12 +47,14 @@ import type {
   CompanyOverview,
   CompanySettingsRead,
   CompanySettingsUpdate,
+  ConsumptionTrend,
   ConvertToPo,
   CostEntryCreate,
   CostEntryRead,
   CostEntryUpdate,
   DeadlineItem,
   DeadlinesParams,
+  DemandForecast,
   DependencyCreate,
   DependencyRead,
   DiaryEntryCreate,
@@ -66,6 +68,7 @@ import type {
   ExpiryReport,
   ExportCostLedgerParams,
   ExportExpenseRegisterParams,
+  ExportInventoryAnalyticsParams,
   ExportMaterialReconciliationParams,
   ExportProcurementRegisterParams,
   ExportProjectCostParams,
@@ -74,6 +77,9 @@ import type {
   FinancialTrendParams,
   FolderCounts,
   GanttPayload,
+  GetDemandForecastParams,
+  GetInventoryAnalyticsParams,
+  GetItemConsumptionParams,
   GetMediaFolderCountsParams,
   GetPhotoTimelineParams,
   GlobalSearchParams,
@@ -84,6 +90,7 @@ import type {
   IngestionItemRead,
   IngestionRejectRequest,
   IngestionUploadResponse,
+  InventoryAnalytics,
   IssueRequest,
   ListClientsParams,
   ListCostEntriesParams,
@@ -10740,6 +10747,297 @@ export function useTraceBatch<TData = Awaited<ReturnType<typeof traceBatch>>, TE
 
 
 /**
+ * Turnover, ageing, carrying cost and dead stock over a window.
+ * @summary Get Inventory Analytics
+ */
+export const getInventoryAnalytics = (
+    params?: GetInventoryAnalyticsParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<InventoryAnalytics>(
+      {url: `/api/v1/stock-analytics`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getGetInventoryAnalyticsQueryKey = (params?: GetInventoryAnalyticsParams,) => {
+    return [
+    `/api/v1/stock-analytics`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetInventoryAnalyticsQueryOptions = <TData = Awaited<ReturnType<typeof getInventoryAnalytics>>, TError = HTTPValidationError>(params?: GetInventoryAnalyticsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInventoryAnalytics>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetInventoryAnalyticsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getInventoryAnalytics>>> = ({ signal }) => getInventoryAnalytics(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getInventoryAnalytics>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetInventoryAnalyticsQueryResult = NonNullable<Awaited<ReturnType<typeof getInventoryAnalytics>>>
+export type GetInventoryAnalyticsQueryError = HTTPValidationError
+
+
+export function useGetInventoryAnalytics<TData = Awaited<ReturnType<typeof getInventoryAnalytics>>, TError = HTTPValidationError>(
+ params: undefined |  GetInventoryAnalyticsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInventoryAnalytics>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getInventoryAnalytics>>,
+          TError,
+          Awaited<ReturnType<typeof getInventoryAnalytics>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetInventoryAnalytics<TData = Awaited<ReturnType<typeof getInventoryAnalytics>>, TError = HTTPValidationError>(
+ params?: GetInventoryAnalyticsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInventoryAnalytics>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getInventoryAnalytics>>,
+          TError,
+          Awaited<ReturnType<typeof getInventoryAnalytics>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetInventoryAnalytics<TData = Awaited<ReturnType<typeof getInventoryAnalytics>>, TError = HTTPValidationError>(
+ params?: GetInventoryAnalyticsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInventoryAnalytics>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Inventory Analytics
+ */
+
+export function useGetInventoryAnalytics<TData = Awaited<ReturnType<typeof getInventoryAnalytics>>, TError = HTTPValidationError>(
+ params?: GetInventoryAnalyticsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInventoryAnalytics>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetInventoryAnalyticsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Consumption rate, days of cover and what to reorder before it runs out.
+ * @summary Get Demand Forecast
+ */
+export const getDemandForecast = (
+    params?: GetDemandForecastParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<DemandForecast>(
+      {url: `/api/v1/stock-forecast`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getGetDemandForecastQueryKey = (params?: GetDemandForecastParams,) => {
+    return [
+    `/api/v1/stock-forecast`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetDemandForecastQueryOptions = <TData = Awaited<ReturnType<typeof getDemandForecast>>, TError = HTTPValidationError>(params?: GetDemandForecastParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDemandForecast>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDemandForecastQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDemandForecast>>> = ({ signal }) => getDemandForecast(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDemandForecast>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetDemandForecastQueryResult = NonNullable<Awaited<ReturnType<typeof getDemandForecast>>>
+export type GetDemandForecastQueryError = HTTPValidationError
+
+
+export function useGetDemandForecast<TData = Awaited<ReturnType<typeof getDemandForecast>>, TError = HTTPValidationError>(
+ params: undefined |  GetDemandForecastParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDemandForecast>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDemandForecast>>,
+          TError,
+          Awaited<ReturnType<typeof getDemandForecast>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetDemandForecast<TData = Awaited<ReturnType<typeof getDemandForecast>>, TError = HTTPValidationError>(
+ params?: GetDemandForecastParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDemandForecast>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDemandForecast>>,
+          TError,
+          Awaited<ReturnType<typeof getDemandForecast>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetDemandForecast<TData = Awaited<ReturnType<typeof getDemandForecast>>, TError = HTTPValidationError>(
+ params?: GetDemandForecastParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDemandForecast>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Demand Forecast
+ */
+
+export function useGetDemandForecast<TData = Awaited<ReturnType<typeof getDemandForecast>>, TError = HTTPValidationError>(
+ params?: GetDemandForecastParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDemandForecast>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetDemandForecastQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get Item Consumption
+ */
+export const getItemConsumption = (
+    itemId: string,
+    params?: GetItemConsumptionParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<ConsumptionTrend>(
+      {url: `/api/v1/stock-items/${itemId}/consumption`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getGetItemConsumptionQueryKey = (itemId: string,
+    params?: GetItemConsumptionParams,) => {
+    return [
+    `/api/v1/stock-items/${itemId}/consumption`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetItemConsumptionQueryOptions = <TData = Awaited<ReturnType<typeof getItemConsumption>>, TError = HTTPValidationError>(itemId: string,
+    params?: GetItemConsumptionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getItemConsumption>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetItemConsumptionQueryKey(itemId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getItemConsumption>>> = ({ signal }) => getItemConsumption(itemId,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: itemId !== null && itemId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getItemConsumption>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetItemConsumptionQueryResult = NonNullable<Awaited<ReturnType<typeof getItemConsumption>>>
+export type GetItemConsumptionQueryError = HTTPValidationError
+
+
+export function useGetItemConsumption<TData = Awaited<ReturnType<typeof getItemConsumption>>, TError = HTTPValidationError>(
+ itemId: string,
+    params: undefined |  GetItemConsumptionParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getItemConsumption>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getItemConsumption>>,
+          TError,
+          Awaited<ReturnType<typeof getItemConsumption>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetItemConsumption<TData = Awaited<ReturnType<typeof getItemConsumption>>, TError = HTTPValidationError>(
+ itemId: string,
+    params?: GetItemConsumptionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getItemConsumption>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getItemConsumption>>,
+          TError,
+          Awaited<ReturnType<typeof getItemConsumption>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetItemConsumption<TData = Awaited<ReturnType<typeof getItemConsumption>>, TError = HTTPValidationError>(
+ itemId: string,
+    params?: GetItemConsumptionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getItemConsumption>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Item Consumption
+ */
+
+export function useGetItemConsumption<TData = Awaited<ReturnType<typeof getItemConsumption>>, TError = HTTPValidationError>(
+ itemId: string,
+    params?: GetItemConsumptionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getItemConsumption>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetItemConsumptionQueryOptions(itemId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
  * @summary List Valuations
  */
 export const listValuations = (
@@ -14739,6 +15037,100 @@ export function useExportExpenseRegister<TData = Awaited<ReturnType<typeof expor
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getExportExpenseRegisterQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Export Inventory Analytics
+ */
+export const exportInventoryAnalytics = (
+    params?: ExportInventoryAnalyticsParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<unknown>(
+      {url: `/api/v1/reports/inventory-analytics`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getExportInventoryAnalyticsQueryKey = (params?: ExportInventoryAnalyticsParams,) => {
+    return [
+    `/api/v1/reports/inventory-analytics`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getExportInventoryAnalyticsQueryOptions = <TData = Awaited<ReturnType<typeof exportInventoryAnalytics>>, TError = HTTPValidationError>(params?: ExportInventoryAnalyticsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportInventoryAnalytics>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getExportInventoryAnalyticsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof exportInventoryAnalytics>>> = ({ signal }) => exportInventoryAnalytics(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof exportInventoryAnalytics>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ExportInventoryAnalyticsQueryResult = NonNullable<Awaited<ReturnType<typeof exportInventoryAnalytics>>>
+export type ExportInventoryAnalyticsQueryError = HTTPValidationError
+
+
+export function useExportInventoryAnalytics<TData = Awaited<ReturnType<typeof exportInventoryAnalytics>>, TError = HTTPValidationError>(
+ params: undefined |  ExportInventoryAnalyticsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportInventoryAnalytics>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportInventoryAnalytics>>,
+          TError,
+          Awaited<ReturnType<typeof exportInventoryAnalytics>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useExportInventoryAnalytics<TData = Awaited<ReturnType<typeof exportInventoryAnalytics>>, TError = HTTPValidationError>(
+ params?: ExportInventoryAnalyticsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportInventoryAnalytics>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportInventoryAnalytics>>,
+          TError,
+          Awaited<ReturnType<typeof exportInventoryAnalytics>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useExportInventoryAnalytics<TData = Awaited<ReturnType<typeof exportInventoryAnalytics>>, TError = HTTPValidationError>(
+ params?: ExportInventoryAnalyticsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportInventoryAnalytics>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Export Inventory Analytics
+ */
+
+export function useExportInventoryAnalytics<TData = Awaited<ReturnType<typeof exportInventoryAnalytics>>, TError = HTTPValidationError>(
+ params?: ExportInventoryAnalyticsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportInventoryAnalytics>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getExportInventoryAnalyticsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

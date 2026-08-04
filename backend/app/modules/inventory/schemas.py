@@ -329,3 +329,78 @@ class RecallTrace(BaseModel):
     remaining_quantity: Decimal
     issued_quantity: Decimal
     usages: list[RecallUsage]
+
+
+# --- Analytics and forecasting ------------------------------------------------
+
+
+class InventoryAnalyticsRow(BaseModel):
+    stock_item_id: uuid.UUID
+    code: str
+    name: str
+    category: str | None
+    unit: str
+    qty_on_hand: Decimal
+    stock_value: Decimal
+    average_stock_value: Decimal
+    issued_quantity: Decimal
+    issued_value: Decimal
+    # None when there was no movement to judge by, rather than a fake zero
+    turnover_ratio: Decimal | None = None
+    days_on_hand: int | None = None
+    annual_carrying_cost: Decimal
+    last_movement: date | None = None
+    last_issue: date | None = None
+    days_since_issue: int | None = None
+    is_dead_stock: bool = False
+
+
+class InventoryAnalytics(BaseModel):
+    window_days: int
+    carrying_rate: Decimal
+    total_stock_value: Decimal
+    total_issued_value: Decimal
+    annual_carrying_cost: Decimal
+    dead_stock_value: Decimal
+    dead_stock_count: int
+    rows: list[InventoryAnalyticsRow]
+
+
+class DemandForecastRow(BaseModel):
+    stock_item_id: uuid.UUID
+    code: str
+    name: str
+    unit: str
+    qty_on_hand: Decimal
+    reorder_level: Decimal
+    lead_time_days: int
+    # False when there is too little history to say anything honest
+    has_enough_history: bool
+    daily_usage: Decimal | None = None
+    monthly_usage: Decimal | None = None
+    days_of_cover: int | None = None
+    projected_stockout: date | None = None
+    suggested_reorder_point: Decimal | None = None
+    suggested_order_quantity: Decimal | None = None
+    reorder_level_is_low: bool = False
+    needs_ordering: bool = False
+
+
+class DemandForecast(BaseModel):
+    window_days: int
+    lead_time_days: int
+    safety_days: int
+    rows: list[DemandForecastRow]
+    needs_ordering_count: int
+    forecastable_count: int
+
+
+class ConsumptionMonth(BaseModel):
+    month: str
+    quantity: Decimal
+
+
+class ConsumptionTrend(BaseModel):
+    stock_item_id: uuid.UUID
+    months: list[ConsumptionMonth]
+    total: Decimal

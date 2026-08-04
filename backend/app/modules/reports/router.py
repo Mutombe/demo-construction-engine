@@ -71,6 +71,13 @@ def export_expense_register(
     return _respond(service.expense_register(db, project_id, status), format)
 
 
+@router.get("/inventory-analytics")
+def export_inventory_analytics(
+    db: DbDep, days: int = 90, format: Format = "csv"
+) -> Response:
+    return _respond(service.inventory_analytics_report(db, days), format)
+
+
 @router.get("/stock-valuation")
 def export_stock_valuation(
     db: DbDep, low_stock_only: bool = False, format: Format = "csv"

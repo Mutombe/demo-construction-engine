@@ -467,3 +467,48 @@ def material_reconciliation(db: Session, project_id: uuid.UUID) -> ReportTable:
             "variance": total_actual - total_theoretical,
         },
     )
+
+
+def inventory_analytics_report(db: Session, days: int = 90) -> ReportTable:
+    """Turnover, ageing and dead stock as a spreadsheet."""
+    from app.modules.inventory.analytics import inventory_analytics
+
+    data = inventory_analytics(db, days=days)
+    rows = [
+        {
+            "code": row.code,
+            "name": row.name,
+            "category": row.category or "",
+            "qty_on_hand": row.qty_on_hand,
+            "stock_value": row.stock_value,
+            "issued_value": row.issued_value,
+            "turnover_ratio": row.turnover_ratio if row.turnover_ratio is not None else "",
+            "days_on_hand": row.days_on_hand if row.days_on_hand is not None else "",
+            "carrying_cost": row.annual_carrying_cost,
+            "days_since_issue": row.days_since_issue if row.days_since_issue is not None else "",
+            "flag": "DEAD" if row.is_dead_stock else "",
+        }
+        for row in data.rows
+    ]
+    return ReportTable(
+        title=f"Inventory analytics {days}d",
+        columns=[
+            ReportColumn("code", "Code", "text", 12),
+            ReportColumn("name", "Item", "text", 32),
+            ReportColumn("category", "Category", "text", 14),
+            ReportColumn("qty_on_hand", "On hand", "qty", 12),
+            ReportColumn("stock_value", "Stock value", "money", 14),
+            ReportColumn("issued_value", "Issued value", "money", 14),
+            ReportColumn("turnover_ratio", "Turnover", "qty", 10),
+            ReportColumn("days_on_hand", "Days on hand", "qty", 12),
+            ReportColumn("carrying_cost", "Carrying cost/yr", "money", 16),
+            ReportColumn("days_since_issue", "Days idle", "qty", 10),
+            ReportColumn("flag", "Flag", "text", 8),
+        ],
+        rows=rows,
+        totals={
+            "stock_value": data.total_stock_value,
+            "issued_value": data.total_issued_value,
+            "carrying_cost": data.annual_carrying_cost,
+        },
+    )

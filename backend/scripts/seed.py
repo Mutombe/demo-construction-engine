@@ -1308,6 +1308,45 @@ def seed_inventory(db, users) -> None:
             )
 
 
+def seed_consumption_history(db, users) -> None:
+    """Repeated issues over recent weeks so turnover and forecasting have a
+    real rate to work from — one issue per item is a coincidence, not a trend."""
+    from app.modules.inventory.models import StockItem, StockMovement
+    from app.modules.inventory.schemas import IssueRequest
+    from app.modules.inventory.service import issue_to_project
+
+    project = db.scalar(select(Project).where(Project.code == "PRJ-2026-001"))
+    if project is None:
+        return
+    # Idempotent: this seeding is recognisable by its reference note
+    already = db.scalar(
+        select(StockMovement).where(StockMovement.notes == "Weekly site draw").limit(1)
+    )
+    if already:
+        return
+
+    draws = [("CEM-425", "30"), ("REB-Y12", "40"), ("BRK-STD", "600"), ("DSL", "8")]
+    for code, qty in draws:
+        item = db.scalar(select(StockItem).where(StockItem.code == code))
+        if item is None:
+            continue
+        # Six weekly draws, oldest first, stopping before the shelf empties
+        for week in range(6, 0, -1):
+            if item.qty_on_hand <= Decimal(qty):
+                break
+            issue_to_project(
+                db,
+                item.id,
+                IssueRequest(
+                    project_id=project.id,
+                    quantity=Decimal(qty),
+                    movement_date=TODAY - timedelta(weeks=week),
+                    notes="Weekly site draw",
+                ),
+                users["site_manager"].id,
+            )
+
+
 def seed_valuations(db, users) -> None:
     from app.modules.valuations.models import Valuation
     from app.modules.valuations.schemas import ValuationCreate
@@ -1722,6 +1761,7 @@ def main() -> None:
         seed_baseline(db)
         seed_stock_transfers(db, users)
         seed_batches(db, users)
+        seed_consumption_history(db, users)
         seed_coordinates(db)
         portal_link = seed_portal_link(db, users)
         db.commit()

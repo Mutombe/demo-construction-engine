@@ -7395,6 +7395,204 @@
     }
    }
   },
+  "/api/v1/stock-analytics": {
+   "get": {
+    "tags": [
+     "inventory"
+    ],
+    "summary": "Get Inventory Analytics",
+    "description": "Turnover, ageing, carrying cost and dead stock over a window.",
+    "operationId": "get_inventory_analytics",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "days",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 730,
+       "minimum": 7,
+       "default": 90,
+       "title": "Days"
+      }
+     },
+     {
+      "name": "carrying_rate",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "number",
+       "maximum": 1,
+       "minimum": 0,
+       "default": 0.25,
+       "title": "Carrying Rate"
+      }
+     },
+     {
+      "name": "dead_after_days",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 730,
+       "minimum": 7,
+       "default": 90,
+       "title": "Dead After Days"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/InventoryAnalytics"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/stock-forecast": {
+   "get": {
+    "tags": [
+     "inventory"
+    ],
+    "summary": "Get Demand Forecast",
+    "description": "Consumption rate, days of cover and what to reorder before it runs out.",
+    "operationId": "get_demand_forecast",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "days",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 730,
+       "minimum": 14,
+       "default": 90,
+       "title": "Days"
+      }
+     },
+     {
+      "name": "safety_days",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 90,
+       "minimum": 0,
+       "default": 7,
+       "title": "Safety Days"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/DemandForecast"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/stock-items/{item_id}/consumption": {
+   "get": {
+    "tags": [
+     "inventory"
+    ],
+    "summary": "Get Item Consumption",
+    "operationId": "get_item_consumption",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "item_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Item Id"
+      }
+     },
+     {
+      "name": "months",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 24,
+       "minimum": 2,
+       "default": 6,
+       "title": "Months"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ConsumptionTrend"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/v1/projects/{project_id}/valuations": {
    "get": {
     "tags": [
@@ -10207,6 +10405,66 @@
     }
    }
   },
+  "/api/v1/reports/inventory-analytics": {
+   "get": {
+    "tags": [
+     "reports"
+    ],
+    "summary": "Export Inventory Analytics",
+    "operationId": "export_inventory_analytics",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "days",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "default": 90,
+       "title": "Days"
+      }
+     },
+     {
+      "name": "format",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "enum": [
+        "csv",
+        "xlsx"
+       ],
+       "type": "string",
+       "default": "csv",
+       "title": "Format"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/v1/reports/stock-valuation": {
    "get": {
     "tags": [
@@ -12954,6 +13212,53 @@
     ],
     "title": "ComparisonMatrix"
    },
+   "ConsumptionMonth": {
+    "properties": {
+     "month": {
+      "type": "string",
+      "title": "Month"
+     },
+     "quantity": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Quantity"
+     }
+    },
+    "type": "object",
+    "required": [
+     "month",
+     "quantity"
+    ],
+    "title": "ConsumptionMonth"
+   },
+   "ConsumptionTrend": {
+    "properties": {
+     "stock_item_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Stock Item Id"
+     },
+     "months": {
+      "items": {
+       "$ref": "#/components/schemas/ConsumptionMonth"
+      },
+      "type": "array",
+      "title": "Months"
+     },
+     "total": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Total"
+     }
+    },
+    "type": "object",
+    "required": [
+     "stock_item_id",
+     "months",
+     "total"
+    ],
+    "title": "ConsumptionTrend"
+   },
    "ConvertToPo": {
     "properties": {
      "supplier_id": {
@@ -13378,6 +13683,179 @@
      "is_overdue"
     ],
     "title": "DeadlineItem"
+   },
+   "DemandForecast": {
+    "properties": {
+     "window_days": {
+      "type": "integer",
+      "title": "Window Days"
+     },
+     "lead_time_days": {
+      "type": "integer",
+      "title": "Lead Time Days"
+     },
+     "safety_days": {
+      "type": "integer",
+      "title": "Safety Days"
+     },
+     "rows": {
+      "items": {
+       "$ref": "#/components/schemas/DemandForecastRow"
+      },
+      "type": "array",
+      "title": "Rows"
+     },
+     "needs_ordering_count": {
+      "type": "integer",
+      "title": "Needs Ordering Count"
+     },
+     "forecastable_count": {
+      "type": "integer",
+      "title": "Forecastable Count"
+     }
+    },
+    "type": "object",
+    "required": [
+     "window_days",
+     "lead_time_days",
+     "safety_days",
+     "rows",
+     "needs_ordering_count",
+     "forecastable_count"
+    ],
+    "title": "DemandForecast"
+   },
+   "DemandForecastRow": {
+    "properties": {
+     "stock_item_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Stock Item Id"
+     },
+     "code": {
+      "type": "string",
+      "title": "Code"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "unit": {
+      "type": "string",
+      "title": "Unit"
+     },
+     "qty_on_hand": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Qty On Hand"
+     },
+     "reorder_level": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Reorder Level"
+     },
+     "lead_time_days": {
+      "type": "integer",
+      "title": "Lead Time Days"
+     },
+     "has_enough_history": {
+      "type": "boolean",
+      "title": "Has Enough History"
+     },
+     "daily_usage": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Daily Usage"
+     },
+     "monthly_usage": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Monthly Usage"
+     },
+     "days_of_cover": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Days Of Cover"
+     },
+     "projected_stockout": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Projected Stockout"
+     },
+     "suggested_reorder_point": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Suggested Reorder Point"
+     },
+     "suggested_order_quantity": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Suggested Order Quantity"
+     },
+     "reorder_level_is_low": {
+      "type": "boolean",
+      "title": "Reorder Level Is Low",
+      "default": false
+     },
+     "needs_ordering": {
+      "type": "boolean",
+      "title": "Needs Ordering",
+      "default": false
+     }
+    },
+    "type": "object",
+    "required": [
+     "stock_item_id",
+     "code",
+     "name",
+     "unit",
+     "qty_on_hand",
+     "reorder_level",
+     "lead_time_days",
+     "has_enough_history"
+    ],
+    "title": "DemandForecastRow"
    },
    "DependencyCreate": {
     "properties": {
@@ -15117,6 +15595,202 @@
      "duplicate_ids"
     ],
     "title": "IngestionUploadResponse"
+   },
+   "InventoryAnalytics": {
+    "properties": {
+     "window_days": {
+      "type": "integer",
+      "title": "Window Days"
+     },
+     "carrying_rate": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Carrying Rate"
+     },
+     "total_stock_value": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Total Stock Value"
+     },
+     "total_issued_value": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Total Issued Value"
+     },
+     "annual_carrying_cost": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Annual Carrying Cost"
+     },
+     "dead_stock_value": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Dead Stock Value"
+     },
+     "dead_stock_count": {
+      "type": "integer",
+      "title": "Dead Stock Count"
+     },
+     "rows": {
+      "items": {
+       "$ref": "#/components/schemas/InventoryAnalyticsRow"
+      },
+      "type": "array",
+      "title": "Rows"
+     }
+    },
+    "type": "object",
+    "required": [
+     "window_days",
+     "carrying_rate",
+     "total_stock_value",
+     "total_issued_value",
+     "annual_carrying_cost",
+     "dead_stock_value",
+     "dead_stock_count",
+     "rows"
+    ],
+    "title": "InventoryAnalytics"
+   },
+   "InventoryAnalyticsRow": {
+    "properties": {
+     "stock_item_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Stock Item Id"
+     },
+     "code": {
+      "type": "string",
+      "title": "Code"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "category": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Category"
+     },
+     "unit": {
+      "type": "string",
+      "title": "Unit"
+     },
+     "qty_on_hand": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Qty On Hand"
+     },
+     "stock_value": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Stock Value"
+     },
+     "average_stock_value": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Average Stock Value"
+     },
+     "issued_quantity": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Issued Quantity"
+     },
+     "issued_value": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Issued Value"
+     },
+     "turnover_ratio": {
+      "anyOf": [
+       {
+        "type": "string",
+        "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Turnover Ratio"
+     },
+     "days_on_hand": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Days On Hand"
+     },
+     "annual_carrying_cost": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Annual Carrying Cost"
+     },
+     "last_movement": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Movement"
+     },
+     "last_issue": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Issue"
+     },
+     "days_since_issue": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Days Since Issue"
+     },
+     "is_dead_stock": {
+      "type": "boolean",
+      "title": "Is Dead Stock",
+      "default": false
+     }
+    },
+    "type": "object",
+    "required": [
+     "stock_item_id",
+     "code",
+     "name",
+     "category",
+     "unit",
+     "qty_on_hand",
+     "stock_value",
+     "average_stock_value",
+     "issued_quantity",
+     "issued_value",
+     "annual_carrying_cost"
+    ],
+    "title": "InventoryAnalyticsRow"
    },
    "IssueRequest": {
     "properties": {
