@@ -2882,6 +2882,33 @@
     }
    }
   },
+  "/api/v1/dashboard/nav-counts": {
+   "get": {
+    "tags": [
+     "dashboard"
+    ],
+    "summary": "Nav Counts",
+    "description": "Sidebar badges: work waiting for the signed-in user, per destination.",
+    "operationId": "nav_counts",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/NavCounts"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ]
+   }
+  },
   "/api/v1/dashboard/procurement-pulse": {
    "get": {
     "tags": [
@@ -9842,6 +9869,56 @@
     }
    }
   },
+  "/api/v1/search": {
+   "get": {
+    "tags": [
+     "search"
+    ],
+    "summary": "Global Search",
+    "description": "Records matching `q` across every addressable entity, for the palette.",
+    "operationId": "global_search",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "q",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "string",
+       "maxLength": 100,
+       "default": "",
+       "title": "Q"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SearchResults"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/v1/ingestion/items": {
    "post": {
     "tags": [
@@ -15093,6 +15170,47 @@
     },
     "type": "object",
     "title": "MediaUpdate"
+   },
+   "NavCount": {
+    "properties": {
+     "path": {
+      "type": "string",
+      "title": "Path"
+     },
+     "count": {
+      "type": "integer",
+      "title": "Count"
+     },
+     "tone": {
+      "type": "string",
+      "title": "Tone"
+     }
+    },
+    "type": "object",
+    "required": [
+     "path",
+     "count",
+     "tone"
+    ],
+    "title": "NavCount",
+    "description": "A count the sidebar shows against a destination."
+   },
+   "NavCounts": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/NavCount"
+      },
+      "type": "array",
+      "title": "Items"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items"
+    ],
+    "title": "NavCounts",
+    "description": "Work waiting for THIS user, per destination.\n\nDeliberately not \"how many records exist here\": a badge that is always lit\nstops being read. Each count is something the signed-in role can act on,\nso a viewer sees none and a site manager does not see approvals meant for\na project manager."
    },
    "NotificationRead": {
     "properties": {
@@ -21021,6 +21139,95 @@
     },
     "type": "object",
     "title": "RfqUpdate"
+   },
+   "SearchHit": {
+    "properties": {
+     "type": {
+      "type": "string",
+      "title": "Type"
+     },
+     "type_label": {
+      "type": "string",
+      "title": "Type Label"
+     },
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "label": {
+      "type": "string",
+      "title": "Label"
+     },
+     "sublabel": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Sublabel"
+     },
+     "code": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Code"
+     },
+     "url": {
+      "type": "string",
+      "title": "Url"
+     }
+    },
+    "type": "object",
+    "required": [
+     "type",
+     "type_label",
+     "id",
+     "label",
+     "sublabel",
+     "code",
+     "url"
+    ],
+    "title": "SearchHit",
+    "description": "One addressable record the palette can jump to."
+   },
+   "SearchResults": {
+    "properties": {
+     "query": {
+      "type": "string",
+      "title": "Query"
+     },
+     "hits": {
+      "items": {
+       "$ref": "#/components/schemas/SearchHit"
+      },
+      "type": "array",
+      "title": "Hits"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     },
+     "truncated": {
+      "type": "boolean",
+      "title": "Truncated"
+     }
+    },
+    "type": "object",
+    "required": [
+     "query",
+     "hits",
+     "total",
+     "truncated"
+    ],
+    "title": "SearchResults"
    },
    "SectionTotal": {
     "properties": {

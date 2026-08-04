@@ -75,6 +75,7 @@ import type {
   GanttPayload,
   GetMediaFolderCountsParams,
   GetPhotoTimelineParams,
+  GlobalSearchParams,
   GoodsInRequest,
   HTTPValidationError,
   Healthz200,
@@ -111,6 +112,7 @@ import type {
   MeasurementSet,
   MediaRead,
   MediaUpdate,
+  NavCounts,
   NotificationRead,
   PageClientRead,
   PageCostEntryRead,
@@ -181,6 +183,7 @@ import type {
   RfqGenerateRequest,
   RfqItemsReplace,
   RfqUpdate,
+  SearchResults,
   SiteIssueCreate,
   SiteIssueRead,
   SiteIssueResolve,
@@ -4432,6 +4435,100 @@ export function useFinancialTrend<TData = Awaited<ReturnType<typeof financialTre
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getFinancialTrendQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Sidebar badges: work waiting for the signed-in user, per destination.
+ * @summary Nav Counts
+ */
+export const navCounts = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<NavCounts>(
+      {url: `/api/v1/dashboard/nav-counts`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getNavCountsQueryKey = () => {
+    return [
+    `/api/v1/dashboard/nav-counts`
+    ] as const;
+    }
+
+
+export const getNavCountsQueryOptions = <TData = Awaited<ReturnType<typeof navCounts>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof navCounts>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getNavCountsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof navCounts>>> = ({ signal }) => navCounts(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof navCounts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type NavCountsQueryResult = NonNullable<Awaited<ReturnType<typeof navCounts>>>
+export type NavCountsQueryError = unknown
+
+
+export function useNavCounts<TData = Awaited<ReturnType<typeof navCounts>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof navCounts>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof navCounts>>,
+          TError,
+          Awaited<ReturnType<typeof navCounts>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useNavCounts<TData = Awaited<ReturnType<typeof navCounts>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof navCounts>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof navCounts>>,
+          TError,
+          Awaited<ReturnType<typeof navCounts>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useNavCounts<TData = Awaited<ReturnType<typeof navCounts>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof navCounts>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Nav Counts
+ */
+
+export function useNavCounts<TData = Awaited<ReturnType<typeof navCounts>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof navCounts>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getNavCountsQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -14053,6 +14150,101 @@ export function useExportCostLedger<TData = Awaited<ReturnType<typeof exportCost
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getExportCostLedgerQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Records matching `q` across every addressable entity, for the palette.
+ * @summary Global Search
+ */
+export const globalSearch = (
+    params?: GlobalSearchParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<SearchResults>(
+      {url: `/api/v1/search`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getGlobalSearchQueryKey = (params?: GlobalSearchParams,) => {
+    return [
+    `/api/v1/search`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGlobalSearchQueryOptions = <TData = Awaited<ReturnType<typeof globalSearch>>, TError = HTTPValidationError>(params?: GlobalSearchParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof globalSearch>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGlobalSearchQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof globalSearch>>> = ({ signal }) => globalSearch(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof globalSearch>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GlobalSearchQueryResult = NonNullable<Awaited<ReturnType<typeof globalSearch>>>
+export type GlobalSearchQueryError = HTTPValidationError
+
+
+export function useGlobalSearch<TData = Awaited<ReturnType<typeof globalSearch>>, TError = HTTPValidationError>(
+ params: undefined |  GlobalSearchParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof globalSearch>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof globalSearch>>,
+          TError,
+          Awaited<ReturnType<typeof globalSearch>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGlobalSearch<TData = Awaited<ReturnType<typeof globalSearch>>, TError = HTTPValidationError>(
+ params?: GlobalSearchParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof globalSearch>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof globalSearch>>,
+          TError,
+          Awaited<ReturnType<typeof globalSearch>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGlobalSearch<TData = Awaited<ReturnType<typeof globalSearch>>, TError = HTTPValidationError>(
+ params?: GlobalSearchParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof globalSearch>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Global Search
+ */
+
+export function useGlobalSearch<TData = Awaited<ReturnType<typeof globalSearch>>, TError = HTTPValidationError>(
+ params?: GlobalSearchParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof globalSearch>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGlobalSearchQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

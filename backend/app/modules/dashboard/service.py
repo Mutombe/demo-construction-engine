@@ -16,6 +16,8 @@ from app.modules.dashboard.schemas import (
     DeadlineItem,
     FinancialTotals,
     FinancialTrend,
+    NavCount,
+    NavCounts,
     OverdueDelivery,
     ProcurementPulse,
     ProjectHealth,
@@ -486,3 +488,105 @@ def cashflow_forecast(
         closing_position=cumulative,
         worst_month=worst_month,
     )
+
+
+def nav_counts(db: Session, user) -> NavCounts:
+    """Badge counts for the sidebar — only work this user can actually act on.
+
+    Every count answers "is there something here for me?". Counts that would
+    always be lit (total records, historical documents) are deliberately absent
+    so a badge keeps meaning something.
+    """
+    from app.common.enums import (
+        ExpenseStatus,
+        IngestionStatus,
+        PoStatus,
+        RequisitionStatus,
+        UserRole,
+    )
+    from app.modules.expenses.models import ExpenseClaim
+    from app.modules.ingestion.models import IngestionItem
+    from app.modules.inventory.models import StockItem
+    from app.modules.procurement.models import PurchaseOrder
+    from app.modules.requisitions.models import Requisition
+
+    role = user.role
+    items: list[NavCount] = []
+
+    def count_of(model, *where) -> int:
+        return db.scalar(select(func.count()).select_from(model).where(*where)) or 0
+
+    def add(path: str, count: int, tone: str = "default") -> None:
+        if count > 0:
+            items.append(NavCount(path=path, count=count, tone=tone))
+
+    procurement_side = role in (
+        UserRole.admin,
+        UserRole.project_manager,
+        UserRole.procurement_officer,
+    )
+
+    # Material requests: procurement's queue. Site sees its own open requests
+    # so it knows what is still outstanding, not as a task to action.
+    if procurement_side:
+        add(
+            "/procurement/requisitions",
+            count_of(Requisition, Requisition.status == RequisitionStatus.open),
+            "warning",
+        )
+    elif role == UserRole.site_manager:
+        add(
+            "/procurement/requisitions",
+            count_of(
+                Requisition,
+                Requisition.status == RequisitionStatus.open,
+                Requisition.created_by == user.id,
+            ),
+        )
+
+    # Procurement: deliveries that have gone past their promised date
+    if procurement_side:
+        add(
+            "/procurement",
+            count_of(
+                PurchaseOrder,
+                PurchaseOrder.status == PoStatus.issued,
+                PurchaseOrder.expected_delivery.is_not(None),
+                PurchaseOrder.expected_delivery < date.today(),
+            ),
+            "danger",
+        )
+
+    # Inventory: stock that has fallen through its reorder level
+    if role != UserRole.viewer:
+        add(
+            "/inventory",
+            count_of(
+                StockItem,
+                StockItem.is_active.is_(True),
+                StockItem.qty_on_hand <= StockItem.reorder_level,
+            ),
+            "warning",
+        )
+
+    # Expenses: claims awaiting the approver, not everyone's pending claims
+    if role in (UserRole.admin, UserRole.project_manager):
+        add(
+            "/expenses",
+            count_of(ExpenseClaim, ExpenseClaim.status == ExpenseStatus.pending),
+            "warning",
+        )
+
+    # AI Inbox: documents drafted or stuck, waiting on a human decision
+    if role != UserRole.viewer:
+        add(
+            "/inbox",
+            count_of(
+                IngestionItem,
+                IngestionItem.status.in_(
+                    [IngestionStatus.drafted, IngestionStatus.needs_info]
+                ),
+            ),
+        )
+
+    return NavCounts(items=items)

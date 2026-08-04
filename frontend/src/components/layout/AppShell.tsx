@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { AddressBook, Buildings, CaretDoubleLeft, CaretDoubleRight, ChartBar, ClipboardText, Gear, HardHat, MapTrifold, Money, Package, Receipt, ShoppingCart, SignOut, SquaresFour, Tray } from "@phosphor-icons/react";
+import { AddressBook, Buildings, CaretDoubleLeft, CaretDoubleRight, ChartBar, ClipboardText, Gear, MagnifyingGlass, HardHat, MapTrifold, Money, Package, Receipt, ShoppingCart, SignOut, SquaresFour, Tray } from "@phosphor-icons/react";
 import { ClaudeIcon } from "@/components/ui/claude-icon";
 import type { ReactNode } from "react";
 import { create } from "zustand";
@@ -10,7 +10,13 @@ import { useChatStore } from "@/features/ai/chatStore";
 import { logout } from "@/features/auth/api";
 import { useAuth } from "@/features/auth/hooks";
 import { NotificationBell } from "@/features/notifications/NotificationBell";
+import {
+  CommandPalette,
+  usePalette,
+  type PaletteDestination,
+} from "@/features/search/CommandPalette";
 import { can, type Permission } from "@/features/auth/permissions";
+import { useNavCounts } from "@/lib/api/generated/endpoints";
 import { ROLE_LABELS } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -93,6 +99,46 @@ function activeNavPath(pathname: string, candidates: string[]): string | null {
     .sort((a, b) => b.length - a.length)[0] ?? null;
 }
 
+/** Work waiting on a destination. Collapsed to icons there is no room for a
+ *  number, so it becomes a dot — presence still reads, the count moves to the
+ *  tooltip. */
+function NavBadge({
+  entry,
+  collapsed,
+}: {
+  entry?: { count: number; tone: string };
+  collapsed: boolean;
+}) {
+  if (!entry) return null;
+  const tone =
+    entry.tone === "danger"
+      ? "bg-destructive text-white"
+      : entry.tone === "warning"
+        ? "bg-warning text-black"
+        : "bg-sidebar-accent text-sidebar-foreground";
+
+  if (collapsed) {
+    return (
+      <span
+        className={cn(
+          "absolute right-1.5 top-1.5 size-2 rounded-full",
+          tone.split(" ")[0],
+        )}
+      />
+    );
+  }
+  return (
+    <span
+      className={cn(
+        "ml-auto min-w-[1.25rem] shrink-0 rounded-full px-1.5 py-0.5 text-center text-[10px] font-semibold tabular-nums",
+        tone,
+      )}
+    >
+      {entry.count > 99 ? "99+" : entry.count}
+    </span>
+  );
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -113,6 +159,28 @@ export function AppShell({ children }: { children: ReactNode }) {
   const activePath = activeNavPath(
     pathname,
     visibleGroups.flatMap((group) => group.items.map((item) => item.to ?? "")),
+  );
+
+  // Work waiting for this user, refreshed on the same cadence as the bell.
+  const { data: navCounts } = useNavCounts({
+    query: { refetchInterval: 60_000, refetchIntervalInBackground: false },
+  });
+  const countByPath = new Map(
+    (navCounts?.items ?? []).map((entry) => [entry.path, entry]),
+  );
+
+  const countFor = (item: NavItem) =>
+    item.to ? countByPath.get(item.to) : undefined;
+
+  const openPalette = usePalette((s) => s.setOpen);
+  const paletteDestinations: PaletteDestination[] = visibleGroups.flatMap((group) =>
+    group.items
+      .filter((item) => item.to)
+      .map((item) => ({
+        to: item.to as string,
+        label: item.label,
+        group: group.title ?? "Overview",
+      })),
   );
 
   const handleLogout = async () => {
@@ -179,14 +247,21 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <Link
                     key={item.label}
                     to={item.to}
-                    title={collapsed ? item.label : undefined}
+                    title={
+                      collapsed
+                        ? countFor(item)
+                          ? `${item.label} — ${countFor(item)?.count} waiting`
+                          : item.label
+                        : undefined
+                    }
                     className={cn(
-                      "flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-colors hover:bg-sidebar-accent [&_svg]:size-4.5 [&_svg]:shrink-0",
+                      "relative flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-colors hover:bg-sidebar-accent [&_svg]:size-4.5 [&_svg]:shrink-0",
                       item.to === activePath && "bg-sidebar-accent font-medium",
                     )}
                   >
                     {item.icon}
-                    {!collapsed && <span className="truncate">{item.label}</span>}
+                    {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+                    <NavBadge entry={countFor(item)} collapsed={collapsed} />
                   </Link>
                 ),
               )}
@@ -223,6 +298,17 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="text-sm text-muted-foreground" />
           <div className="flex items-center gap-3">
             <Button
+              variant="outline"
+              size="sm"
+              onClick={() => openPalette(true)}
+              title="Search everything (Ctrl+K)"
+              className="gap-2 text-muted-foreground"
+            >
+              <MagnifyingGlass />
+              <span className="hidden sm:inline">Search</span>
+              <kbd className="hidden rounded border px-1 text-[10px] sm:inline">Ctrl K</kbd>
+            </Button>
+            <Button
               variant={chatOpen ? "secondary" : "outline"}
               size="sm"
               onClick={toggleChat}
@@ -252,6 +338,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <main className="min-h-0 flex-1 overflow-y-auto p-5">{children}</main>
       </div>
       <ChatPanel />
+      <CommandPalette destinations={paletteDestinations} />
     </div>
   );
 }

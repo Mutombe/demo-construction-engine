@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query
 
-from app.core.deps import DbDep
+from app.core.deps import CurrentUser, DbDep
 from app.modules.dashboard import service
 from app.modules.dashboard.schemas import (
     BudgetAlert,
@@ -11,6 +11,7 @@ from app.modules.dashboard.schemas import (
     CompanyOverview,
     DeadlineItem,
     FinancialTrend,
+    NavCounts,
     ProcurementPulse,
 )
 
@@ -34,6 +35,12 @@ def financial_trend(
     project_id: uuid.UUID | None = None,
 ) -> FinancialTrend:
     return service.financial_trend(db, months, project_id)
+
+
+@router.get("/nav-counts", response_model=NavCounts)
+def nav_counts(db: DbDep, user: CurrentUser) -> NavCounts:
+    """Sidebar badges: work waiting for the signed-in user, per destination."""
+    return service.nav_counts(db, user)
 
 
 @router.get("/procurement-pulse", response_model=ProcurementPulse)

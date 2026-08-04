@@ -125,3 +125,23 @@ class CashflowForecast(BaseModel):
     total_outflow: Decimal
     closing_position: Decimal
     worst_month: str | None  # the month with the deepest negative net
+
+
+class NavCount(BaseModel):
+    """A count the sidebar shows against a destination."""
+
+    path: str  # the nav item's `to`, so the shell needs no mapping table
+    count: int
+    tone: str  # "default" | "warning" | "danger" — how loudly to show it
+
+
+class NavCounts(BaseModel):
+    """Work waiting for THIS user, per destination.
+
+    Deliberately not "how many records exist here": a badge that is always lit
+    stops being read. Each count is something the signed-in role can act on,
+    so a viewer sees none and a site manager does not see approvals meant for
+    a project manager.
+    """
+
+    items: list[NavCount]
