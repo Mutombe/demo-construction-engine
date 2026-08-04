@@ -10,5 +10,6 @@ import type { PoStoreLineMapping } from './poStoreLineMapping.ts';
 export interface PoReceive {
   received_date?: string | null;
   destination?: PoDestination;
+  location_id?: string | null;
   store_lines?: PoStoreLineMapping[] | null;
 }

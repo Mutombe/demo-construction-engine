@@ -1,7 +1,10 @@
 import { keepPreviousData } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { ArrowsLeftRight } from "@phosphor-icons/react";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import { Can } from "@/components/layout/Can";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EntityLink } from "@/components/ui/linked-row";
@@ -15,12 +18,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PageSkeleton, TableSkeleton } from "@/components/ui/skeleton";
+import { TransferDialog } from "@/features/inventory/TransferDialog";
 import { makeBadge } from "@/features/procurement/StatusBadges";
 import {
   getGetStockItemQueryOptions,
   useGetStockItem,
+  useGetStockItemLevels,
   useListStockMovements,
 } from "@/lib/api/generated/endpoints";
+import type { StockItemRead } from "@/lib/api/generated/model";
 import { fmtDate, moneyExact } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/inventory/$itemId")({
@@ -33,11 +39,14 @@ const MovementTypeBadge = makeBadge({
   goods_in: ["success", "Goods In"],
   issue: ["default", "Issue"],
   adjustment: ["secondary", "Adjustment"],
+  transfer: ["outline", "Transfer"],
 });
 
 function StockItemDetailPage() {
   const { itemId } = Route.useParams();
   const { data: item } = useGetStockItem(itemId);
+  const { data: levels } = useGetStockItemLevels(itemId);
+  const [transferring, setTransferring] = useState<StockItemRead | null>(null);
   const [movementsPage, setMovementsPage] = useState(1);
   const { data: movements, isLoading: movementsLoading } = useListStockMovements(
     itemId,
@@ -107,11 +116,44 @@ function StockItemDetailPage() {
         </Card>
       </div>
 
+      {levels && levels.length > 0 && (
+        <Card className="mb-5">
+          <CardContent className="p-4">
+            <div className="mb-2 flex items-center justify-between">
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                Where this stock is
+              </div>
+              <Can perm="inventory:issue">
+                <Button variant="outline" size="sm" onClick={() => setTransferring(item)}>
+                  <ArrowsLeftRight /> Transfer
+                </Button>
+              </Can>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+              {levels.map((level) => (
+                <div
+                  key={level.location_id}
+                  className="flex items-baseline justify-between rounded-md border px-3 py-2"
+                >
+                  <span className="text-sm">{level.location_name}</span>
+                  <span className="text-sm font-semibold tabular-nums">
+                    {Number(level.quantity).toLocaleString()} {item.unit}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <TransferDialog item={transferring} onClose={() => setTransferring(null)} />
+
       <div className="rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Movement</TableHead>
+              <TableHead>Location</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Date</TableHead>
               <TableHead className="text-right">Qty</TableHead>
@@ -121,10 +163,10 @@ function StockItemDetailPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {movementsLoading && !movements && <TableSkeleton columns={7} rows={5} />}
+            {movementsLoading && !movements && <TableSkeleton columns={8} rows={5} />}
             {!movementsLoading && !movements?.items.length && (
               <TableRow>
-                <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
                   No movements yet.
                 </TableCell>
               </TableRow>
@@ -132,6 +174,9 @@ function StockItemDetailPage() {
             {movements?.items.map((m) => (
               <TableRow key={m.id}>
                 <TableCell className="font-mono text-xs">{m.doc_number}</TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  {m.location_name ?? "—"}
+                </TableCell>
                 <TableCell>
                   <MovementTypeBadge status={m.movement_type} />
                 </TableCell>

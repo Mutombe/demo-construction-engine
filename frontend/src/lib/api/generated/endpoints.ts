@@ -98,7 +98,9 @@ import type {
   ListRfqsParams,
   ListSiteIssuesParams,
   ListStockItemsParams,
+  ListStockLocationsParams,
   ListStockMovementsParams,
+  ListStockTransfersParams,
   ListStocktakesParams,
   ListSuppliersParams,
   ListTasksParams,
@@ -129,6 +131,7 @@ import type {
   PageSiteIssueRead,
   PageStockItemRead,
   PageStockMovementRead,
+  PageStockTransferRead,
   PageStocktakeRead,
   PageSupplierRead,
   PageTimesheetRead,
@@ -191,6 +194,11 @@ import type {
   StockItemCreate,
   StockItemRead,
   StockItemUpdate,
+  StockLevelRead,
+  StockLocationCreate,
+  StockLocationRead,
+  StockLocationUpdate,
+  StockTransferRead,
   StocktakeCountSet,
   StocktakeCreate,
   StocktakeDetail,
@@ -208,6 +216,7 @@ import type {
   TimesheetRead,
   TimesheetUpdate,
   TokenResponse,
+  TransferRequest,
   UnreadCount,
   UserCreate,
   UserRead,
@@ -9960,6 +9969,486 @@ export const useCancelStocktake = <TError = HTTPValidationError,
         TContext
       > => {
       return useMutation(getCancelStocktakeMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary List Stock Locations
+ */
+export const listStockLocations = (
+    params?: ListStockLocationsParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<StockLocationRead[]>(
+      {url: `/api/v1/stock-locations`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getListStockLocationsQueryKey = (params?: ListStockLocationsParams,) => {
+    return [
+    `/api/v1/stock-locations`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListStockLocationsQueryOptions = <TData = Awaited<ReturnType<typeof listStockLocations>>, TError = HTTPValidationError>(params?: ListStockLocationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStockLocations>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListStockLocationsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listStockLocations>>> = ({ signal }) => listStockLocations(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listStockLocations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListStockLocationsQueryResult = NonNullable<Awaited<ReturnType<typeof listStockLocations>>>
+export type ListStockLocationsQueryError = HTTPValidationError
+
+
+export function useListStockLocations<TData = Awaited<ReturnType<typeof listStockLocations>>, TError = HTTPValidationError>(
+ params: undefined |  ListStockLocationsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStockLocations>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStockLocations>>,
+          TError,
+          Awaited<ReturnType<typeof listStockLocations>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListStockLocations<TData = Awaited<ReturnType<typeof listStockLocations>>, TError = HTTPValidationError>(
+ params?: ListStockLocationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStockLocations>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStockLocations>>,
+          TError,
+          Awaited<ReturnType<typeof listStockLocations>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListStockLocations<TData = Awaited<ReturnType<typeof listStockLocations>>, TError = HTTPValidationError>(
+ params?: ListStockLocationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStockLocations>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Stock Locations
+ */
+
+export function useListStockLocations<TData = Awaited<ReturnType<typeof listStockLocations>>, TError = HTTPValidationError>(
+ params?: ListStockLocationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStockLocations>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListStockLocationsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Create Stock Location
+ */
+export const createStockLocation = (
+    stockLocationCreate: StockLocationCreate,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<StockLocationRead>(
+      {url: `/api/v1/stock-locations`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: stockLocationCreate, signal
+    },
+      );
+    }
+
+
+
+
+export const getCreateStockLocationMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createStockLocation>>, TError,{data: StockLocationCreate}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof createStockLocation>>, TError,{data: StockLocationCreate}, TContext> => {
+
+const mutationKey = ['createStockLocation'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createStockLocation>>, {data: StockLocationCreate}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createStockLocation(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateStockLocationMutationResult = NonNullable<Awaited<ReturnType<typeof createStockLocation>>>
+    export type CreateStockLocationMutationBody = StockLocationCreate
+    export type CreateStockLocationMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Stock Location
+ */
+export const useCreateStockLocation = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createStockLocation>>, TError,{data: StockLocationCreate}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createStockLocation>>,
+        TError,
+        {data: StockLocationCreate},
+        TContext
+      > => {
+      return useMutation(getCreateStockLocationMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Update Stock Location
+ */
+export const updateStockLocation = (
+    locationId: string,
+    stockLocationUpdate: StockLocationUpdate,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<StockLocationRead>(
+      {url: `/api/v1/stock-locations/${locationId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: stockLocationUpdate, signal
+    },
+      );
+    }
+
+
+
+
+export const getUpdateStockLocationMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateStockLocation>>, TError,{locationId: string;data: StockLocationUpdate}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof updateStockLocation>>, TError,{locationId: string;data: StockLocationUpdate}, TContext> => {
+
+const mutationKey = ['updateStockLocation'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateStockLocation>>, {locationId: string;data: StockLocationUpdate}> = (props) => {
+          const {locationId,data} = props ?? {};
+
+          return  updateStockLocation(locationId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateStockLocationMutationResult = NonNullable<Awaited<ReturnType<typeof updateStockLocation>>>
+    export type UpdateStockLocationMutationBody = StockLocationUpdate
+    export type UpdateStockLocationMutationError = HTTPValidationError
+
+    /**
+ * @summary Update Stock Location
+ */
+export const useUpdateStockLocation = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateStockLocation>>, TError,{locationId: string;data: StockLocationUpdate}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateStockLocation>>,
+        TError,
+        {locationId: string;data: StockLocationUpdate},
+        TContext
+      > => {
+      return useMutation(getUpdateStockLocationMutationOptions(options), queryClient);
+    }
+
+/**
+ * Where this item actually sits, so a healthy total cannot hide that all
+ * of it is at the wrong location.
+ * @summary Get Stock Item Levels
+ */
+export const getStockItemLevels = (
+    itemId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<StockLevelRead[]>(
+      {url: `/api/v1/stock-items/${itemId}/levels`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetStockItemLevelsQueryKey = (itemId: string,) => {
+    return [
+    `/api/v1/stock-items/${itemId}/levels`
+    ] as const;
+    }
+
+
+export const getGetStockItemLevelsQueryOptions = <TData = Awaited<ReturnType<typeof getStockItemLevels>>, TError = HTTPValidationError>(itemId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockItemLevels>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStockItemLevelsQueryKey(itemId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStockItemLevels>>> = ({ signal }) => getStockItemLevels(itemId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: itemId !== null && itemId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStockItemLevels>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetStockItemLevelsQueryResult = NonNullable<Awaited<ReturnType<typeof getStockItemLevels>>>
+export type GetStockItemLevelsQueryError = HTTPValidationError
+
+
+export function useGetStockItemLevels<TData = Awaited<ReturnType<typeof getStockItemLevels>>, TError = HTTPValidationError>(
+ itemId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockItemLevels>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStockItemLevels>>,
+          TError,
+          Awaited<ReturnType<typeof getStockItemLevels>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetStockItemLevels<TData = Awaited<ReturnType<typeof getStockItemLevels>>, TError = HTTPValidationError>(
+ itemId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockItemLevels>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStockItemLevels>>,
+          TError,
+          Awaited<ReturnType<typeof getStockItemLevels>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetStockItemLevels<TData = Awaited<ReturnType<typeof getStockItemLevels>>, TError = HTTPValidationError>(
+ itemId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockItemLevels>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Stock Item Levels
+ */
+
+export function useGetStockItemLevels<TData = Awaited<ReturnType<typeof getStockItemLevels>>, TError = HTTPValidationError>(
+ itemId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStockItemLevels>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetStockItemLevelsQueryOptions(itemId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary List Stock Transfers
+ */
+export const listStockTransfers = (
+    params?: ListStockTransfersParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<PageStockTransferRead>(
+      {url: `/api/v1/stock-transfers`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getListStockTransfersQueryKey = (params?: ListStockTransfersParams,) => {
+    return [
+    `/api/v1/stock-transfers`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListStockTransfersQueryOptions = <TData = Awaited<ReturnType<typeof listStockTransfers>>, TError = HTTPValidationError>(params?: ListStockTransfersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStockTransfers>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListStockTransfersQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listStockTransfers>>> = ({ signal }) => listStockTransfers(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listStockTransfers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListStockTransfersQueryResult = NonNullable<Awaited<ReturnType<typeof listStockTransfers>>>
+export type ListStockTransfersQueryError = HTTPValidationError
+
+
+export function useListStockTransfers<TData = Awaited<ReturnType<typeof listStockTransfers>>, TError = HTTPValidationError>(
+ params: undefined |  ListStockTransfersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStockTransfers>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStockTransfers>>,
+          TError,
+          Awaited<ReturnType<typeof listStockTransfers>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListStockTransfers<TData = Awaited<ReturnType<typeof listStockTransfers>>, TError = HTTPValidationError>(
+ params?: ListStockTransfersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStockTransfers>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStockTransfers>>,
+          TError,
+          Awaited<ReturnType<typeof listStockTransfers>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListStockTransfers<TData = Awaited<ReturnType<typeof listStockTransfers>>, TError = HTTPValidationError>(
+ params?: ListStockTransfersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStockTransfers>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Stock Transfers
+ */
+
+export function useListStockTransfers<TData = Awaited<ReturnType<typeof listStockTransfers>>, TError = HTTPValidationError>(
+ params?: ListStockTransfersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStockTransfers>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListStockTransfersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Site moves material between stores, so issue-level access is enough.
+ * @summary Create Stock Transfer
+ */
+export const createStockTransfer = (
+    transferRequest: TransferRequest,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<StockTransferRead>(
+      {url: `/api/v1/stock-transfers`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: transferRequest, signal
+    },
+      );
+    }
+
+
+
+
+export const getCreateStockTransferMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createStockTransfer>>, TError,{data: TransferRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof createStockTransfer>>, TError,{data: TransferRequest}, TContext> => {
+
+const mutationKey = ['createStockTransfer'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createStockTransfer>>, {data: TransferRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createStockTransfer(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateStockTransferMutationResult = NonNullable<Awaited<ReturnType<typeof createStockTransfer>>>
+    export type CreateStockTransferMutationBody = TransferRequest
+    export type CreateStockTransferMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Stock Transfer
+ */
+export const useCreateStockTransfer = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createStockTransfer>>, TError,{data: TransferRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createStockTransfer>>,
+        TError,
+        {data: TransferRequest},
+        TContext
+      > => {
+      return useMutation(getCreateStockTransferMutationOptions(options), queryClient);
     }
 
 /**

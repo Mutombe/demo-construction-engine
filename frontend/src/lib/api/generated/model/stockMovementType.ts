@@ -12,4 +12,5 @@ export const StockMovementType = {
   goods_in: 'goods_in',
   issue: 'issue',
   adjustment: 'adjustment',
+  transfer: 'transfer',
 } as const;

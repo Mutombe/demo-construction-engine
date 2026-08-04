@@ -9,6 +9,7 @@ import { Can } from "@/components/layout/Can";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { ClickableRow, RowActions } from "@/components/ui/linked-row";
 import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import { TableSkeleton } from "@/components/ui/skeleton";
@@ -31,6 +32,7 @@ import {
   getGetStockItemQueryOptions,
   getStockItemByBarcode,
   useListStockItems,
+  useListStockLocations,
 } from "@/lib/api/generated/endpoints";
 import type { StockItemRead } from "@/lib/api/generated/model";
 import { moneyExact } from "@/lib/format";
@@ -58,6 +60,8 @@ function InventoryPage() {
   const canIssue = usePermission("inventory:issue");
   const [scanOpen, setScanOpen] = useState(false);
   const [reorderOpen, setReorderOpen] = useState(false);
+  const [locationId, setLocationId] = useState("");
+  const { data: locations } = useListStockLocations({ active_only: true });
 
   const onScanned = async (code: string) => {
     try {
@@ -73,6 +77,7 @@ function InventoryPage() {
     {
       search: search || undefined,
       low_stock_only: lowOnly || undefined,
+      location_id: locationId || undefined,
       page,
       page_size: DEFAULT_PAGE_SIZE,
     },
@@ -145,6 +150,21 @@ function InventoryPage() {
         <Button variant="outline" onClick={() => setScanOpen(true)}>
           <Barcode /> Scan
         </Button>
+        <Select
+          className="w-52"
+          value={locationId}
+          onChange={(e) => {
+            setLocationId(e.target.value);
+            void navigate({ search: { page: 1 }, replace: true });
+          }}
+        >
+          <option value="">All locations</option>
+          {locations?.map((loc) => (
+            <option key={loc.id} value={loc.id}>
+              {loc.name}
+            </option>
+          ))}
+        </Select>
         <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <input
             type="checkbox"

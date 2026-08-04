@@ -459,7 +459,27 @@ def test_diary_labour_replaces_the_previous_list(client, db):
     assert [line["worker_id"] for line in replaced["labour"]] == [str(b.id)]
 
 
-def test_stock_movement_types_unchanged_by_stocktake(db):
-    # Guard against a future refactor inventing a new movement type: stocktake
-    # corrections are ordinary adjustments so the ledger stays reconcilable.
-    assert {t.value for t in StockMovementType} == {"goods_in", "issue", "adjustment"}
+def test_stocktake_corrections_post_as_plain_adjustments(client, db):
+    """A stocktake must not invent its own movement type.
+
+    Corrections stay ordinary adjustments so the ledger reconciles the same way
+    whoever made the correction. (This originally froze the whole enum, which
+    was over-specified — the enum may legitimately grow, as it did for
+    transfers; what must not change is how a count posts.)
+    """
+    headers = _proc(db)
+    item = _stock_item(client, headers, "GUARD-1", qty="10")
+    stocktake = client.post("/api/v1/stocktakes", json={}, headers=headers).json()
+    client.put(
+        f"/api/v1/stocktakes/{stocktake['id']}/counts",
+        json={"lines": [{"stock_item_id": item["id"], "counted_quantity": "8"}]},
+        headers=headers,
+    )
+    client.post(f"/api/v1/stocktakes/{stocktake['id']}/approve", headers=headers)
+
+    movements = client.get(
+        f"/api/v1/stock-items/{item['id']}/movements", headers=headers
+    ).json()["items"]
+    correction = next(m for m in movements if stocktake["doc_number"] in (m["notes"] or ""))
+    assert correction["movement_type"] == StockMovementType.adjustment.value
+    assert correction["doc_number"].startswith("ADJ-")

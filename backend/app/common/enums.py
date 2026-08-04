@@ -108,6 +108,18 @@ class StockMovementType(StrEnum):
     goods_in = "goods_in"
     issue = "issue"
     adjustment = "adjustment"
+    transfer = "transfer"
+
+
+class StockLocationKind(StrEnum):
+    """Where stock physically sits.
+
+    A site store belongs to a project; a central store and a plant yard do not.
+    """
+
+    store = "store"
+    site = "site"
+    yard = "yard"
 
 
 class StocktakeStatus(StrEnum):

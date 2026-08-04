@@ -6,6 +6,7 @@
  */
 
 export interface AdjustRequest {
+  location_id?: string | null;
   quantity: number | string;
   /** @minLength 1 */
   notes: string;

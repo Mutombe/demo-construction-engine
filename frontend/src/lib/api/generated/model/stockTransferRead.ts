@@ -4,23 +4,24 @@
  * Construction ERP API
  * OpenAPI spec version: 0.1.0
  */
-import type { StockMovementType } from './stockMovementType.ts';
 
-export interface StockMovementRead {
+export interface StockTransferRead {
   id: string;
-  stock_item_id: string;
   doc_number: string;
-  movement_type: StockMovementType;
-  movement_date: string;
+  stock_item_id: string;
+  item_code?: string;
+  item_name?: string;
+  from_location_id: string;
+  from_location_name?: string;
+  to_location_id: string;
+  to_location_name?: string;
+  transfer_date: string;
   /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
   quantity: string;
   /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
   unit_cost: string;
-  location_id?: string | null;
-  location_name?: string | null;
-  project_id: string | null;
-  project_name?: string | null;
-  reference: string | null;
+  /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
+  value?: string;
   notes: string | null;
   created_at: string;
 }

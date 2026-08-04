@@ -1163,6 +1163,66 @@ STOCK_BARCODES = {
 }
 
 
+def seed_locations(db) -> None:
+    """A central store plus a site store, so the demo shows stock in more than
+    one place rather than a single-location system with extra tables."""
+    from app.modules.inventory.models import StockLocation
+    from app.modules.inventory.service import default_location
+
+    default_location(db)  # guarantees MAIN exists
+    riverside = db.scalar(select(Project).where(Project.code == "PRJ-2026-001"))
+    get_or_create(
+        db,
+        StockLocation,
+        code="SITE-RIV",
+        defaults={
+            "name": "Riverside Site Store",
+            "kind": "site",
+            "project_id": riverside.id if riverside else None,
+            "is_default": False,
+            "is_active": True,
+        },
+    )
+    get_or_create(
+        db,
+        StockLocation,
+        code="YARD",
+        defaults={
+            "name": "Plant Yard",
+            "kind": "yard",
+            "is_default": False,
+            "is_active": True,
+        },
+    )
+    db.flush()
+
+
+def seed_stock_transfers(db, users) -> None:
+    """Move some cement to the site store so levels differ by location."""
+    from app.modules.inventory.models import StockItem, StockLocation, StockTransfer
+    from app.modules.inventory.schemas import TransferRequest
+    from app.modules.inventory.service import default_location, transfer_stock
+
+    if db.scalar(select(StockTransfer).limit(1)):
+        return
+    site = db.scalar(select(StockLocation).where(StockLocation.code == "SITE-RIV"))
+    cement = db.scalar(select(StockItem).where(StockItem.code == "CEM-425"))
+    if site is None or cement is None or cement.qty_on_hand <= 40:
+        return
+    transfer_stock(
+        db,
+        TransferRequest(
+            stock_item_id=cement.id,
+            from_location_id=default_location(db).id,
+            to_location_id=site.id,
+            quantity=Decimal("40"),
+            transfer_date=TODAY - timedelta(days=2),
+            notes="Cement moved to the site store ahead of the slab pour",
+        ),
+        users["procurement_officer"].id,
+    )
+
+
 def seed_inventory(db, users) -> None:
     from app.modules.inventory.models import StockItem
     from app.modules.inventory.schemas import GoodsInRequest, IssueRequest, StockItemCreate
@@ -1614,6 +1674,7 @@ def main() -> None:
         seed_procurement(db, users)
         seed_site(db, users)
         seed_expenses(db, users)
+        seed_locations(db)
         seed_inventory(db, users)
         seed_valuations(db, users)
         seed_purchase_orders(db, users)
@@ -1621,6 +1682,7 @@ def main() -> None:
         seed_measurement(db, users)
         seed_requisitions(db, users)
         seed_baseline(db)
+        seed_stock_transfers(db, users)
         seed_coordinates(db)
         portal_link = seed_portal_link(db, users)
         db.commit()

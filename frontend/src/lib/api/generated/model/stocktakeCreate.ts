@@ -6,6 +6,7 @@
  */
 
 export interface StocktakeCreate {
+  location_id?: string | null;
   count_date?: string | null;
   notes?: string | null;
   stock_item_ids?: string[];

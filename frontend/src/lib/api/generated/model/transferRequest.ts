@@ -5,11 +5,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface GoodsInRequest {
-  location_id?: string | null;
+export interface TransferRequest {
+  stock_item_id: string;
+  from_location_id: string;
+  to_location_id: string;
   quantity: number | string;
-  unit_cost: number | string;
-  movement_date?: string | null;
-  reference?: string | null;
+  transfer_date?: string | null;
   notes?: string | null;
 }

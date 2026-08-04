@@ -10,7 +10,12 @@ from app.common.enums import CostSource, StockMovementType
 from app.core.exceptions import ConflictError, NotFoundError, ValidationFailedError
 from app.modules.boq.models import BoqItem
 from app.modules.costs.models import CostEntry
-from app.modules.inventory.models import StockItem, StockMovement
+from app.modules.inventory.models import (
+    StockItem,
+    StockLevel,
+    StockLocation,
+    StockMovement,
+)
 from app.modules.inventory.schemas import (
     AdjustRequest,
     GoodsInRequest,
@@ -37,8 +42,15 @@ def list_items(
     search: str | None = None,
     active_only: bool = False,
     low_stock_only: bool = False,
+    location_id: uuid.UUID | None = None,
 ) -> tuple[list[StockItem], int]:
     query = select(StockItem)
+    if location_id is not None:
+        # Only items actually held at that location, so the list matches what
+        # someone standing in that store would find on the shelves.
+        query = query.join(StockLevel, StockLevel.stock_item_id == StockItem.id).where(
+            StockLevel.location_id == location_id, StockLevel.quantity != 0
+        )
     if search:
         query = query.where(
             StockItem.code.ilike(f"%{search}%")
@@ -208,6 +220,64 @@ def _lock_item(db: Session, item_id: uuid.UUID) -> StockItem:
     return item
 
 
+def default_location(db: Session) -> StockLocation:
+    """The location anything unspecified belongs to.
+
+    Created on first use if absent rather than assumed, so a fresh install —
+    or any path that builds the schema without running the data migration —
+    still works instead of failing on the first goods-in. Exactly one location
+    carries is_default, which is what lets every existing single-store caller
+    keep working without naming a location.
+    """
+    location = db.scalar(
+        select(StockLocation).where(StockLocation.is_default.is_(True))
+    )
+    if location is None:
+        location = StockLocation(
+            code="MAIN", name="Main Store", is_default=True, is_active=True
+        )
+        db.add(location)
+        db.flush()
+    return location
+
+
+def get_location(db: Session, location_id: uuid.UUID) -> StockLocation:
+    location = db.get(StockLocation, location_id)
+    if location is None:
+        raise NotFoundError("Stock location not found")
+    return location
+
+
+def _resolve_location(db: Session, location_id: uuid.UUID | None) -> StockLocation:
+    return get_location(db, location_id) if location_id else default_location(db)
+
+
+def _lock_level(db: Session, item_id: uuid.UUID, location_id: uuid.UUID) -> StockLevel:
+    """Row-lock this item's balance at this location, creating it at zero.
+
+    Locking the level rather than the item lets two locations move the same
+    item concurrently without serialising against each other.
+    """
+    level = db.scalar(
+        select(StockLevel)
+        .where(StockLevel.stock_item_id == item_id, StockLevel.location_id == location_id)
+        .with_for_update()
+    )
+    if level is None:
+        level = StockLevel(stock_item_id=item_id, location_id=location_id, quantity=Decimal("0"))
+        db.add(level)
+        db.flush()
+    return level
+
+
+def level_quantity(db: Session, item_id: uuid.UUID, location_id: uuid.UUID) -> Decimal:
+    return db.scalar(
+        select(func.coalesce(StockLevel.quantity, 0)).where(
+            StockLevel.stock_item_id == item_id, StockLevel.location_id == location_id
+        )
+    ) or Decimal("0")
+
+
 def _check_barcode_free(db: Session, barcode: str, exclude_id: uuid.UUID | None = None) -> None:
     query = select(StockItem).where(StockItem.barcode == barcode)
     if exclude_id is not None:
@@ -275,7 +345,11 @@ def goods_in(
     db: Session, item_id: uuid.UUID, data: GoodsInRequest, user_id: uuid.UUID
 ) -> StockItem:
     item = _lock_item(db, item_id)
+    location = _resolve_location(db, getattr(data, "location_id", None))
+    level = _lock_level(db, item.id, location.id)
     qoh, qty = item.qty_on_hand, data.quantity
+    # Weighted average is company-wide: the same material costs the same
+    # wherever it is stored, so receiving anywhere reprices the item once.
     if qoh <= 0:
         item.unit_cost = data.unit_cost
     else:
@@ -283,9 +357,11 @@ def goods_in(
             CENT
         )
     item.qty_on_hand = qoh + qty
+    level.quantity += qty
     db.add(
         StockMovement(
             stock_item_id=item.id,
+            location_id=location.id,
             doc_number=next_doc_number(db, StockMovement, "GRN"),
             movement_type=StockMovementType.goods_in,
             movement_date=data.movement_date or date.today(),
@@ -304,13 +380,20 @@ def issue_to_project(
     db: Session, item_id: uuid.UUID, data: IssueRequest, user_id: uuid.UUID
 ) -> StockItem:
     item = _lock_item(db, item_id)
+    location = _resolve_location(db, getattr(data, "location_id", None))
+    level = _lock_level(db, item.id, location.id)
     get_project(db, data.project_id)
     if data.boq_item_id is not None:
         boq_item = db.get(BoqItem, data.boq_item_id)
         if boq_item is None or boq_item.project_id != data.project_id:
             raise ValidationFailedError("BOQ item does not exist in this project")
-    if data.quantity > item.qty_on_hand:
-        raise ConflictError(f"Insufficient stock: only {item.qty_on_hand} {item.unit} on hand")
+    # Checked against the location, not the company: material in the yard
+    # cannot be issued from a site store that does not hold it.
+    if data.quantity > level.quantity:
+        raise ConflictError(
+            f"Insufficient stock at {location.name}: only {level.quantity} "
+            f"{item.unit} there"
+        )
 
     doc = next_doc_number(db, StockMovement, "ISS")
     when = data.movement_date or date.today()
@@ -330,9 +413,11 @@ def issue_to_project(
     db.flush()
 
     item.qty_on_hand -= data.quantity  # WAC unchanged on issue
+    level.quantity -= data.quantity
     db.add(
         StockMovement(
             stock_item_id=item.id,
+            location_id=location.id,
             doc_number=doc,
             movement_type=StockMovementType.issue,
             movement_date=when,
@@ -353,12 +438,19 @@ def adjust(db: Session, item_id: uuid.UUID, data: AdjustRequest, user_id: uuid.U
     if data.quantity == 0:
         raise ValidationFailedError("Adjustment quantity cannot be zero")
     item = _lock_item(db, item_id)
-    if item.qty_on_hand + data.quantity < 0:
-        raise ConflictError("Adjustment would take stock below zero")
+    location = _resolve_location(db, getattr(data, "location_id", None))
+    level = _lock_level(db, item.id, location.id)
+    if level.quantity + data.quantity < 0:
+        raise ConflictError(
+            f"Adjustment would take {location.name} below zero "
+            f"(holds {level.quantity})"
+        )
     item.qty_on_hand += data.quantity  # WAC unchanged; quantity corrections only
+    level.quantity += data.quantity
     db.add(
         StockMovement(
             stock_item_id=item.id,
+            location_id=location.id,
             doc_number=next_doc_number(db, StockMovement, "ADJ"),
             movement_type=StockMovementType.adjustment,
             movement_date=data.movement_date or date.today(),
@@ -394,6 +486,7 @@ def stocktake_read(stocktake, detail: bool = False):
     lines = [_stocktake_line_read(line) for line in stocktake.lines]
     cls = StocktakeDetail if detail else StocktakeRead
     read = cls.model_validate(stocktake)
+    read.location_name = stocktake.location.name if stocktake.location else None
     read.line_count = len(lines)
     read.counted_count = sum(1 for line in lines if line.counted_quantity is not None)
     read.variance_value = sum((line.variance_value for line in lines), Decimal("0"))
@@ -442,6 +535,10 @@ def create_stocktake(db: Session, data, user_id: uuid.UUID):
             "approve or cancel it first"
         )
 
+    # A count happens at one place: you cannot walk two stores at once, and
+    # the expected quantity has to be what is on THAT shelf.
+    location = _resolve_location(db, getattr(data, "location_id", None))
+
     query = select(StockItem).where(StockItem.is_active.is_(True))
     if data.stock_item_ids:
         query = query.where(StockItem.id.in_(data.stock_item_ids))
@@ -451,15 +548,22 @@ def create_stocktake(db: Session, data, user_id: uuid.UUID):
     if not items:
         raise ValidationFailedError("No stock items match this stocktake")
 
+    held = {
+        row.stock_item_id: row.quantity
+        for row in db.scalars(
+            select(StockLevel).where(StockLevel.location_id == location.id)
+        )
+    }
     stocktake = Stocktake(
         doc_number=next_doc_number(db, Stocktake, "STK"),
+        location_id=location.id,
         count_date=data.count_date or date.today(),
         notes=data.notes,
         created_by=user_id,
         lines=[
             StocktakeLine(
                 stock_item_id=item.id,
-                expected_quantity=item.qty_on_hand,
+                expected_quantity=held.get(item.id, Decimal("0")),
                 unit_cost=item.unit_cost,
             )
             for item in items
@@ -511,6 +615,7 @@ def approve_stocktake(db: Session, stocktake_id: uuid.UUID, user_id: uuid.UUID):
             db,
             line.stock_item_id,
             AdjustRequest(
+                location_id=stocktake.location_id,
                 quantity=variance,
                 movement_date=stocktake.count_date,
                 notes=f"Stocktake {stocktake.doc_number}"
@@ -535,3 +640,204 @@ def cancel_stocktake(db: Session, stocktake_id: uuid.UUID):
     stocktake.status = StocktakeStatus.cancelled
     db.flush()
     return stocktake
+
+
+# --- Locations ---------------------------------------------------------------
+
+
+def location_read(db: Session, location: StockLocation):
+    from app.modules.inventory.schemas import StockLocationRead
+
+    read = StockLocationRead.model_validate(location)
+    read.project_name = location.project.name if location.project else None
+    rows = db.execute(
+        select(func.count(), func.coalesce(func.sum(StockLevel.quantity * StockItem.unit_cost), 0))
+        .select_from(StockLevel)
+        .join(StockItem, StockItem.id == StockLevel.stock_item_id)
+        .where(StockLevel.location_id == location.id, StockLevel.quantity != 0)
+    ).first()
+    read.item_count = rows[0] if rows else 0
+    read.stock_value = (rows[1] if rows else Decimal("0")).quantize(CENT)
+    return read
+
+
+def list_locations(db: Session, active_only: bool = False) -> list[StockLocation]:
+    query = select(StockLocation).options(joinedload(StockLocation.project))
+    if active_only:
+        query = query.where(StockLocation.is_active.is_(True))
+    return list(db.scalars(query.order_by(StockLocation.code)))
+
+
+def create_location(db: Session, data, created_by: uuid.UUID) -> StockLocation:
+    if db.scalar(select(StockLocation).where(StockLocation.code == data.code)):
+        raise ConflictError("A location with this code already exists")
+    if data.project_id is not None:
+        get_project(db, data.project_id)
+    location = StockLocation(**data.model_dump(), created_by=created_by)
+    db.add(location)
+    db.flush()
+    return location
+
+
+def update_location(db: Session, location_id: uuid.UUID, data) -> StockLocation:
+    location = get_location(db, location_id)
+    updates = data.model_dump(exclude_unset=True)
+    if (
+        "code" in updates
+        and updates["code"] != location.code
+        and db.scalar(select(StockLocation).where(StockLocation.code == updates["code"]))
+    ):
+        raise ConflictError("A location with this code already exists")
+    if updates.get("is_active") is False:
+        if location.is_default:
+            raise ConflictError("The default location cannot be deactivated")
+        holding = db.scalar(
+            select(func.count())
+            .select_from(StockLevel)
+            .where(StockLevel.location_id == location.id, StockLevel.quantity != 0)
+        ) or 0
+        if holding:
+            raise ConflictError(
+                f"{location.name} still holds {holding} item(s) — transfer them out first"
+            )
+    for field, value in updates.items():
+        setattr(location, field, value)
+    return location
+
+
+def item_levels(db: Session, item_id: uuid.UUID):
+    """Where this item actually is, so a total of 40 does not hide that all of
+    it sits at the wrong site."""
+    from app.modules.inventory.schemas import StockLevelRead
+
+    item = get_item(db, item_id)
+    rows = db.execute(
+        select(StockLevel, StockLocation)
+        .join(StockLocation, StockLocation.id == StockLevel.location_id)
+        .where(StockLevel.stock_item_id == item_id, StockLevel.quantity != 0)
+        .order_by(StockLocation.code)
+    ).all()
+    return [
+        StockLevelRead(
+            location_id=location.id,
+            location_code=location.code,
+            location_name=location.name,
+            quantity=level.quantity,
+            value=(level.quantity * item.unit_cost).quantize(CENT),
+        )
+        for level, location in rows
+    ]
+
+
+# --- Transfers ---------------------------------------------------------------
+
+
+def list_transfers(db: Session, page: int, page_size: int, location_id=None):
+    from app.modules.inventory.models import StockTransfer
+
+    query = select(StockTransfer).options(
+        joinedload(StockTransfer.stock_item),
+        joinedload(StockTransfer.from_location),
+        joinedload(StockTransfer.to_location),
+    )
+    if location_id is not None:
+        query = query.where(
+            (StockTransfer.from_location_id == location_id)
+            | (StockTransfer.to_location_id == location_id)
+        )
+    total = db.scalar(select(func.count()).select_from(query.subquery())) or 0
+    rows = list(
+        db.scalars(
+            query.order_by(StockTransfer.created_at.desc())
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+        )
+    )
+    return rows, total
+
+
+def transfer_read(transfer):
+    from app.modules.inventory.schemas import StockTransferRead
+
+    read = StockTransferRead.model_validate(transfer)
+    if transfer.stock_item:
+        read.item_code = transfer.stock_item.code
+        read.item_name = transfer.stock_item.name
+    if transfer.from_location:
+        read.from_location_name = transfer.from_location.name
+    if transfer.to_location:
+        read.to_location_name = transfer.to_location.name
+    read.value = (transfer.quantity * transfer.unit_cost).quantize(CENT)
+    return read
+
+
+def transfer_stock(db: Session, data, user_id: uuid.UUID):
+    """Move material between locations.
+
+    Posts a matched pair of ledger rows so the company total is unchanged and
+    both locations reconcile. No cost entry: moving our own stock between our
+    own stores spends nothing — cost reaches a project only on issue.
+    """
+    from app.modules.inventory.models import StockTransfer
+
+    if data.from_location_id == data.to_location_id:
+        raise ValidationFailedError("Source and destination must be different")
+
+    item = _lock_item(db, data.stock_item_id)
+    source = get_location(db, data.from_location_id)
+    destination = get_location(db, data.to_location_id)
+    if not destination.is_active:
+        raise ValidationFailedError(f"{destination.name} is not active")
+
+    # Lock in a stable order so two opposing transfers cannot deadlock
+    first, second = sorted([source.id, destination.id], key=str)
+    levels = {
+        first: _lock_level(db, item.id, first),
+        second: _lock_level(db, item.id, second),
+    }
+    from_level, to_level = levels[source.id], levels[destination.id]
+
+    if data.quantity > from_level.quantity:
+        raise ConflictError(
+            f"Insufficient stock at {source.name}: only {from_level.quantity} "
+            f"{item.unit} there"
+        )
+
+    when = data.transfer_date or date.today()
+    doc = next_doc_number(db, StockTransfer, "TRF")
+    transfer = StockTransfer(
+        doc_number=doc,
+        stock_item_id=item.id,
+        from_location_id=source.id,
+        to_location_id=destination.id,
+        transfer_date=when,
+        quantity=data.quantity,
+        unit_cost=item.unit_cost,
+        notes=data.notes,
+        created_by=user_id,
+    )
+    db.add(transfer)
+
+    from_level.quantity -= data.quantity
+    to_level.quantity += data.quantity
+    # Company total is untouched: the pair nets to zero.
+    for location_id, signed, suffix in (
+        (source.id, -data.quantity, "O"),
+        (destination.id, data.quantity, "I"),
+    ):
+        db.add(
+            StockMovement(
+                stock_item_id=item.id,
+                location_id=location_id,
+                doc_number=f"{doc}-{suffix}",
+                movement_type=StockMovementType.transfer,
+                movement_date=when,
+                quantity=signed,
+                unit_cost=item.unit_cost,
+                reference=doc,
+                notes=data.notes,
+                created_by=user_id,
+            )
+        )
+    db.flush()
+    return transfer

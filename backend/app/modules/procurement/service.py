@@ -662,6 +662,8 @@ def _receive_to_store(db: Session, po: PurchaseOrder, body, when: date, user_id)
             db,
             stock_item.id,
             GoodsInRequest(
+                # Which store took delivery; omitted means the default one
+                location_id=getattr(body, "location_id", None),
                 quantity=line.quantity,
                 unit_cost=line.unit_price,
                 movement_date=when,

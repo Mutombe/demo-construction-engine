@@ -246,6 +246,8 @@ class PoStoreLineMapping(BaseModel):
 class PoReceive(BaseModel):
     received_date: date | None = None
     destination: PoDestination = PoDestination.project
+    # Which store took delivery; omitted means the default location
+    location_id: uuid.UUID | None = None
     store_lines: list[PoStoreLineMapping] | None = None
 
 

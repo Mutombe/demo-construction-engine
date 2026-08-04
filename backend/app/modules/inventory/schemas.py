@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.common.enums import StockMovementType, StocktakeStatus
+from app.common.enums import StockLocationKind, StockMovementType, StocktakeStatus
 
 
 class StockItemBase(BaseModel):
@@ -83,6 +83,8 @@ class ReorderResult(BaseModel):
 
 
 class GoodsInRequest(BaseModel):
+    # Omit to use the default location — keeps single-store callers unchanged
+    location_id: uuid.UUID | None = None
     quantity: Decimal = Field(gt=0)
     unit_cost: Decimal = Field(ge=0)
     movement_date: date | None = None
@@ -91,6 +93,7 @@ class GoodsInRequest(BaseModel):
 
 
 class IssueRequest(BaseModel):
+    location_id: uuid.UUID | None = None
     project_id: uuid.UUID
     boq_item_id: uuid.UUID | None = None
     quantity: Decimal = Field(gt=0)
@@ -99,6 +102,7 @@ class IssueRequest(BaseModel):
 
 
 class AdjustRequest(BaseModel):
+    location_id: uuid.UUID | None = None
     quantity: Decimal  # signed; validated non-zero in service
     notes: str = Field(min_length=1)
     movement_date: date | None = None
@@ -114,6 +118,8 @@ class StockMovementRead(BaseModel):
     movement_date: date
     quantity: Decimal
     unit_cost: Decimal
+    location_id: uuid.UUID | None = None
+    location_name: str | None = None
     project_id: uuid.UUID | None
     project_name: str | None = None
     reference: str | None
@@ -125,6 +131,7 @@ class StockMovementRead(BaseModel):
 
 
 class StocktakeCreate(BaseModel):
+    location_id: uuid.UUID | None = None
     count_date: date | None = None
     notes: str | None = None
     # Empty means "count everything active"
@@ -163,6 +170,8 @@ class StocktakeRead(BaseModel):
 
     id: uuid.UUID
     doc_number: str
+    location_id: uuid.UUID | None
+    location_name: str | None = None
     status: StocktakeStatus
     count_date: date
     notes: str | None
@@ -176,3 +185,78 @@ class StocktakeRead(BaseModel):
 
 class StocktakeDetail(StocktakeRead):
     lines: list[StocktakeLineRead] = []
+
+
+# --- Locations and transfers -------------------------------------------------
+
+
+class StockLocationBase(BaseModel):
+    code: str = Field(min_length=1, max_length=20)
+    name: str = Field(min_length=1, max_length=120)
+    kind: StockLocationKind = StockLocationKind.store
+    project_id: uuid.UUID | None = None
+    address: str | None = None
+
+
+class StockLocationCreate(StockLocationBase):
+    pass
+
+
+class StockLocationUpdate(BaseModel):
+    code: str | None = Field(default=None, min_length=1, max_length=20)
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    kind: StockLocationKind | None = None
+    project_id: uuid.UUID | None = None
+    address: str | None = None
+    is_active: bool | None = None
+
+
+class StockLocationRead(StockLocationBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    is_default: bool
+    is_active: bool
+    project_name: str | None = None
+    item_count: int = 0  # distinct items holding stock here
+    stock_value: Decimal = Decimal("0")
+    created_at: datetime
+
+
+class StockLevelRead(BaseModel):
+    """One item's balance at one location."""
+
+    location_id: uuid.UUID
+    location_code: str
+    location_name: str
+    quantity: Decimal
+    value: Decimal
+
+
+class TransferRequest(BaseModel):
+    stock_item_id: uuid.UUID
+    from_location_id: uuid.UUID
+    to_location_id: uuid.UUID
+    quantity: Decimal = Field(gt=0)
+    transfer_date: date | None = None
+    notes: str | None = None
+
+
+class StockTransferRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    doc_number: str
+    stock_item_id: uuid.UUID
+    item_code: str = ""
+    item_name: str = ""
+    from_location_id: uuid.UUID
+    from_location_name: str = ""
+    to_location_id: uuid.UUID
+    to_location_name: str = ""
+    transfer_date: date
+    quantity: Decimal
+    unit_cost: Decimal
+    value: Decimal = Decimal("0")
+    notes: str | None
+    created_at: datetime

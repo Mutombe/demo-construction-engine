@@ -18,11 +18,17 @@ from app.modules.inventory.schemas import (
     StockItemCreate,
     StockItemRead,
     StockItemUpdate,
+    StockLevelRead,
+    StockLocationCreate,
+    StockLocationRead,
+    StockLocationUpdate,
     StockMovementRead,
     StocktakeCountSet,
     StocktakeCreate,
     StocktakeDetail,
     StocktakeRead,
+    StockTransferRead,
+    TransferRequest,
 )
 
 router = APIRouter(tags=["inventory"])
@@ -37,6 +43,7 @@ inv_issue_user = require_roles(
 def _movement_read(m) -> StockMovementRead:
     read = StockMovementRead.model_validate(m)
     read.project_name = m.project.name if m.project else None
+    read.location_name = m.location.name if m.location else None
     return read
 
 
@@ -47,9 +54,10 @@ def list_stock_items(
     search: str | None = None,
     active_only: bool = False,
     low_stock_only: bool = False,
+    location_id: uuid.UUID | None = None,
 ) -> Page[StockItemRead]:
     items, total = service.list_items(
-        db, params.page, params.page_size, search, active_only, low_stock_only
+        db, params.page, params.page_size, search, active_only, low_stock_only, location_id
     )
     return Page(
         items=[service.item_read(i) for i in items],
@@ -183,3 +191,56 @@ def cancel_stocktake(
     stocktake_id: uuid.UUID, db: DbDep, _=Depends(inv_write_user)
 ) -> StocktakeDetail:
     return service.stocktake_read(service.cancel_stocktake(db, stocktake_id), detail=True)
+
+
+# --- Locations and transfers -------------------------------------------------
+
+
+@router.get("/stock-locations", response_model=list[StockLocationRead])
+def list_stock_locations(db: DbDep, active_only: bool = False) -> list[StockLocationRead]:
+    return [service.location_read(db, loc) for loc in service.list_locations(db, active_only)]
+
+
+@router.post("/stock-locations", response_model=StockLocationRead, status_code=201)
+def create_stock_location(
+    body: StockLocationCreate, db: DbDep, user=Depends(inv_write_user)
+) -> StockLocationRead:
+    return service.location_read(db, service.create_location(db, body, user.id))
+
+
+@router.patch("/stock-locations/{location_id}", response_model=StockLocationRead)
+def update_stock_location(
+    location_id: uuid.UUID,
+    body: StockLocationUpdate,
+    db: DbDep,
+    _=Depends(inv_write_user),
+) -> StockLocationRead:
+    return service.location_read(db, service.update_location(db, location_id, body))
+
+
+@router.get("/stock-items/{item_id}/levels", response_model=list[StockLevelRead])
+def get_stock_item_levels(item_id: uuid.UUID, db: DbDep) -> list[StockLevelRead]:
+    """Where this item actually sits, so a healthy total cannot hide that all
+    of it is at the wrong location."""
+    return service.item_levels(db, item_id)
+
+
+@router.get("/stock-transfers", response_model=Page[StockTransferRead])
+def list_stock_transfers(
+    db: DbDep, params: PageParamsDep, location_id: uuid.UUID | None = None
+) -> Page[StockTransferRead]:
+    rows, total = service.list_transfers(db, params.page, params.page_size, location_id)
+    return Page(
+        items=[service.transfer_read(t) for t in rows],
+        total=total,
+        page=params.page,
+        page_size=params.page_size,
+    )
+
+
+@router.post("/stock-transfers", response_model=StockTransferRead, status_code=201)
+def create_stock_transfer(
+    body: TransferRequest, db: DbDep, user=Depends(inv_issue_user)
+) -> StockTransferRead:
+    """Site moves material between stores, so issue-level access is enough."""
+    return service.transfer_read(service.transfer_stock(db, body, user.id))

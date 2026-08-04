@@ -9,6 +9,8 @@ import type { StocktakeStatus } from './stocktakeStatus.ts';
 export interface StocktakeRead {
   id: string;
   doc_number: string;
+  location_id: string | null;
+  location_name?: string | null;
   status: StocktakeStatus;
   count_date: string;
   notes: string | null;

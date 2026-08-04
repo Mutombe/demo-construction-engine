@@ -6004,6 +6004,23 @@
       }
      },
      {
+      "name": "location_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "uuid"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Location Id"
+      }
+     },
+     {
       "name": "page",
       "in": "query",
       "required": false,
@@ -6870,6 +6887,336 @@
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/StocktakeDetail"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/stock-locations": {
+   "get": {
+    "tags": [
+     "inventory"
+    ],
+    "summary": "List Stock Locations",
+    "operationId": "list_stock_locations",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "active_only",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "boolean",
+       "default": false,
+       "title": "Active Only"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/StockLocationRead"
+         },
+         "title": "Response List Stock Locations"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "inventory"
+    ],
+    "summary": "Create Stock Location",
+    "operationId": "create_stock_location",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/StockLocationCreate"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/StockLocationRead"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/stock-locations/{location_id}": {
+   "patch": {
+    "tags": [
+     "inventory"
+    ],
+    "summary": "Update Stock Location",
+    "operationId": "update_stock_location",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "location_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Location Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/StockLocationUpdate"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/StockLocationRead"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/stock-items/{item_id}/levels": {
+   "get": {
+    "tags": [
+     "inventory"
+    ],
+    "summary": "Get Stock Item Levels",
+    "description": "Where this item actually sits, so a healthy total cannot hide that all\nof it is at the wrong location.",
+    "operationId": "get_stock_item_levels",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "item_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Item Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/StockLevelRead"
+         },
+         "title": "Response Get Stock Item Levels"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/stock-transfers": {
+   "get": {
+    "tags": [
+     "inventory"
+    ],
+    "summary": "List Stock Transfers",
+    "operationId": "list_stock_transfers",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "location_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "uuid"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Location Id"
+      }
+     },
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "minimum": 1,
+       "default": 50,
+       "title": "Page Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Page_StockTransferRead_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "inventory"
+    ],
+    "summary": "Create Stock Transfer",
+    "description": "Site moves material between stores, so issue-level access is enough.",
+    "operationId": "create_stock_transfer",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/TransferRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/StockTransferRead"
         }
        }
       }
@@ -10996,6 +11343,18 @@
   "schemas": {
    "AdjustRequest": {
     "properties": {
+     "location_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location Id"
+     },
      "quantity": {
       "anyOf": [
        {
@@ -14188,6 +14547,18 @@
    },
    "GoodsInRequest": {
     "properties": {
+     "location_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location Id"
+     },
      "quantity": {
       "anyOf": [
        {
@@ -14515,6 +14886,18 @@
    },
    "IssueRequest": {
     "properties": {
+     "location_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location Id"
+     },
      "project_id": {
       "type": "string",
       "format": "uuid",
@@ -15801,6 +16184,37 @@
      "page_size"
     ],
     "title": "Page[StockMovementRead]"
+   },
+   "Page_StockTransferRead_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/StockTransferRead"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "total",
+     "page",
+     "page_size"
+    ],
+    "title": "Page[StockTransferRead]"
    },
    "Page_StocktakeRead_": {
     "properties": {
@@ -17449,6 +17863,18 @@
      "destination": {
       "$ref": "#/components/schemas/PoDestination",
       "default": "project"
+     },
+     "location_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location Id"
      },
      "store_lines": {
       "anyOf": [
@@ -21753,6 +22179,271 @@
     "type": "object",
     "title": "StockItemUpdate"
    },
+   "StockLevelRead": {
+    "properties": {
+     "location_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Location Id"
+     },
+     "location_code": {
+      "type": "string",
+      "title": "Location Code"
+     },
+     "location_name": {
+      "type": "string",
+      "title": "Location Name"
+     },
+     "quantity": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Quantity"
+     },
+     "value": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Value"
+     }
+    },
+    "type": "object",
+    "required": [
+     "location_id",
+     "location_code",
+     "location_name",
+     "quantity",
+     "value"
+    ],
+    "title": "StockLevelRead",
+    "description": "One item's balance at one location."
+   },
+   "StockLocationCreate": {
+    "properties": {
+     "code": {
+      "type": "string",
+      "maxLength": 20,
+      "minLength": 1,
+      "title": "Code"
+     },
+     "name": {
+      "type": "string",
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Name"
+     },
+     "kind": {
+      "$ref": "#/components/schemas/StockLocationKind",
+      "default": "store"
+     },
+     "project_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Project Id"
+     },
+     "address": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Address"
+     }
+    },
+    "type": "object",
+    "required": [
+     "code",
+     "name"
+    ],
+    "title": "StockLocationCreate"
+   },
+   "StockLocationKind": {
+    "type": "string",
+    "enum": [
+     "store",
+     "site",
+     "yard"
+    ],
+    "title": "StockLocationKind",
+    "description": "Where stock physically sits.\n\nA site store belongs to a project; a central store and a plant yard do not."
+   },
+   "StockLocationRead": {
+    "properties": {
+     "code": {
+      "type": "string",
+      "maxLength": 20,
+      "minLength": 1,
+      "title": "Code"
+     },
+     "name": {
+      "type": "string",
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Name"
+     },
+     "kind": {
+      "$ref": "#/components/schemas/StockLocationKind",
+      "default": "store"
+     },
+     "project_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Project Id"
+     },
+     "address": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Address"
+     },
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "is_default": {
+      "type": "boolean",
+      "title": "Is Default"
+     },
+     "is_active": {
+      "type": "boolean",
+      "title": "Is Active"
+     },
+     "project_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Project Name"
+     },
+     "item_count": {
+      "type": "integer",
+      "title": "Item Count",
+      "default": 0
+     },
+     "stock_value": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Stock Value",
+      "default": "0"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "code",
+     "name",
+     "id",
+     "is_default",
+     "is_active",
+     "created_at"
+    ],
+    "title": "StockLocationRead"
+   },
+   "StockLocationUpdate": {
+    "properties": {
+     "code": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 20,
+        "minLength": 1
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Code"
+     },
+     "name": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 120,
+        "minLength": 1
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "kind": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/StockLocationKind"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "project_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Project Id"
+     },
+     "address": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Address"
+     },
+     "is_active": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Is Active"
+     }
+    },
+    "type": "object",
+    "title": "StockLocationUpdate"
+   },
    "StockMovementRead": {
     "properties": {
      "id": {
@@ -21786,6 +22477,29 @@
       "type": "string",
       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
       "title": "Unit Cost"
+     },
+     "location_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location Id"
+     },
+     "location_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location Name"
      },
      "project_id": {
       "anyOf": [
@@ -21859,9 +22573,109 @@
     "enum": [
      "goods_in",
      "issue",
-     "adjustment"
+     "adjustment",
+     "transfer"
     ],
     "title": "StockMovementType"
+   },
+   "StockTransferRead": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+     },
+     "doc_number": {
+      "type": "string",
+      "title": "Doc Number"
+     },
+     "stock_item_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Stock Item Id"
+     },
+     "item_code": {
+      "type": "string",
+      "title": "Item Code",
+      "default": ""
+     },
+     "item_name": {
+      "type": "string",
+      "title": "Item Name",
+      "default": ""
+     },
+     "from_location_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "From Location Id"
+     },
+     "from_location_name": {
+      "type": "string",
+      "title": "From Location Name",
+      "default": ""
+     },
+     "to_location_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "To Location Id"
+     },
+     "to_location_name": {
+      "type": "string",
+      "title": "To Location Name",
+      "default": ""
+     },
+     "transfer_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Transfer Date"
+     },
+     "quantity": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Quantity"
+     },
+     "unit_cost": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Unit Cost"
+     },
+     "value": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Value",
+      "default": "0"
+     },
+     "notes": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notes"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "doc_number",
+     "stock_item_id",
+     "from_location_id",
+     "to_location_id",
+     "transfer_date",
+     "quantity",
+     "unit_cost",
+     "notes",
+     "created_at"
+    ],
+    "title": "StockTransferRead"
    },
    "StocktakeCountLine": {
     "properties": {
@@ -21920,6 +22734,18 @@
    },
    "StocktakeCreate": {
     "properties": {
+     "location_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location Id"
+     },
      "count_date": {
       "anyOf": [
        {
@@ -21976,6 +22802,29 @@
      "doc_number": {
       "type": "string",
       "title": "Doc Number"
+     },
+     "location_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location Id"
+     },
+     "location_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location Name"
      },
      "status": {
       "$ref": "#/components/schemas/StocktakeStatus"
@@ -22054,6 +22903,7 @@
     "required": [
      "id",
      "doc_number",
+     "location_id",
      "status",
      "count_date",
      "notes",
@@ -22158,6 +23008,29 @@
       "type": "string",
       "title": "Doc Number"
      },
+     "location_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location Id"
+     },
+     "location_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location Name"
+     },
      "status": {
       "$ref": "#/components/schemas/StocktakeStatus"
      },
@@ -22227,6 +23100,7 @@
     "required": [
      "id",
      "doc_number",
+     "location_id",
      "status",
      "count_date",
      "notes",
@@ -23772,6 +24646,69 @@
      "user"
     ],
     "title": "TokenResponse"
+   },
+   "TransferRequest": {
+    "properties": {
+     "stock_item_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Stock Item Id"
+     },
+     "from_location_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "From Location Id"
+     },
+     "to_location_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "To Location Id"
+     },
+     "quantity": {
+      "anyOf": [
+       {
+        "type": "number",
+        "exclusiveMinimum": 0.0
+       },
+       {
+        "type": "string",
+        "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+       }
+      ],
+      "title": "Quantity"
+     },
+     "transfer_date": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Transfer Date"
+     },
+     "notes": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notes"
+     }
+    },
+    "type": "object",
+    "required": [
+     "stock_item_id",
+     "from_location_id",
+     "to_location_id",
+     "quantity"
+    ],
+    "title": "TransferRequest"
    },
    "TrendMonth": {
     "properties": {

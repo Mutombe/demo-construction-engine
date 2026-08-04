@@ -5,10 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type ListStockItemsParams = {
-search?: string | null;
-active_only?: boolean;
-low_stock_only?: boolean;
+export type ListStockTransfersParams = {
 location_id?: string | null;
 /**
  * @minimum 1
