@@ -7,6 +7,7 @@ from app.core.deps import DbDep
 from app.modules.dashboard import service
 from app.modules.dashboard.schemas import (
     BudgetAlert,
+    CashflowForecast,
     CompanyOverview,
     DeadlineItem,
     FinancialTrend,
@@ -47,6 +48,15 @@ def procurement_pulse(db: DbDep) -> ProcurementPulse:
     pulse = service.procurement_pulse(db)
     notify_overdue_deliveries(db)
     return pulse
+
+
+@router.get("/cashflow-forecast", response_model=CashflowForecast)
+def cashflow_forecast(
+    db: DbDep,
+    months: Annotated[int, Query(ge=2, le=24)] = 6,
+    project_id: uuid.UUID | None = None,
+) -> CashflowForecast:
+    return service.cashflow_forecast(db, months, project_id)
 
 
 @router.get("/budget-alerts", response_model=list[BudgetAlert])

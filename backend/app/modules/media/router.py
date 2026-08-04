@@ -9,7 +9,7 @@ from app.common.schemas import Page
 from app.core.deps import CurrentUser, DbDep, require_roles
 from app.modules.media import service
 from app.modules.media.models import MediaFile
-from app.modules.media.schemas import FolderCounts, MediaRead, MediaUpdate
+from app.modules.media.schemas import FolderCounts, MediaRead, MediaUpdate, PhotoTimeline
 
 router = APIRouter(prefix="/media", tags=["media"])
 
@@ -75,6 +75,11 @@ def get_media_folder_counts(
 ) -> FolderCounts:
     counts = service.counts_by_folder(db, entity_type, entity_id)
     return FolderCounts(counts=counts, total=sum(counts.values()))
+
+
+@router.get("/photo-timeline", response_model=PhotoTimeline)
+def get_photo_timeline(entity_type: str, entity_id: uuid.UUID, db: DbDep) -> PhotoTimeline:
+    return service.photo_timeline(db, entity_type, entity_id)
 
 
 @router.get("/{media_id}/file")

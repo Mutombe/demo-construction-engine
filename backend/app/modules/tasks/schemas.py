@@ -89,9 +89,20 @@ class GanttTask(BaseModel):
     planned_end: date | None
     actual_start: date | None
     actual_end: date | None
+    baseline_start: date | None = None
+    baseline_end: date | None = None
+    # Days the planned finish has moved since the baseline was set (+ is late)
+    slippage_days: int | None = None
     is_milestone: bool
     sort_order: int
     assignee_name: str | None
+    # Critical path analysis (null when the task has no planned dates)
+    total_float: int | None = None
+    is_critical: bool = False
+    early_start: date | None = None
+    early_finish: date | None = None
+    late_start: date | None = None
+    late_finish: date | None = None
 
 
 class GanttPhase(BaseModel):
@@ -110,3 +121,7 @@ class GanttPayload(BaseModel):
     phases: list[GanttPhase]
     tasks: list[GanttTask]
     dependencies: list[DependencyRead]
+    critical_path_length: int = 0  # tasks with zero or negative float
+    project_finish: date | None = None  # earliest finish across the network
+    has_baseline: bool = False
+    worst_slippage_days: int | None = None

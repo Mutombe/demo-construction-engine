@@ -336,3 +336,134 @@ def cost_ledger(
         rows=rows,
         totals={"amount": total},
     )
+
+
+def material_reconciliation(db: Session, project_id: uuid.UUID) -> ReportTable:
+    """Materials consumed against materials the measured work should have used.
+
+    Both halves already exist: measurement sheets say how much of each BOQ line
+    is built, and the cost ledger says what materials were issued or delivered
+    against it. Theoretical consumption is the line's budget scaled by measured
+    progress; anything materially above that is waste, theft or over-ordering.
+
+    Progress comes from the latest certificate that measured the line, so a
+    line nobody has measured is reported rather than silently skipped.
+    """
+    from app.common.enums import ValuationStatus
+    from app.modules.valuations.models import Valuation, ValuationLine
+
+    project = get_project(db, project_id)
+
+    # Measured quantity to date per BOQ line, from the newest valuation that
+    # carries a measurement sheet (drafts included: the QS is working on it).
+    measured: dict[uuid.UUID, Decimal] = {}
+    valuations = db.scalars(
+        select(Valuation)
+        .where(
+            Valuation.project_id == project_id,
+            Valuation.status != ValuationStatus.cancelled,
+        )
+        .order_by(Valuation.valuation_number.desc())
+    ).all()
+    for valuation in valuations:
+        for line in valuation.lines:
+            if line.boq_item_id and line.boq_item_id not in measured:
+                measured[line.boq_item_id] = line.qty_to_date
+
+    material_sources = (CostSource.inventory_issue, CostSource.purchase_order)
+    consumed = dict(
+        db.execute(
+            select(CostEntry.boq_item_id, func.sum(CostEntry.amount))
+            .where(
+                CostEntry.project_id == project_id,
+                CostEntry.boq_item_id.is_not(None),
+                CostEntry.source.in_(material_sources),
+            )
+            .group_by(CostEntry.boq_item_id)
+        ).all()
+    )
+
+    items = db.scalars(
+        select(BoqItem)
+        .join(BoqSection, BoqSection.id == BoqItem.section_id)
+        .where(
+            BoqItem.project_id == project_id,
+            BoqItem.item_type != BoqItemType.omission,
+        )
+        .order_by(BoqSection.code, BoqItem.sort_order)
+    ).all()
+
+    rows = []
+    total_theoretical = ZERO
+    total_actual = ZERO
+    for item in items:
+        actual = consumed.get(item.id, ZERO)
+        qty_done = measured.get(item.id)
+        # Nothing measured and nothing consumed is just work not started
+        if actual == ZERO and not qty_done:
+            continue
+
+        if qty_done is not None and item.quantity:
+            progress = min(qty_done / item.quantity, Decimal("10"))  # cap runaway data
+        else:
+            progress = None
+        theoretical = (
+            (item.amount * progress).quantize(Decimal("0.01"))
+            if progress is not None
+            else ZERO
+        )
+        variance = actual - theoretical
+        variance_pct = (
+            (variance * 100 / theoretical).quantize(Decimal("0.1"))
+            if theoretical
+            else None
+        )
+
+        rows.append(
+            {
+                "item_code": item.item_code,
+                "description": item.description,
+                "unit": item.unit,
+                "boq_quantity": item.quantity,
+                "measured_quantity": qty_done if qty_done is not None else ZERO,
+                "progress_pct": (
+                    (progress * 100).quantize(Decimal("0.1"))
+                    if progress is not None
+                    else ZERO
+                ),
+                "theoretical_cost": theoretical,
+                "actual_cost": actual,
+                "variance": variance,
+                "variance_pct": variance_pct if variance_pct is not None else ZERO,
+                "flag": (
+                    "UNMEASURED"
+                    if progress is None
+                    else "OVER" if variance_pct is not None and variance_pct > 10 else ""
+                ),
+            }
+        )
+        total_theoretical += theoretical
+        total_actual += actual
+
+    return ReportTable(
+        title=f"Material reconciliation — {project.code}",
+        columns=[
+            ReportColumn("item_code", "Item", "text", 12),
+            ReportColumn("description", "Description", "text", 40),
+            ReportColumn("unit", "Unit", "text", 8),
+            ReportColumn("boq_quantity", "BOQ qty", "qty", 12),
+            ReportColumn("measured_quantity", "Measured", "qty", 12),
+            ReportColumn("progress_pct", "Progress %", "qty", 12),
+            ReportColumn("theoretical_cost", "Should have used", "money", 16),
+            ReportColumn("actual_cost", "Actually used", "money", 16),
+            ReportColumn("variance", "Variance", "money", 14),
+            ReportColumn("variance_pct", "Variance %", "qty", 12),
+            ReportColumn("flag", "Flag", "text", 12),
+        ],
+        rows=rows,
+        totals={
+            "theoretical_cost": total_theoretical,
+            "actual_cost": total_actual,
+            "variance": total_actual - total_theoretical,
+        },
+    )

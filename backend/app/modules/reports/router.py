@@ -1,3 +1,5 @@
+import re
+import unicodedata
 import uuid
 from datetime import date
 from typing import Literal
@@ -19,10 +21,18 @@ _MEDIA_TYPES = {
 }
 
 
+def _filename_stem(title: str) -> str:
+    """Report titles carry punctuation and em dashes; HTTP headers are latin-1
+    only, so anything outside [a-z0-9_-] is dropped rather than 500'ing the
+    download."""
+    ascii_only = unicodedata.normalize("NFKD", title).encode("ascii", "ignore").decode()
+    cleaned = re.sub(r"[^a-z0-9]+", "_", ascii_only.lower()).strip("_")
+    return cleaned or "report"
+
+
 def _respond(table: ReportTable, format: Format) -> Response:
     content = to_csv(table) if format == "csv" else to_xlsx(table)
-    stem = table.title.lower().replace(" ", "_")
-    filename = f"{stem}_{date.today()}.{format}"
+    filename = f"{_filename_stem(table.title)}_{date.today()}.{format}"
     return Response(
         content=content,
         media_type=_MEDIA_TYPES[format],
@@ -35,6 +45,13 @@ def export_project_cost(
     project_id: uuid.UUID, db: DbDep, format: Format = "csv"
 ) -> Response:
     return _respond(service.project_cost_report(db, project_id), format)
+
+
+@router.get("/material-reconciliation")
+def export_material_reconciliation(
+    project_id: uuid.UUID, db: DbDep, format: Format = "csv"
+) -> Response:
+    return _respond(service.material_reconciliation(db, project_id), format)
 
 
 @router.get("/procurement-register")

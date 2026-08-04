@@ -1538,6 +1538,33 @@ PROJECT_COORDS = {
 }
 
 
+def seed_baseline(db) -> None:
+    """Freeze a baseline on Riverside, then let a few tasks slip so the
+    programme demonstrates slippage rather than a flat zero."""
+    from app.modules.tasks.models import Task
+    from app.modules.tasks.service import set_baseline
+
+    project = db.scalar(select(Project).where(Project.code == "PRJ-2026-001"))
+    if project is None:
+        return
+    already = db.scalar(
+        select(Task).where(Task.project_id == project.id, Task.baseline_end.is_not(None))
+    )
+    if already:
+        return
+    set_baseline(db, project.id)
+
+    slipped = db.scalars(
+        select(Task)
+        .where(Task.project_id == project.id, Task.planned_end.is_not(None))
+        .order_by(Task.planned_end)
+        .limit(3)
+    ).all()
+    for offset, task in enumerate(slipped, start=1):
+        task.planned_end = task.planned_end + timedelta(days=offset * 2)
+    db.flush()
+
+
 def seed_coordinates(db) -> None:
     """Idempotent pin backfill so the site map has markers."""
     for code, (lat, lng) in PROJECT_COORDS.items():
@@ -1570,6 +1597,7 @@ def main() -> None:
         seed_payroll(db, users)
         seed_measurement(db, users)
         seed_requisitions(db, users)
+        seed_baseline(db)
         seed_coordinates(db)
         portal_link = seed_portal_link(db, users)
         db.commit()

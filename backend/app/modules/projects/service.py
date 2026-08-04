@@ -166,6 +166,10 @@ def project_summary(db: Session, project_id: uuid.UUID) -> ProjectSummary:
         )
     )
 
+    from app.modules.costs.service import committed_total as _committed_total
+
+    committed = _committed_total(db, project_id)
+
     status_counts = dict(
         db.execute(
             select(Task.status, func.count())
@@ -191,6 +195,11 @@ def project_summary(db: Session, project_id: uuid.UUID) -> ProjectSummary:
         if budget_total
         else None
     )
+    exposure_pct = (
+        round((float(actual_total) + float(committed)) / float(budget_total) * 100, 1)
+        if budget_total
+        else None
+    )
     days_remaining = (project.planned_end - date.today()).days if project.planned_end else None
 
     return ProjectSummary(
@@ -201,7 +210,9 @@ def project_summary(db: Session, project_id: uuid.UUID) -> ProjectSummary:
         progress_pct=project_progress_pct(db, project_id),
         budget_total=budget_total,
         actual_total=actual_total,
+        committed_total=committed,
         budget_variance_pct=variance_pct,
+        exposure_pct=exposure_pct,
         task_counts={status.value: count for status, count in status_counts.items()},
         overdue_tasks=overdue,
         days_remaining=days_remaining,

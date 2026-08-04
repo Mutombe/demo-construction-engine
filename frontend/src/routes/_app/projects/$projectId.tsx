@@ -96,6 +96,22 @@ function ProjectDetailLayout() {
                         </span>
                       )}
                   </div>
+                  {Number(summary.committed_total) > 0 && (
+                    <div
+                      className={cn(
+                        "text-xs",
+                        (summary.exposure_pct ?? 0) > 100
+                          ? "font-medium text-warning"
+                          : "text-muted-foreground",
+                      )}
+                      title="Actual spend plus purchase orders already issued"
+                    >
+                      +{money(summary.committed_total)} committed
+                      {summary.exposure_pct !== null &&
+                        summary.exposure_pct !== undefined &&
+                        ` · ${summary.exposure_pct}% exposed`}
+                    </div>
+                  )}
                 </div>
               </>
             )}

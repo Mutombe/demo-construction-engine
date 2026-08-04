@@ -15,6 +15,8 @@ export interface CompanyOverview {
   portfolio_budget: string;
   /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
   portfolio_actual: string;
+  /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
+  portfolio_committed?: string;
   overdue_tasks: number;
   projects: ProjectHealth[];
 }

@@ -17,7 +17,16 @@ export interface GanttTask {
   planned_end: string | null;
   actual_start: string | null;
   actual_end: string | null;
+  baseline_start?: string | null;
+  baseline_end?: string | null;
+  slippage_days?: number | null;
   is_milestone: boolean;
   sort_order: number;
   assignee_name: string | null;
+  total_float?: number | null;
+  is_critical?: boolean;
+  early_start?: string | null;
+  early_finish?: string | null;
+  late_start?: string | null;
+  late_finish?: string | null;
 }

@@ -57,6 +57,26 @@ def get_gantt(project_id: uuid.UUID, db: DbDep) -> GanttPayload:
     return service.gantt_payload(db, project_id)
 
 
+@router.post("/projects/{project_id}/baseline", response_model=GanttPayload)
+def set_baseline(
+    project_id: uuid.UUID,
+    db: DbDep,
+    _=Depends(require_roles(UserRole.project_manager)),
+) -> GanttPayload:
+    service.set_baseline(db, project_id)
+    return service.gantt_payload(db, project_id)
+
+
+@router.delete("/projects/{project_id}/baseline", response_model=GanttPayload)
+def clear_baseline(
+    project_id: uuid.UUID,
+    db: DbDep,
+    _=Depends(require_roles(UserRole.project_manager)),
+) -> GanttPayload:
+    service.clear_baseline(db, project_id)
+    return service.gantt_payload(db, project_id)
+
+
 @router.get("/tasks/my", response_model=list[TaskListItem])
 def my_tasks(db: DbDep, user: CurrentUser) -> list[TaskListItem]:
     return [_to_list_item(db, t) for t in service.list_my_tasks(db, user.id)]

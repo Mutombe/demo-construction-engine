@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -31,3 +31,19 @@ class MediaUpdate(BaseModel):
 class FolderCounts(BaseModel):
     counts: dict[str, int]
     total: int
+
+
+class PhotoDay(BaseModel):
+    """Photos taken on one day, newest day first in the timeline."""
+
+    day: date
+    photos: list[MediaRead]
+
+
+class PhotoTimeline(BaseModel):
+    entity_type: str
+    entity_id: uuid.UUID
+    days: list[PhotoDay]
+    total_photos: int
+    first_photo: date | None
+    last_photo: date | None

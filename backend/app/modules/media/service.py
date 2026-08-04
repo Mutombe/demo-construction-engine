@@ -234,3 +234,47 @@ def delete_media(db: Session, media_id: uuid.UUID, user) -> None:
             except OSError:
                 pass  # best-effort cleanup; the DB row is the source of truth
     db.delete(media)
+
+
+def photo_timeline(
+    db: Session, entity_type: str, entity_id: uuid.UUID, limit: int = 400
+):
+    """Every photo on an entity, grouped by the day it was taken.
+
+    Reads as a progress diary: newest day first, oldest photo first within a
+    day so a single day's sequence runs in the order the work happened.
+    """
+    from app.modules.media.schemas import MediaRead, PhotoDay, PhotoTimeline
+
+    _validate_entity(db, entity_type, entity_id)
+    # Ascending with an id tiebreak: photos uploaded in one transaction share a
+    # created_at, so ordering on the timestamp alone is not stable.
+    photos = list(
+        db.scalars(
+            select(MediaFile)
+            .where(
+                MediaFile.entity_type == entity_type,
+                MediaFile.entity_id == entity_id,
+                MediaFile.folder == MediaFolder.photos,
+            )
+            .order_by(MediaFile.created_at.desc(), MediaFile.id.desc())
+            .limit(limit)
+        )
+    )
+
+    by_day: dict = {}
+    for photo in reversed(photos):  # oldest first within each day
+        read = MediaRead.model_validate(photo)
+        read.has_thumbnail = bool(photo.thumb_path)
+        by_day.setdefault(photo.created_at.date(), []).append(read)
+
+    days = [PhotoDay(day=day, photos=items) for day, items in sorted(by_day.items(), reverse=True)]
+    all_days = sorted(by_day)
+    return PhotoTimeline(
+        entity_type=entity_type,
+        entity_id=entity_id,
+        days=days,
+        total_photos=len(photos),
+        first_photo=all_days[0] if all_days else None,
+        last_photo=all_days[-1] if all_days else None,
+    )

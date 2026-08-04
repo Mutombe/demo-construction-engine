@@ -12,6 +12,7 @@ import { ClickableRow, RowActions } from "@/components/ui/linked-row";
 import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import { StatRowSkeleton, TableSkeleton } from "@/components/ui/skeleton";
 import { downloadFile } from "@/lib/api/download";
+import { CashflowCard } from "@/features/dashboard/CashflowCard";
 import { MeasurementSheetDialog } from "@/features/valuations/MeasurementSheetDialog";
 import {
   Table,
@@ -162,6 +163,8 @@ function ValuationsTab() {
           </Button>
         </Can>
       </div>
+
+      <CashflowCard projectId={projectId} />
 
       <Card>
         <CardContent className="p-0">

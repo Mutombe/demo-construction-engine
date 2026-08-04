@@ -69,7 +69,11 @@ class ProjectSummary(BaseModel):
     progress_pct: float
     budget_total: Decimal
     actual_total: Decimal
+    committed_total: Decimal = Decimal("0")  # issued POs not yet received
     budget_variance_pct: float | None  # None when there is no budget yet
+    # Actual + committed against budget: the number that catches an overrun
+    # before the invoices land.
+    exposure_pct: float | None = None
     task_counts: dict[str, int]
     overdue_tasks: int
     days_remaining: int | None

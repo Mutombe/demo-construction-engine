@@ -35,4 +35,6 @@ export interface BoqItemRead {
   amount: string;
   /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
   actual_total?: string;
+  /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
+  committed_total?: string;
 }

@@ -20,6 +20,8 @@ export interface BoqSummary {
   /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
   actual_total: string;
   /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
+  committed_total?: string;
+  /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
   unallocated_actual: string;
   by_category: CategoryTotal[];
   by_section: SectionTotal[];

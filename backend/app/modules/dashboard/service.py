@@ -10,6 +10,8 @@ from app.modules.boq.models import BoqItem
 from app.modules.costs.models import CostEntry
 from app.modules.dashboard.schemas import (
     BudgetAlert,
+    CashflowForecast,
+    CashflowMonth,
     CompanyOverview,
     DeadlineItem,
     FinancialTotals,
@@ -25,6 +27,7 @@ from app.modules.tasks.models import Task
 from app.modules.users.models import User
 
 ZERO = Decimal("0")
+CENT = Decimal("0.01")
 OPEN_STATUSES = [WorkStatus.not_started, WorkStatus.in_progress, WorkStatus.blocked]
 
 
@@ -68,14 +71,18 @@ def company_overview(db: Session) -> CompanyOverview:
         .order_by(Project.planned_end.nulls_last())
     ).all()
 
+    from app.modules.costs.service import committed_by_project
+
     budgets = _budget_by_project(db)
     actuals = _actual_by_project(db)
     overdue = _overdue_by_project(db)
+    commitments = committed_by_project(db)
 
     items: list[ProjectHealth] = []
     for p in projects:
         budget = budgets.get(p.id, ZERO)
         actual = actuals.get(p.id, ZERO)
+        committed = commitments.get(p.id, ZERO)
         items.append(
             ProjectHealth(
                 id=p.id,
@@ -86,7 +93,13 @@ def company_overview(db: Session) -> CompanyOverview:
                 progress_pct=project_progress_pct(db, p.id),
                 budget_total=budget,
                 actual_total=actual,
+                committed_total=committed,
                 budget_used_pct=round(float(actual) / float(budget) * 100, 1) if budget else None,
+                exposure_pct=(
+                    round((float(actual) + float(committed)) / float(budget) * 100, 1)
+                    if budget
+                    else None
+                ),
                 planned_end=p.planned_end,
                 overdue_tasks=overdue.get(p.id, 0),
             )
@@ -108,6 +121,7 @@ def company_overview(db: Session) -> CompanyOverview:
         portfolio_contract_value=contract_total,
         portfolio_budget=sum((i.budget_total for i in items), ZERO),
         portfolio_actual=sum((i.actual_total for i in items), ZERO),
+        portfolio_committed=sum((i.committed_total for i in items), ZERO),
         overdue_tasks=sum(i.overdue_tasks for i in items),
         projects=items,
     )
@@ -323,4 +337,152 @@ def procurement_pulse(db: Session) -> ProcurementPulse:
             )
             for po in pos
         ],
+    )
+
+
+def _month_keys(start: date, count: int) -> list[str]:
+    keys, cursor = [], date(start.year, start.month, 1)
+    for _ in range(count):
+        keys.append(cursor.strftime("%Y-%m"))
+        cursor = date(
+            cursor.year + (1 if cursor.month == 12 else 0),
+            1 if cursor.month == 12 else cursor.month + 1,
+            1,
+        )
+    return keys
+
+
+def cashflow_forecast(
+    db: Session, months: int = 6, project_id: uuid.UUID | None = None
+) -> CashflowForecast:
+    """Money in versus money out over the coming months.
+
+    Every figure comes from something already committed: valuations issued but
+    unpaid, contract value not yet certified, purchase orders already issued,
+    and the payroll run-rate of the last three months. Nothing is invented.
+    """
+    from app.common.enums import CostSource, PoStatus, ValuationStatus
+    from app.modules.procurement.models import PoItem, PurchaseOrder
+    from app.modules.valuations.models import Valuation
+    from app.modules.valuations.service import effective_contract_value
+
+    today = date.today()
+    keys = _month_keys(today, months)
+    first_key = keys[0]
+    last_key = keys[-1]
+
+    receivable = dict.fromkeys(keys, ZERO)
+    forecast = dict.fromkeys(keys, ZERO)
+    committed = dict.fromkeys(keys, ZERO)
+    payroll = dict.fromkeys(keys, ZERO)
+
+    def bucket(when: date | None) -> str:
+        """Anything already due lands in the current month, not the past."""
+        if when is None:
+            return first_key
+        key = when.strftime("%Y-%m")
+        if key < first_key:
+            return first_key
+        return key if key <= last_key else last_key
+
+    # --- Inflow 1: certificates issued but not yet paid
+    issued_query = select(Valuation).where(Valuation.status == ValuationStatus.issued)
+    if project_id is not None:
+        issued_query = issued_query.where(Valuation.project_id == project_id)
+    opening_receivables = ZERO
+    for valuation in db.scalars(issued_query):
+        opening_receivables += valuation.net_certified
+        # Assume payment the month after issue — the only signal we have
+        due = valuation.issued_date or today
+        due_month = date(
+            due.year + (1 if due.month == 12 else 0),
+            1 if due.month == 12 else due.month + 1,
+            1,
+        )
+        receivable[bucket(due_month)] += valuation.net_certified
+
+    # --- Inflow 2: contract value still to certify, spread over what is left
+    #     of each project's programme
+    project_query = select(Project).where(
+        Project.status.in_([ProjectStatus.planning, ProjectStatus.active])
+    )
+    if project_id is not None:
+        project_query = project_query.where(Project.id == project_id)
+    for project in db.scalars(project_query):
+        ceiling = effective_contract_value(db, project)
+        if not ceiling:
+            continue
+        certified = db.scalar(
+            select(func.coalesce(func.max(Valuation.gross_valuation), 0)).where(
+                Valuation.project_id == project.id,
+                Valuation.status.in_([ValuationStatus.issued, ValuationStatus.paid]),
+            )
+        ) or ZERO
+        remaining = ceiling - certified
+        if remaining <= 0:
+            continue
+        # Months left on the programme, clamped to the forecast window
+        end = project.planned_end or today
+        months_left = max(1, (end.year - today.year) * 12 + (end.month - today.month) + 1)
+        spread_keys = keys[: min(months_left, len(keys))]
+        share = (remaining / len(spread_keys)).quantize(CENT)
+        for key in spread_keys:
+            forecast[key] += share
+
+    # --- Outflow 1: purchase orders already issued, in their delivery month
+    po_query = (
+        select(PurchaseOrder.expected_delivery, func.coalesce(func.sum(PoItem.amount), 0))
+        .join(PoItem, PoItem.po_id == PurchaseOrder.id)
+        .where(PurchaseOrder.status == PoStatus.issued)
+        .group_by(PurchaseOrder.expected_delivery)
+    )
+    if project_id is not None:
+        po_query = po_query.where(PurchaseOrder.project_id == project_id)
+    for expected, amount in db.execute(po_query).all():
+        committed[bucket(expected)] += amount
+
+    # --- Outflow 2: payroll run-rate from the last three months of the ledger
+    lookback = today - timedelta(days=90)
+    payroll_query = select(func.coalesce(func.sum(CostEntry.amount), 0)).where(
+        CostEntry.source == CostSource.payroll, CostEntry.entry_date >= lookback
+    )
+    if project_id is not None:
+        payroll_query = payroll_query.where(CostEntry.project_id == project_id)
+    payroll_run_rate = ((db.scalar(payroll_query) or ZERO) / 3).quantize(CENT)
+    for key in keys:
+        payroll[key] = payroll_run_rate
+
+    rows: list[CashflowMonth] = []
+    cumulative = ZERO
+    total_in = ZERO
+    total_out = ZERO
+    worst_month, worst_net = None, None
+    for key in keys:
+        inflow = receivable[key] + forecast[key]
+        outflow = committed[key] + payroll[key]
+        net = inflow - outflow
+        cumulative += net
+        total_in += inflow
+        total_out += outflow
+        if worst_net is None or net < worst_net:
+            worst_month, worst_net = key, net
+        rows.append(
+            CashflowMonth(
+                month=key,
+                inflow_receivable=receivable[key],
+                inflow_forecast=forecast[key],
+                outflow_committed=committed[key],
+                outflow_payroll=payroll[key],
+                net=net,
+                cumulative=cumulative,
+            )
+        )
+
+    return CashflowForecast(
+        months=rows,
+        opening_receivables=opening_receivables,
+        total_inflow=total_in,
+        total_outflow=total_out,
+        closing_position=cumulative,
+        worst_month=worst_month,
     )

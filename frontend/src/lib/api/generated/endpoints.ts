@@ -38,6 +38,8 @@ import type {
   BoqTree,
   BudgetAlert,
   BudgetAlertsParams,
+  CashflowForecast,
+  CashflowForecastParams,
   ChatRequest,
   ClientCreate,
   ClientRead,
@@ -70,6 +72,7 @@ import type {
   FolderCounts,
   GanttPayload,
   GetMediaFolderCountsParams,
+  GetPhotoTimelineParams,
   GoodsInRequest,
   HTTPValidationError,
   Healthz200,
@@ -135,6 +138,7 @@ import type {
   PhaseRead,
   PhaseReorder,
   PhaseUpdate,
+  PhotoTimeline,
   PoCreate,
   PoDetail,
   PoReceive,
@@ -2548,6 +2552,132 @@ export function useGetGantt<TData = Awaited<ReturnType<typeof getGantt>>, TError
 
 
 /**
+ * @summary Set Baseline
+ */
+export const setBaseline = (
+    projectId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<GanttPayload>(
+      {url: `/api/v1/projects/${projectId}/baseline`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getSetBaselineMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setBaseline>>, TError,{projectId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof setBaseline>>, TError,{projectId: string}, TContext> => {
+
+const mutationKey = ['setBaseline'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setBaseline>>, {projectId: string}> = (props) => {
+          const {projectId} = props ?? {};
+
+          return  setBaseline(projectId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetBaselineMutationResult = NonNullable<Awaited<ReturnType<typeof setBaseline>>>
+
+    export type SetBaselineMutationError = HTTPValidationError
+
+    /**
+ * @summary Set Baseline
+ */
+export const useSetBaseline = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setBaseline>>, TError,{projectId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof setBaseline>>,
+        TError,
+        {projectId: string},
+        TContext
+      > => {
+      return useMutation(getSetBaselineMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Clear Baseline
+ */
+export const clearBaseline = (
+    projectId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<GanttPayload>(
+      {url: `/api/v1/projects/${projectId}/baseline`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getClearBaselineMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearBaseline>>, TError,{projectId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof clearBaseline>>, TError,{projectId: string}, TContext> => {
+
+const mutationKey = ['clearBaseline'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof clearBaseline>>, {projectId: string}> = (props) => {
+          const {projectId} = props ?? {};
+
+          return  clearBaseline(projectId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClearBaselineMutationResult = NonNullable<Awaited<ReturnType<typeof clearBaseline>>>
+
+    export type ClearBaselineMutationError = HTTPValidationError
+
+    /**
+ * @summary Clear Baseline
+ */
+export const useClearBaseline = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearBaseline>>, TError,{projectId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof clearBaseline>>,
+        TError,
+        {projectId: string},
+        TContext
+      > => {
+      return useMutation(getClearBaselineMutationOptions(options), queryClient);
+    }
+
+/**
  * @summary My Tasks
  */
 export const myTasks = (
@@ -4230,6 +4360,100 @@ export function useProcurementPulse<TData = Awaited<ReturnType<typeof procuremen
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getProcurementPulseQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Cashflow Forecast
+ */
+export const cashflowForecast = (
+    params?: CashflowForecastParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<CashflowForecast>(
+      {url: `/api/v1/dashboard/cashflow-forecast`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getCashflowForecastQueryKey = (params?: CashflowForecastParams,) => {
+    return [
+    `/api/v1/dashboard/cashflow-forecast`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getCashflowForecastQueryOptions = <TData = Awaited<ReturnType<typeof cashflowForecast>>, TError = HTTPValidationError>(params?: CashflowForecastParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof cashflowForecast>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCashflowForecastQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof cashflowForecast>>> = ({ signal }) => cashflowForecast(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof cashflowForecast>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type CashflowForecastQueryResult = NonNullable<Awaited<ReturnType<typeof cashflowForecast>>>
+export type CashflowForecastQueryError = HTTPValidationError
+
+
+export function useCashflowForecast<TData = Awaited<ReturnType<typeof cashflowForecast>>, TError = HTTPValidationError>(
+ params: undefined |  CashflowForecastParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof cashflowForecast>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof cashflowForecast>>,
+          TError,
+          Awaited<ReturnType<typeof cashflowForecast>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCashflowForecast<TData = Awaited<ReturnType<typeof cashflowForecast>>, TError = HTTPValidationError>(
+ params?: CashflowForecastParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof cashflowForecast>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof cashflowForecast>>,
+          TError,
+          Awaited<ReturnType<typeof cashflowForecast>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCashflowForecast<TData = Awaited<ReturnType<typeof cashflowForecast>>, TError = HTTPValidationError>(
+ params?: CashflowForecastParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof cashflowForecast>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Cashflow Forecast
+ */
+
+export function useCashflowForecast<TData = Awaited<ReturnType<typeof cashflowForecast>>, TError = HTTPValidationError>(
+ params?: CashflowForecastParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof cashflowForecast>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCashflowForecastQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -12110,6 +12334,100 @@ export function useGetMediaFolderCounts<TData = Awaited<ReturnType<typeof getMed
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetMediaFolderCountsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get Photo Timeline
+ */
+export const getPhotoTimeline = (
+    params: GetPhotoTimelineParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<PhotoTimeline>(
+      {url: `/api/v1/media/photo-timeline`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getGetPhotoTimelineQueryKey = (params?: GetPhotoTimelineParams,) => {
+    return [
+    `/api/v1/media/photo-timeline`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetPhotoTimelineQueryOptions = <TData = Awaited<ReturnType<typeof getPhotoTimeline>>, TError = HTTPValidationError>(params: GetPhotoTimelineParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPhotoTimeline>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPhotoTimelineQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPhotoTimeline>>> = ({ signal }) => getPhotoTimeline(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPhotoTimeline>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetPhotoTimelineQueryResult = NonNullable<Awaited<ReturnType<typeof getPhotoTimeline>>>
+export type GetPhotoTimelineQueryError = HTTPValidationError
+
+
+export function useGetPhotoTimeline<TData = Awaited<ReturnType<typeof getPhotoTimeline>>, TError = HTTPValidationError>(
+ params: GetPhotoTimelineParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPhotoTimeline>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPhotoTimeline>>,
+          TError,
+          Awaited<ReturnType<typeof getPhotoTimeline>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPhotoTimeline<TData = Awaited<ReturnType<typeof getPhotoTimeline>>, TError = HTTPValidationError>(
+ params: GetPhotoTimelineParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPhotoTimeline>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPhotoTimeline>>,
+          TError,
+          Awaited<ReturnType<typeof getPhotoTimeline>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPhotoTimeline<TData = Awaited<ReturnType<typeof getPhotoTimeline>>, TError = HTTPValidationError>(
+ params: GetPhotoTimelineParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPhotoTimeline>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Photo Timeline
+ */
+
+export function useGetPhotoTimeline<TData = Awaited<ReturnType<typeof getPhotoTimeline>>, TError = HTTPValidationError>(
+ params: GetPhotoTimelineParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPhotoTimeline>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetPhotoTimelineQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

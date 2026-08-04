@@ -16,6 +16,7 @@ import { PageHeader } from "@/components/layout/AppShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { CardListSkeleton, PageSkeleton } from "@/components/ui/skeleton";
+import { CashflowCard } from "@/features/dashboard/CashflowCard";
 import { ProjectStatusBadge } from "@/features/projects/StatusBadge";
 import {
   useBudgetAlerts,
@@ -240,6 +241,10 @@ function DashboardPage() {
       </div>
 
       <ProcurementPulseCard pulse={pulse} />
+
+      <div className="mb-4">
+        <CashflowCard />
+      </div>
 
       <Card className="mb-4">
         <CardHeader className="flex-row items-center justify-between space-y-0">

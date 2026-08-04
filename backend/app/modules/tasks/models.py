@@ -54,6 +54,10 @@ class Task(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
     planned_end: Mapped[date | None] = mapped_column(Date)
     actual_start: Mapped[date | None] = mapped_column(Date)
     actual_end: Mapped[date | None] = mapped_column(Date)
+    # Frozen copy of the approved programme; slippage is planned vs baseline.
+    # Null until someone sets a baseline for the project.
+    baseline_start: Mapped[date | None] = mapped_column(Date)
+    baseline_end: Mapped[date | None] = mapped_column(Date)
     weight: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
     is_milestone: Mapped[bool] = mapped_column(Boolean, default=False)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)

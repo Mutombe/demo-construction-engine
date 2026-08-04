@@ -17,7 +17,10 @@ export interface ProjectSummary {
   budget_total: string;
   /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
   actual_total: string;
+  /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
+  committed_total?: string;
   budget_variance_pct: number | null;
+  exposure_pct?: number | null;
   task_counts: ProjectSummaryTaskCounts;
   overdue_tasks: number;
   days_remaining: number | null;

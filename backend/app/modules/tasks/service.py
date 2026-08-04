@@ -13,6 +13,7 @@ from app.core.exceptions import (
 )
 from app.modules.projects.models import Phase
 from app.modules.projects.service import get_project
+from app.modules.tasks import cpm
 from app.modules.tasks.models import Task, TaskDependency
 from app.modules.tasks.schemas import (
     DependencyCreate,
@@ -234,10 +235,28 @@ def gantt_payload(db: Session, project_id: uuid.UUID) -> GanttPayload:
         .join(Task, Task.id == TaskDependency.successor_id)
         .where(Task.project_id == project_id)
     ).all()
-    return GanttPayload(
-        project_id=project_id,
-        phases=[GanttPhase.model_validate(p, from_attributes=True) for p in phases],
-        tasks=[
+    # Only dated tasks have a duration, so only they can carry float
+    schedulable = [
+        cpm.TaskNode(id=t.id, start=t.planned_start, end=t.planned_end)
+        for t in tasks
+        if t.planned_start and t.planned_end and t.planned_end >= t.planned_start
+    ]
+    analysis = cpm.compute(
+        schedulable,
+        [(d.predecessor_id, d.successor_id, d.dep_type, d.lag_days) for d in deps],
+    )
+
+    gantt_tasks = []
+    slippages: list[int] = []
+    for t in tasks:
+        slippage = (
+            (t.planned_end - t.baseline_end).days
+            if t.planned_end and t.baseline_end
+            else None
+        )
+        if slippage is not None:
+            slippages.append(slippage)
+        gantt_tasks.append(
             GanttTask(
                 id=t.id,
                 phase_id=t.phase_id,
@@ -249,14 +268,57 @@ def gantt_payload(db: Session, project_id: uuid.UUID) -> GanttPayload:
                 planned_end=t.planned_end,
                 actual_start=t.actual_start,
                 actual_end=t.actual_end,
+                baseline_start=t.baseline_start,
+                baseline_end=t.baseline_end,
+                slippage_days=slippage,
                 is_milestone=t.is_milestone,
                 sort_order=t.sort_order,
                 assignee_name=t.assignee.full_name if t.assignee else None,
+                total_float=analysis.total_float.get(t.id),
+                is_critical=t.id in analysis.critical,
+                early_start=analysis.early_start.get(t.id),
+                early_finish=analysis.early_finish.get(t.id),
+                late_start=analysis.late_start.get(t.id),
+                late_finish=analysis.late_finish.get(t.id),
             )
-            for t in tasks
-        ],
+        )
+
+    return GanttPayload(
+        project_id=project_id,
+        phases=[GanttPhase.model_validate(p, from_attributes=True) for p in phases],
+        tasks=gantt_tasks,
         dependencies=[DependencyRead.model_validate(dep) for dep in deps],
+        critical_path_length=len(analysis.critical),
+        project_finish=analysis.project_finish,
+        has_baseline=any(t.baseline_end for t in tasks),
+        worst_slippage_days=max(slippages) if slippages else None,
     )
+
+
+def set_baseline(db: Session, project_id: uuid.UUID) -> int:
+    """Freeze the current programme as the baseline to measure slippage against.
+
+    Re-baselining overwrites the previous snapshot — that is the point: it is
+    the schedule everyone agreed to, not an audit trail of every edit.
+    """
+    get_project(db, project_id)
+    tasks = db.scalars(select(Task).where(Task.project_id == project_id)).all()
+    stamped = 0
+    for task in tasks:
+        if task.planned_start and task.planned_end:
+            task.baseline_start = task.planned_start
+            task.baseline_end = task.planned_end
+            stamped += 1
+    db.flush()
+    return stamped
+
+
+def clear_baseline(db: Session, project_id: uuid.UUID) -> None:
+    get_project(db, project_id)
+    for task in db.scalars(select(Task).where(Task.project_id == project_id)):
+        task.baseline_start = None
+        task.baseline_end = None
+    db.flush()
 
 
 def count_overdue(db: Session, project_id: uuid.UUID) -> int:

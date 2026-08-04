@@ -34,6 +34,12 @@ export interface GanttRowModel {
   isMilestone: boolean;
   assignee: string | null;
   y: number; // row index among visible rows
+  // Critical path analysis (tasks only; phases carry no float)
+  isCritical: boolean;
+  totalFloat: number | null;
+  baselineStart: Date | null;
+  baselineEnd: Date | null;
+  slippageDays: number | null;
 }
 
 export interface GanttLayout {
@@ -48,6 +54,7 @@ export interface GanttLayout {
   dateToX: (d: Date) => number;
   barFor: (row: GanttRowModel) => { x: number; width: number } | null;
   actualBarFor: (row: GanttRowModel) => { x: number; width: number } | null;
+  baselineBarFor: (row: GanttRowModel) => { x: number; width: number } | null;
 }
 
 const parse = (value: string | null | undefined): Date | null =>
@@ -77,6 +84,11 @@ export function useGanttLayout(
       isMilestone: false,
       assignee: null,
       y: 0,
+      isCritical: false,
+      totalFloat: null,
+      baselineStart: null,
+      baselineEnd: null,
+      slippageDays: null,
     }));
 
     const taskRow = (t: (typeof payload.tasks)[number]): GanttRowModel => ({
@@ -94,6 +106,11 @@ export function useGanttLayout(
       isMilestone: t.is_milestone,
       assignee: t.assignee_name ?? null,
       y: 0,
+      isCritical: t.is_critical ?? false,
+      totalFloat: t.total_float ?? null,
+      baselineStart: parse(t.baseline_start),
+      baselineEnd: parse(t.baseline_end),
+      slippageDays: t.slippage_days ?? null,
     });
 
     const rows: GanttRowModel[] = [];
@@ -163,6 +180,16 @@ export function useGanttLayout(
       return { x, width };
     };
 
+    const baselineBarFor = (row: GanttRowModel) => {
+      if (!row.baselineStart || !row.baselineEnd) return null;
+      const x = dateToX(row.baselineStart);
+      const width = Math.max(
+        (differenceInCalendarDays(row.baselineEnd, row.baselineStart) + 1) * pxPerDay,
+        4,
+      );
+      return { x, width };
+    };
+
     return {
       rows,
       rangeStart,
@@ -175,6 +202,7 @@ export function useGanttLayout(
       dateToX,
       barFor,
       actualBarFor,
+      baselineBarFor,
     };
   }, [payload, zoom, collapsed]);
 }

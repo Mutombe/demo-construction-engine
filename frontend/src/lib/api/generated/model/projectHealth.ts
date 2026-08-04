@@ -17,7 +17,10 @@ export interface ProjectHealth {
   budget_total: string;
   /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
   actual_total: string;
+  /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
+  committed_total?: string;
   budget_used_pct: number | null;
+  exposure_pct?: number | null;
   planned_end: string | null;
   overdue_tasks: number;
 }

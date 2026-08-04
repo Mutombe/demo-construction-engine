@@ -1572,6 +1572,100 @@
     }
    }
   },
+  "/api/v1/projects/{project_id}/baseline": {
+   "post": {
+    "tags": [
+     "tasks"
+    ],
+    "summary": "Set Baseline",
+    "operationId": "set_baseline",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "project_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Project Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GanttPayload"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "tasks"
+    ],
+    "summary": "Clear Baseline",
+    "operationId": "clear_baseline",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "project_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Project Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GanttPayload"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/v1/tasks/my": {
    "get": {
     "tags": [
@@ -2707,6 +2801,73 @@
       "OAuth2PasswordBearer": []
      }
     ]
+   }
+  },
+  "/api/v1/dashboard/cashflow-forecast": {
+   "get": {
+    "tags": [
+     "dashboard"
+    ],
+    "summary": "Cashflow Forecast",
+    "operationId": "cashflow_forecast",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "months",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 24,
+       "minimum": 2,
+       "default": 6,
+       "title": "Months"
+      }
+     },
+     {
+      "name": "project_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "uuid"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Project Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CashflowForecast"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
    }
   },
   "/api/v1/dashboard/budget-alerts": {
@@ -8458,6 +8619,63 @@
     }
    }
   },
+  "/api/v1/media/photo-timeline": {
+   "get": {
+    "tags": [
+     "media"
+    ],
+    "summary": "Get Photo Timeline",
+    "operationId": "get_photo_timeline",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "entity_type",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Entity Type"
+      }
+     },
+     {
+      "name": "entity_id",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Entity Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PhotoTimeline"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/v1/media/{media_id}/file": {
    "get": {
     "tags": [
@@ -10382,6 +10600,12 @@
       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
       "title": "Actual Total",
       "default": "0"
+     },
+     "committed_total": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Committed Total",
+      "default": "0"
      }
     },
     "type": "object",
@@ -10715,6 +10939,12 @@
       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
       "title": "Actual Total"
      },
+     "committed_total": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Committed Total",
+      "default": "0"
+     },
      "unallocated_actual": {
       "type": "string",
       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
@@ -10882,6 +11112,108 @@
     ],
     "title": "BulkEntry"
    },
+   "CashflowForecast": {
+    "properties": {
+     "months": {
+      "items": {
+       "$ref": "#/components/schemas/CashflowMonth"
+      },
+      "type": "array",
+      "title": "Months"
+     },
+     "opening_receivables": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Opening Receivables"
+     },
+     "total_inflow": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Total Inflow"
+     },
+     "total_outflow": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Total Outflow"
+     },
+     "closing_position": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Closing Position"
+     },
+     "worst_month": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Worst Month"
+     }
+    },
+    "type": "object",
+    "required": [
+     "months",
+     "opening_receivables",
+     "total_inflow",
+     "total_outflow",
+     "closing_position",
+     "worst_month"
+    ],
+    "title": "CashflowForecast",
+    "description": "Forward view built only from commitments already in the system.\n\nInflows are money the client owes or will owe for work left in the\ncontract; outflows are orders already placed plus the payroll run-rate."
+   },
+   "CashflowMonth": {
+    "properties": {
+     "month": {
+      "type": "string",
+      "title": "Month"
+     },
+     "inflow_receivable": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Inflow Receivable"
+     },
+     "inflow_forecast": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Inflow Forecast"
+     },
+     "outflow_committed": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Outflow Committed"
+     },
+     "outflow_payroll": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Outflow Payroll"
+     },
+     "net": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Net"
+     },
+     "cumulative": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Cumulative"
+     }
+    },
+    "type": "object",
+    "required": [
+     "month",
+     "inflow_receivable",
+     "inflow_forecast",
+     "outflow_committed",
+     "outflow_payroll",
+     "net",
+     "cumulative"
+    ],
+    "title": "CashflowMonth"
+   },
    "CategoryTotal": {
     "properties": {
      "cost_category": {
@@ -10896,6 +11228,12 @@
       "type": "string",
       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
       "title": "Actual"
+     },
+     "committed": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Committed",
+      "default": "0"
      }
     },
     "type": "object",
@@ -11223,6 +11561,12 @@
       "type": "string",
       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
       "title": "Portfolio Actual"
+     },
+     "portfolio_committed": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Portfolio Committed",
+      "default": "0"
      },
      "overdue_tasks": {
       "type": "integer",
@@ -12652,6 +12996,39 @@
       },
       "type": "array",
       "title": "Dependencies"
+     },
+     "critical_path_length": {
+      "type": "integer",
+      "title": "Critical Path Length",
+      "default": 0
+     },
+     "project_finish": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Project Finish"
+     },
+     "has_baseline": {
+      "type": "boolean",
+      "title": "Has Baseline",
+      "default": false
+     },
+     "worst_slippage_days": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Worst Slippage Days"
      }
     },
     "type": "object",
@@ -12832,6 +13209,41 @@
       ],
       "title": "Actual End"
      },
+     "baseline_start": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Baseline Start"
+     },
+     "baseline_end": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Baseline End"
+     },
+     "slippage_days": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Slippage Days"
+     },
      "is_milestone": {
       "type": "boolean",
       "title": "Is Milestone"
@@ -12850,6 +13262,70 @@
        }
       ],
       "title": "Assignee Name"
+     },
+     "total_float": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Total Float"
+     },
+     "is_critical": {
+      "type": "boolean",
+      "title": "Is Critical",
+      "default": false
+     },
+     "early_start": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Early Start"
+     },
+     "early_finish": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Early Finish"
+     },
+     "late_start": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Late Start"
+     },
+     "late_finish": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Late Finish"
      }
     },
     "type": "object",
@@ -15421,6 +15897,87 @@
     "type": "object",
     "title": "PhaseUpdate"
    },
+   "PhotoDay": {
+    "properties": {
+     "day": {
+      "type": "string",
+      "format": "date",
+      "title": "Day"
+     },
+     "photos": {
+      "items": {
+       "$ref": "#/components/schemas/MediaRead"
+      },
+      "type": "array",
+      "title": "Photos"
+     }
+    },
+    "type": "object",
+    "required": [
+     "day",
+     "photos"
+    ],
+    "title": "PhotoDay",
+    "description": "Photos taken on one day, newest day first in the timeline."
+   },
+   "PhotoTimeline": {
+    "properties": {
+     "entity_type": {
+      "type": "string",
+      "title": "Entity Type"
+     },
+     "entity_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Entity Id"
+     },
+     "days": {
+      "items": {
+       "$ref": "#/components/schemas/PhotoDay"
+      },
+      "type": "array",
+      "title": "Days"
+     },
+     "total_photos": {
+      "type": "integer",
+      "title": "Total Photos"
+     },
+     "first_photo": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "First Photo"
+     },
+     "last_photo": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Photo"
+     }
+    },
+    "type": "object",
+    "required": [
+     "entity_type",
+     "entity_id",
+     "days",
+     "total_photos",
+     "first_photo",
+     "last_photo"
+    ],
+    "title": "PhotoTimeline"
+   },
    "PoCreate": {
     "properties": {
      "supplier_id": {
@@ -16932,6 +17489,12 @@
       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
       "title": "Actual Total"
      },
+     "committed_total": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Committed Total",
+      "default": "0"
+     },
      "budget_used_pct": {
       "anyOf": [
        {
@@ -16942,6 +17505,17 @@
        }
       ],
       "title": "Budget Used Pct"
+     },
+     "exposure_pct": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Exposure Pct"
      },
      "planned_end": {
       "anyOf": [
@@ -17514,6 +18088,12 @@
       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
       "title": "Actual Total"
      },
+     "committed_total": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Committed Total",
+      "default": "0"
+     },
      "budget_variance_pct": {
       "anyOf": [
        {
@@ -17524,6 +18104,17 @@
        }
       ],
       "title": "Budget Variance Pct"
+     },
+     "exposure_pct": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Exposure Pct"
      },
      "task_counts": {
       "additionalProperties": {
@@ -19661,6 +20252,12 @@
       "type": "string",
       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
       "title": "Actual"
+     },
+     "committed": {
+      "type": "string",
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "title": "Committed",
+      "default": "0"
      }
     },
     "type": "object",

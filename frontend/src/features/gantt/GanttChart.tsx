@@ -19,13 +19,22 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: "var(--border)",
 };
 
-export function GanttChart({ payload }: { payload: GanttPayload }) {
+export function GanttChart({
+  payload,
+  showCritical = true,
+  showBaseline = true,
+}: {
+  payload: GanttPayload;
+  showCritical?: boolean;
+  showBaseline?: boolean;
+}) {
   const [zoom, setZoom] = useState<Zoom>("week");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const layout = useGanttLayout(payload, zoom, collapsed);
 
   if (!layout) return null;
-  const { rows, totalWidth, months, ticks, todayX, barFor, actualBarFor } = layout;
+  const { rows, totalWidth, months, ticks, todayX, barFor, actualBarFor, baselineBarFor } =
+    layout;
   const bodyHeight = rows.length * ROW_H;
 
   const togglePhase = (id: string) => {
@@ -49,6 +58,17 @@ export function GanttChart({ payload }: { payload: GanttPayload }) {
           <span className="flex items-center gap-1.5">
             <span className="inline-block h-1.5 w-5 rounded-sm bg-warning" /> Actual
           </span>
+          {showCritical && (payload.critical_path_length ?? 0) > 0 && (
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-2.5 w-5 rounded-sm bg-destructive" /> Critical
+            </span>
+          )}
+          {showBaseline && payload.has_baseline && (
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-1 w-5 rounded-sm border border-dashed border-muted-foreground" />{" "}
+              Baseline
+            </span>
+          )}
           <span className="flex items-center gap-1.5">
             <Diamond className="h-3 w-3 text-primary" /> Milestone
           </span>
@@ -210,7 +230,11 @@ export function GanttChart({ payload }: { payload: GanttPayload }) {
               {rows.map((row) => {
                 const planned = barFor(row);
                 const actual = actualBarFor(row);
-                const color = STATUS_COLORS[row.status] ?? "var(--primary)";
+                const baseline = showBaseline ? baselineBarFor(row) : null;
+                const critical = showCritical && row.isCritical && row.kind === "task";
+                const color = critical
+                  ? "var(--destructive)"
+                  : (STATUS_COLORS[row.status] ?? "var(--primary)");
                 const centerY = row.y * ROW_H + ROW_H / 2;
                 return (
                   <Fragment key={row.id}>
@@ -244,7 +268,17 @@ export function GanttChart({ payload }: { payload: GanttPayload }) {
                               row.kind === "phase" ? "var(--sidebar)" : "var(--secondary)",
                             border: row.kind === "phase" ? "none" : `1px solid ${color}`,
                           }}
-                          title={`${row.name} · ${row.progress}%`}
+                          title={
+                            `${row.name} · ${row.progress}%` +
+                            (row.totalFloat !== null
+                              ? critical
+                                ? " · on the critical path"
+                                : ` · ${row.totalFloat}d float`
+                              : "") +
+                            (row.slippageDays
+                              ? ` · ${row.slippageDays > 0 ? "+" : ""}${row.slippageDays}d vs baseline`
+                              : "")
+                          }
                         >
                           {row.kind === "task" && (
                             <div
@@ -258,6 +292,20 @@ export function GanttChart({ payload }: { payload: GanttPayload }) {
                           )}
                         </div>
                       )
+                    )}
+                    {baseline && row.kind === "task" && !row.isMilestone && (
+                      <div
+                        className="absolute z-0 rounded-sm border border-dashed"
+                        style={{
+                          left: baseline.x,
+                          top: centerY - 12,
+                          width: baseline.width,
+                          height: 5,
+                          borderColor: "var(--muted-foreground)",
+                          opacity: 0.5,
+                        }}
+                        title={`Baseline: ${row.name}`}
+                      />
                     )}
                     {actual && row.kind === "task" && !row.isMilestone && (
                       <div

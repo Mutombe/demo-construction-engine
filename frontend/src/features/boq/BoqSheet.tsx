@@ -109,8 +109,8 @@ export function BoqSheet({ projectId, tree }: { projectId: string; tree: BoqTree
   };
 
   const gridCols = canWrite
-    ? "grid-cols-[90px_1fr_64px_90px_100px_110px_110px_90px_36px]"
-    : "grid-cols-[90px_1fr_64px_90px_100px_110px_110px_90px]";
+    ? "grid-cols-[90px_1fr_64px_90px_100px_110px_110px_110px_90px_36px]"
+    : "grid-cols-[90px_1fr_64px_90px_100px_110px_110px_110px_90px]";
 
   return (
     <div className="rounded-lg border bg-card">
@@ -127,6 +127,7 @@ export function BoqSheet({ projectId, tree }: { projectId: string; tree: BoqTree
         <div className="px-2 text-right">Rate</div>
         <div className="px-2 text-right">Amount</div>
         <div className="px-2 text-right">Actual</div>
+        <div className="px-2 text-right">Committed</div>
         <div className="px-2">Category</div>
         {canWrite && <div />}
       </div>
@@ -160,6 +161,12 @@ export function BoqSheet({ projectId, tree }: { projectId: string; tree: BoqTree
               items.map((item) => {
                 const over =
                   Number(item.amount) > 0 && Number(item.actual_total) > Number(item.amount);
+                // Committed money has not been spent yet, but it is already gone
+                const exposed =
+                  Number(item.amount) > 0 &&
+                  !over &&
+                  Number(item.actual_total) + Number(item.committed_total) >
+                    Number(item.amount);
                 return (
                   <div
                     key={item.id}
@@ -221,6 +228,19 @@ export function BoqSheet({ projectId, tree }: { projectId: string; tree: BoqTree
                       )}
                     >
                       {Number(item.actual_total) ? moneyExact(item.actual_total) : "—"}
+                    </div>
+                    <div
+                      className={cn(
+                        "px-2 py-1.5 text-right text-sm tabular-nums",
+                        exposed ? "font-semibold text-warning" : "text-muted-foreground",
+                      )}
+                      title={
+                        exposed
+                          ? "Actual plus committed exceeds this line's budget"
+                          : "Issued purchase orders not yet received"
+                      }
+                    >
+                      {Number(item.committed_total) ? moneyExact(item.committed_total) : "—"}
                     </div>
                     <div className="flex items-center px-1">
                       {canWrite ? (

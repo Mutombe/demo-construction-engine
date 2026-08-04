@@ -12,4 +12,6 @@ export interface CategoryTotal {
   budget: string;
   /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
   actual: string;
+  /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
+  committed?: string;
 }

@@ -13,4 +13,8 @@ export interface GanttPayload {
   phases: GanttPhase[];
   tasks: GanttTask[];
   dependencies: DependencyRead[];
+  critical_path_length?: number;
+  project_finish?: string | null;
+  has_baseline?: boolean;
+  worst_slippage_days?: number | null;
 }
