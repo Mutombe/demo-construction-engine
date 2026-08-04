@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from app.common.enums import UserRole
 from app.common.pagination import PageParamsDep
 from app.common.schemas import Page
-from app.core.deps import DbDep, require_roles
+from app.core.deps import CurrentUser, DbDep, require_roles
 from app.modules.procurement import service
 from app.modules.procurement.schemas import (
     PoCreate,
@@ -120,8 +120,8 @@ def issue_rfq(rfq_id: uuid.UUID, db: DbDep) -> RfqDetail:
 
 
 @router.delete("/rfqs/{rfq_id}", status_code=204, dependencies=[proc_write])
-def delete_rfq(rfq_id: uuid.UUID, db: DbDep) -> None:
-    service.delete_rfq(db, rfq_id)
+def delete_rfq(rfq_id: uuid.UUID, db: DbDep, user: CurrentUser) -> None:
+    service.delete_rfq(db, rfq_id, user)
 
 
 # --- Quotes -----------------------------------------------------------------
@@ -147,8 +147,8 @@ def update_quote(quote_id: uuid.UUID, body: QuoteUpdate, db: DbDep) -> QuoteRead
 
 
 @router.delete("/quotes/{quote_id}", status_code=204, dependencies=[proc_write])
-def delete_quote(quote_id: uuid.UUID, db: DbDep) -> None:
-    service.delete_quote(db, quote_id)
+def delete_quote(quote_id: uuid.UUID, db: DbDep, user: CurrentUser) -> None:
+    service.delete_quote(db, quote_id, user)
 
 
 @router.post("/quotes/{quote_id}/accept", response_model=QuoteRead, dependencies=[po_approve])
@@ -189,9 +189,9 @@ def update_purchase_order(po_id: uuid.UUID, body: PoUpdate, db: DbDep) -> PoDeta
     return service.po_detail(db, po_id)
 
 
-@router.post("/purchase-orders/{po_id}/issue", response_model=PoDetail, dependencies=[po_approve])
-def issue_purchase_order(po_id: uuid.UUID, db: DbDep) -> PoDetail:
-    service.issue_po(db, po_id)
+@router.post("/purchase-orders/{po_id}/issue", response_model=PoDetail)
+def issue_purchase_order(po_id: uuid.UUID, db: DbDep, user=Depends(proc_user)) -> PoDetail:
+    service.issue_po(db, po_id, user)
     return service.po_detail(db, po_id)
 
 

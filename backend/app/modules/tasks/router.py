@@ -95,8 +95,8 @@ def update_task(task_id: uuid.UUID, body: TaskUpdate, db: DbDep) -> TaskRead:
 
 
 @router.delete("/tasks/{task_id}", status_code=204, dependencies=[task_write])
-def delete_task(task_id: uuid.UUID, db: DbDep) -> None:
-    service.delete_task(db, task_id)
+def delete_task(task_id: uuid.UUID, db: DbDep, user: CurrentUser) -> None:
+    service.delete_task(db, task_id, user)
 
 
 @router.post(

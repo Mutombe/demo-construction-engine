@@ -54,6 +54,7 @@ import type {
   CostEntryUpdate,
   DeadlineItem,
   DeadlinesParams,
+  DeletedRecordRead,
   DemandForecast,
   DependencyCreate,
   DependencyRead,
@@ -91,7 +92,12 @@ import type {
   IngestionRejectRequest,
   IngestionUploadResponse,
   InventoryAnalytics,
+  InviteAccept,
+  InviteCreate,
+  InviteCreated,
+  InviteRead,
   IssueRequest,
+  ListActivityParams,
   ListClientsParams,
   ListCostEntriesParams,
   ListDiaryEntriesParams,
@@ -114,6 +120,7 @@ import type {
   ListSuppliersParams,
   ListTasksParams,
   ListTimesheetsParams,
+  ListTrashParams,
   ListUsersParams,
   ListValuationsParams,
   ListWorkersParams,
@@ -125,8 +132,10 @@ import type {
   MediaUpdate,
   NavCounts,
   NotificationRead,
+  PageActivityLogRead,
   PageClientRead,
   PageCostEntryRead,
+  PageDeletedRecordRead,
   PageDiaryEntryRead,
   PageExpenseClaimRead,
   PageIngestionItemRead,
@@ -638,6 +647,71 @@ export function useMe<TData = Awaited<ReturnType<typeof me>>, TError = unknown>(
 
 
 
+
+/**
+ * @summary Accept Invite
+ */
+export const acceptInvite = (
+    inviteAccept: InviteAccept,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<UserRead>(
+      {url: `/api/v1/invites/accept`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: inviteAccept, signal
+    },
+      );
+    }
+
+
+
+
+export const getAcceptInviteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptInvite>>, TError,{data: InviteAccept}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof acceptInvite>>, TError,{data: InviteAccept}, TContext> => {
+
+const mutationKey = ['acceptInvite'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof acceptInvite>>, {data: InviteAccept}> = (props) => {
+          const {data} = props ?? {};
+
+          return  acceptInvite(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AcceptInviteMutationResult = NonNullable<Awaited<ReturnType<typeof acceptInvite>>>
+    export type AcceptInviteMutationBody = InviteAccept
+    export type AcceptInviteMutationError = HTTPValidationError
+
+    /**
+ * @summary Accept Invite
+ */
+export const useAcceptInvite = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptInvite>>, TError,{data: InviteAccept}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof acceptInvite>>,
+        TError,
+        {data: InviteAccept},
+        TContext
+      > => {
+      return useMutation(getAcceptInviteMutationOptions(options), queryClient);
+    }
 
 /**
  * @summary List Users
@@ -16514,6 +16588,729 @@ export const useChat = <TError = HTTPValidationError,
         TContext
       > => {
       return useMutation(getChatMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary List Activity
+ */
+export const listActivity = (
+    params?: ListActivityParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<PageActivityLogRead>(
+      {url: `/api/v1/admin/activity`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getListActivityQueryKey = (params?: ListActivityParams,) => {
+    return [
+    `/api/v1/admin/activity`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListActivityQueryOptions = <TData = Awaited<ReturnType<typeof listActivity>>, TError = HTTPValidationError>(params?: ListActivityParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listActivity>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListActivityQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listActivity>>> = ({ signal }) => listActivity(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listActivity>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListActivityQueryResult = NonNullable<Awaited<ReturnType<typeof listActivity>>>
+export type ListActivityQueryError = HTTPValidationError
+
+
+export function useListActivity<TData = Awaited<ReturnType<typeof listActivity>>, TError = HTTPValidationError>(
+ params: undefined |  ListActivityParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listActivity>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listActivity>>,
+          TError,
+          Awaited<ReturnType<typeof listActivity>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListActivity<TData = Awaited<ReturnType<typeof listActivity>>, TError = HTTPValidationError>(
+ params?: ListActivityParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listActivity>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listActivity>>,
+          TError,
+          Awaited<ReturnType<typeof listActivity>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListActivity<TData = Awaited<ReturnType<typeof listActivity>>, TError = HTTPValidationError>(
+ params?: ListActivityParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listActivity>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Activity
+ */
+
+export function useListActivity<TData = Awaited<ReturnType<typeof listActivity>>, TError = HTTPValidationError>(
+ params?: ListActivityParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listActivity>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListActivityQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary List Activity Actions
+ */
+export const listActivityActions = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<string[]>(
+      {url: `/api/v1/admin/activity/actions`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getListActivityActionsQueryKey = () => {
+    return [
+    `/api/v1/admin/activity/actions`
+    ] as const;
+    }
+
+
+export const getListActivityActionsQueryOptions = <TData = Awaited<ReturnType<typeof listActivityActions>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listActivityActions>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListActivityActionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listActivityActions>>> = ({ signal }) => listActivityActions(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listActivityActions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListActivityActionsQueryResult = NonNullable<Awaited<ReturnType<typeof listActivityActions>>>
+export type ListActivityActionsQueryError = unknown
+
+
+export function useListActivityActions<TData = Awaited<ReturnType<typeof listActivityActions>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listActivityActions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listActivityActions>>,
+          TError,
+          Awaited<ReturnType<typeof listActivityActions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListActivityActions<TData = Awaited<ReturnType<typeof listActivityActions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listActivityActions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listActivityActions>>,
+          TError,
+          Awaited<ReturnType<typeof listActivityActions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListActivityActions<TData = Awaited<ReturnType<typeof listActivityActions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listActivityActions>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Activity Actions
+ */
+
+export function useListActivityActions<TData = Awaited<ReturnType<typeof listActivityActions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listActivityActions>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListActivityActionsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary List Invites
+ */
+export const listInvites = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<InviteRead[]>(
+      {url: `/api/v1/admin/invites`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getListInvitesQueryKey = () => {
+    return [
+    `/api/v1/admin/invites`
+    ] as const;
+    }
+
+
+export const getListInvitesQueryOptions = <TData = Awaited<ReturnType<typeof listInvites>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listInvites>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListInvitesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listInvites>>> = ({ signal }) => listInvites(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listInvites>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListInvitesQueryResult = NonNullable<Awaited<ReturnType<typeof listInvites>>>
+export type ListInvitesQueryError = unknown
+
+
+export function useListInvites<TData = Awaited<ReturnType<typeof listInvites>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listInvites>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listInvites>>,
+          TError,
+          Awaited<ReturnType<typeof listInvites>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListInvites<TData = Awaited<ReturnType<typeof listInvites>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listInvites>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listInvites>>,
+          TError,
+          Awaited<ReturnType<typeof listInvites>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListInvites<TData = Awaited<ReturnType<typeof listInvites>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listInvites>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Invites
+ */
+
+export function useListInvites<TData = Awaited<ReturnType<typeof listInvites>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listInvites>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListInvitesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * The link is returned once here and cannot be recovered afterwards.
+ * @summary Create Invite
+ */
+export const createInvite = (
+    inviteCreate: InviteCreate,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<InviteCreated>(
+      {url: `/api/v1/admin/invites`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: inviteCreate, signal
+    },
+      );
+    }
+
+
+
+
+export const getCreateInviteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createInvite>>, TError,{data: InviteCreate}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof createInvite>>, TError,{data: InviteCreate}, TContext> => {
+
+const mutationKey = ['createInvite'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createInvite>>, {data: InviteCreate}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createInvite(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateInviteMutationResult = NonNullable<Awaited<ReturnType<typeof createInvite>>>
+    export type CreateInviteMutationBody = InviteCreate
+    export type CreateInviteMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Invite
+ */
+export const useCreateInvite = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createInvite>>, TError,{data: InviteCreate}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createInvite>>,
+        TError,
+        {data: InviteCreate},
+        TContext
+      > => {
+      return useMutation(getCreateInviteMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Revoke Invite
+ */
+export const revokeInvite = (
+    inviteId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<InviteRead>(
+      {url: `/api/v1/admin/invites/${inviteId}/revoke`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getRevokeInviteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeInvite>>, TError,{inviteId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof revokeInvite>>, TError,{inviteId: string}, TContext> => {
+
+const mutationKey = ['revokeInvite'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof revokeInvite>>, {inviteId: string}> = (props) => {
+          const {inviteId} = props ?? {};
+
+          return  revokeInvite(inviteId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RevokeInviteMutationResult = NonNullable<Awaited<ReturnType<typeof revokeInvite>>>
+
+    export type RevokeInviteMutationError = HTTPValidationError
+
+    /**
+ * @summary Revoke Invite
+ */
+export const useRevokeInvite = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeInvite>>, TError,{inviteId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof revokeInvite>>,
+        TError,
+        {inviteId: string},
+        TContext
+      > => {
+      return useMutation(getRevokeInviteMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary List Trash
+ */
+export const listTrash = (
+    params?: ListTrashParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<PageDeletedRecordRead>(
+      {url: `/api/v1/admin/trash`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getListTrashQueryKey = (params?: ListTrashParams,) => {
+    return [
+    `/api/v1/admin/trash`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListTrashQueryOptions = <TData = Awaited<ReturnType<typeof listTrash>>, TError = HTTPValidationError>(params?: ListTrashParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTrash>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTrashQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTrash>>> = ({ signal }) => listTrash(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTrash>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListTrashQueryResult = NonNullable<Awaited<ReturnType<typeof listTrash>>>
+export type ListTrashQueryError = HTTPValidationError
+
+
+export function useListTrash<TData = Awaited<ReturnType<typeof listTrash>>, TError = HTTPValidationError>(
+ params: undefined |  ListTrashParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTrash>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTrash>>,
+          TError,
+          Awaited<ReturnType<typeof listTrash>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListTrash<TData = Awaited<ReturnType<typeof listTrash>>, TError = HTTPValidationError>(
+ params?: ListTrashParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTrash>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTrash>>,
+          TError,
+          Awaited<ReturnType<typeof listTrash>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListTrash<TData = Awaited<ReturnType<typeof listTrash>>, TError = HTTPValidationError>(
+ params?: ListTrashParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTrash>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Trash
+ */
+
+export function useListTrash<TData = Awaited<ReturnType<typeof listTrash>>, TError = HTTPValidationError>(
+ params?: ListTrashParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTrash>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListTrashQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary List Trash Types
+ */
+export const listTrashTypes = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<string[]>(
+      {url: `/api/v1/admin/trash/types`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getListTrashTypesQueryKey = () => {
+    return [
+    `/api/v1/admin/trash/types`
+    ] as const;
+    }
+
+
+export const getListTrashTypesQueryOptions = <TData = Awaited<ReturnType<typeof listTrashTypes>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTrashTypes>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTrashTypesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTrashTypes>>> = ({ signal }) => listTrashTypes(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTrashTypes>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListTrashTypesQueryResult = NonNullable<Awaited<ReturnType<typeof listTrashTypes>>>
+export type ListTrashTypesQueryError = unknown
+
+
+export function useListTrashTypes<TData = Awaited<ReturnType<typeof listTrashTypes>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTrashTypes>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTrashTypes>>,
+          TError,
+          Awaited<ReturnType<typeof listTrashTypes>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListTrashTypes<TData = Awaited<ReturnType<typeof listTrashTypes>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTrashTypes>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTrashTypes>>,
+          TError,
+          Awaited<ReturnType<typeof listTrashTypes>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListTrashTypes<TData = Awaited<ReturnType<typeof listTrashTypes>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTrashTypes>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Trash Types
+ */
+
+export function useListTrashTypes<TData = Awaited<ReturnType<typeof listTrashTypes>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTrashTypes>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListTrashTypesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Restore Deleted
+ */
+export const restoreDeleted = (
+    recordId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<DeletedRecordRead>(
+      {url: `/api/v1/admin/trash/${recordId}/restore`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getRestoreDeletedMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreDeleted>>, TError,{recordId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof restoreDeleted>>, TError,{recordId: string}, TContext> => {
+
+const mutationKey = ['restoreDeleted'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof restoreDeleted>>, {recordId: string}> = (props) => {
+          const {recordId} = props ?? {};
+
+          return  restoreDeleted(recordId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RestoreDeletedMutationResult = NonNullable<Awaited<ReturnType<typeof restoreDeleted>>>
+
+    export type RestoreDeletedMutationError = HTTPValidationError
+
+    /**
+ * @summary Restore Deleted
+ */
+export const useRestoreDeleted = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreDeleted>>, TError,{recordId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof restoreDeleted>>,
+        TError,
+        {recordId: string},
+        TContext
+      > => {
+      return useMutation(getRestoreDeletedMutationOptions(options), queryClient);
+    }
+
+/**
+ * Empty one entry for good. There is nothing after this.
+ * @summary Purge Deleted
+ */
+export const purgeDeleted = (
+    recordId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<void>(
+      {url: `/api/v1/admin/trash/${recordId}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getPurgeDeletedMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purgeDeleted>>, TError,{recordId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof purgeDeleted>>, TError,{recordId: string}, TContext> => {
+
+const mutationKey = ['purgeDeleted'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof purgeDeleted>>, {recordId: string}> = (props) => {
+          const {recordId} = props ?? {};
+
+          return  purgeDeleted(recordId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PurgeDeletedMutationResult = NonNullable<Awaited<ReturnType<typeof purgeDeleted>>>
+
+    export type PurgeDeletedMutationError = HTTPValidationError
+
+    /**
+ * @summary Purge Deleted
+ */
+export const usePurgeDeleted = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purgeDeleted>>, TError,{recordId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof purgeDeleted>>,
+        TError,
+        {recordId: string},
+        TContext
+      > => {
+      return useMutation(getPurgeDeletedMutationOptions(options), queryClient);
     }
 
 /**

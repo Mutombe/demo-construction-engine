@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from app.common.enums import UserRole
 from app.common.pagination import PageParamsDep
 from app.common.schemas import Page
-from app.core.deps import DbDep, require_roles
+from app.core.deps import CurrentUser, DbDep, require_roles
 from app.modules.valuations import service
 from app.modules.valuations.schemas import (
     MeasurementContext,
@@ -67,8 +67,8 @@ def update_valuation(valuation_id: uuid.UUID, body: ValuationUpdate, db: DbDep) 
 
 
 @router.delete("/valuations/{valuation_id}", status_code=204, dependencies=[val_write])
-def delete_valuation(valuation_id: uuid.UUID, db: DbDep) -> None:
-    service.delete_valuation(db, valuation_id)
+def delete_valuation(valuation_id: uuid.UUID, db: DbDep, user: CurrentUser) -> None:
+    service.delete_valuation(db, valuation_id, user)
 
 
 @router.get("/valuations/{valuation_id}/certificate")

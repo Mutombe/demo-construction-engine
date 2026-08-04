@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Response
 from app.common.enums import UserRole
 from app.common.pagination import PageParamsDep
 from app.common.schemas import Page
-from app.core.deps import DbDep, require_roles
+from app.core.deps import CurrentUser, DbDep, require_roles
 from app.modules.payroll import service
 from app.modules.payroll.models import Timesheet
 from app.modules.payroll.schemas import (
@@ -102,8 +102,8 @@ def update_worker_pay_item(item_id: uuid.UUID, body: PayItemUpdate, db: DbDep) -
 
 
 @router.delete("/pay-items/{item_id}", status_code=204, dependencies=[Depends(pay_admin)])
-def delete_worker_pay_item(item_id: uuid.UUID, db: DbDep) -> None:
-    service.delete_pay_item(db, item_id)
+def delete_worker_pay_item(item_id: uuid.UUID, db: DbDep, user: CurrentUser) -> None:
+    service.delete_pay_item(db, item_id, user)
 
 
 # --- Timesheets -------------------------------------------------------------
@@ -158,8 +158,8 @@ def update_timesheet(timesheet_id: uuid.UUID, body: TimesheetUpdate, db: DbDep) 
 @router.delete(
     "/timesheets/{timesheet_id}", status_code=204, dependencies=[Depends(timesheet_access)]
 )
-def delete_timesheet(timesheet_id: uuid.UUID, db: DbDep) -> None:
-    service.delete_timesheet(db, timesheet_id)
+def delete_timesheet(timesheet_id: uuid.UUID, db: DbDep, user: CurrentUser) -> None:
+    service.delete_timesheet(db, timesheet_id, user)
 
 
 # --- Pay runs ---------------------------------------------------------------
@@ -215,8 +215,8 @@ def approve_pay_run(pay_run_id: uuid.UUID, db: DbDep, user=Depends(pay_admin)) -
 
 
 @router.delete("/pay-runs/{pay_run_id}", status_code=204, dependencies=[Depends(pay_admin)])
-def delete_pay_run(pay_run_id: uuid.UUID, db: DbDep) -> None:
-    service.delete_pay_run(db, pay_run_id)
+def delete_pay_run(pay_run_id: uuid.UUID, db: DbDep, user: CurrentUser) -> None:
+    service.delete_pay_run(db, pay_run_id, user)
 
 
 def _pdf_response(content: bytes, filename: str) -> Response:

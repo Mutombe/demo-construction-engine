@@ -23,6 +23,15 @@ export default defineConfig({
         target: process.env.API_TARGET ?? "http://localhost:8000",
         changeOrigin: false,
       },
+      // So the API reference link in Settings resolves during development
+      "/docs": {
+        target: process.env.API_TARGET ?? "http://localhost:8000",
+        changeOrigin: false,
+      },
+      "/openapi.json": {
+        target: process.env.API_TARGET ?? "http://localhost:8000",
+        changeOrigin: false,
+      },
     },
   },
 });

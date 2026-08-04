@@ -22,6 +22,7 @@ from app.modules.payroll.schemas import (
 )
 from app.modules.projects.models import Project
 from app.modules.projects.service import get_project
+from app.modules.admin import trash
 
 CENT = Decimal("0.01")
 OT_MULTIPLIER = Decimal("1.5")
@@ -90,10 +91,11 @@ def update_pay_item(db: Session, item_id: uuid.UUID, data: PayItemUpdate) -> Wor
     return item
 
 
-def delete_pay_item(db: Session, item_id: uuid.UUID) -> None:
+def delete_pay_item(db: Session, item_id: uuid.UUID, user=None) -> None:
     item = db.get(WorkerPayItem, item_id)
     if item is None:
         raise NotFoundError("Pay item not found")
+    trash.archive(db, item, entity_type="pay_item", label=item.label, user=user)
     db.delete(item)
 
 
@@ -215,9 +217,16 @@ def update_timesheet(db: Session, timesheet_id: uuid.UUID, data: TimesheetUpdate
     return sheet
 
 
-def delete_timesheet(db: Session, timesheet_id: uuid.UUID) -> None:
+def delete_timesheet(db: Session, timesheet_id: uuid.UUID, user=None) -> None:
     sheet = get_timesheet(db, timesheet_id)
     _require_unpaid(sheet)
+    trash.archive(
+        db,
+        sheet,
+        entity_type="timesheet",
+        label=f"{sheet.worker.full_name} on {sheet.work_date}",
+        user=user,
+    )
     db.delete(sheet)
 
 
@@ -283,10 +292,17 @@ def regenerate_pay_run(db: Session, pay_run_id: uuid.UUID) -> PayRun:
     return get_pay_run(db, run.id)
 
 
-def delete_pay_run(db: Session, pay_run_id: uuid.UUID) -> None:
+def delete_pay_run(db: Session, pay_run_id: uuid.UUID, user=None) -> None:
     run = get_pay_run(db, pay_run_id)
     if run.status != PayRunStatus.draft:
         raise ConflictError("Only draft pay runs can be deleted")
+    trash.archive(
+        db,
+        run,
+        entity_type="pay_run",
+        label=f"{run.doc_number} ({run.period_start} to {run.period_end})",
+        user=user,
+    )
     db.delete(run)
 
 

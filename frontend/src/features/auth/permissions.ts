@@ -46,7 +46,9 @@ const READ_ALL: Permission[] = [
   "valuation:read",
 ];
 
-const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
+/** Exported so Settings can show the same table the app enforces, which
+ *  means the displayed matrix cannot drift from actual behaviour. */
+export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   admin: [
     ...READ_ALL,
     "project:write",

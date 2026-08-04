@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from app.common.enums import IssueSeverity, IssueStatus, UserRole
 from app.common.pagination import PageParamsDep
 from app.common.schemas import Page
-from app.core.deps import DbDep, require_roles
+from app.core.deps import CurrentUser, DbDep, require_roles
 from app.modules.site import service
 from app.modules.site.schemas import (
     DiaryEntryCreate,
@@ -78,8 +78,8 @@ def update_diary_entry(entry_id: uuid.UUID, body: DiaryEntryUpdate, db: DbDep) -
 
 
 @router.delete("/diary/{entry_id}", status_code=204, dependencies=[site_write])
-def delete_diary_entry(entry_id: uuid.UUID, db: DbDep) -> None:
-    service.delete_diary_entry(db, entry_id)
+def delete_diary_entry(entry_id: uuid.UUID, db: DbDep, user: CurrentUser) -> None:
+    service.delete_diary_entry(db, entry_id, user)
 
 
 @router.get("/projects/{project_id}/issues", response_model=Page[SiteIssueRead])

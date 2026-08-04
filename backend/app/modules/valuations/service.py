@@ -22,6 +22,7 @@ from app.modules.valuations.schemas import (
     ValuationDetail,
     ValuationUpdate,
 )
+from app.modules.admin import trash
 
 ZERO = Decimal("0")
 CENT = Decimal("0.01")
@@ -203,9 +204,16 @@ def update_valuation(
     return valuation
 
 
-def delete_valuation(db: Session, valuation_id: uuid.UUID) -> None:
+def delete_valuation(db: Session, valuation_id: uuid.UUID, user=None) -> None:
     valuation = get_valuation(db, valuation_id)
     _require_status(valuation, ValuationStatus.draft, "deleted")
+    trash.archive(
+        db,
+        valuation,
+        entity_type="valuation",
+        label=f"{valuation.doc_number} to {valuation.period_end}",
+        user=user,
+    )
     db.delete(valuation)
 
 
@@ -249,6 +257,18 @@ def issue_valuation(
     )
     valuation.status = ValuationStatus.issued
     valuation.issued_date = issued_date or date.today()
+    from app.modules.admin import service as admin
+    from app.modules.users.models import User
+
+    admin.record(
+        db,
+        db.get(User, actor_id) if actor_id else None,
+        "valuation_issued",
+        f"Issued {valuation.doc_number} for {valuation.net_certified} net",
+        entity_type="valuation",
+        entity_id=valuation.id,
+        link_path=f"/valuations/{valuation.id}",
+    )
     _notify_valuation(db, valuation, "issued", actor_id)
     return valuation
 

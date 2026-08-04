@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from app.common.enums import UserRole
 from app.common.pagination import PageParamsDep
 from app.common.schemas import Page
-from app.core.deps import DbDep, require_roles
+from app.core.deps import CurrentUser, DbDep, require_roles
 from app.modules.boq.models import BoqItem
 from app.modules.costs import service
 from app.modules.costs.schemas import CostEntryCreate, CostEntryRead, CostEntryUpdate
@@ -62,5 +62,5 @@ def update_cost_entry(entry_id: uuid.UUID, body: CostEntryUpdate, db: DbDep) -> 
 
 
 @router.delete("/cost-entries/{entry_id}", status_code=204, dependencies=[cost_write])
-def delete_cost_entry(entry_id: uuid.UUID, db: DbDep) -> None:
-    service.delete_entry(db, entry_id)
+def delete_cost_entry(entry_id: uuid.UUID, db: DbDep, user: CurrentUser) -> None:
+    service.delete_entry(db, entry_id, user)

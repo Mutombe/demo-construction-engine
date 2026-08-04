@@ -7,6 +7,7 @@ from app.core.exceptions import ConflictError, NotFoundError
 from app.modules.clients.models import Client
 from app.modules.clients.schemas import ClientCreate, ClientUpdate
 from app.modules.projects.models import Project
+from app.modules.admin import trash
 
 
 def list_clients(
@@ -52,7 +53,7 @@ def update_client(db: Session, client_id: uuid.UUID, data: ClientUpdate) -> Clie
     return client
 
 
-def delete_client(db: Session, client_id: uuid.UUID) -> None:
+def delete_client(db: Session, client_id: uuid.UUID, user=None) -> None:
     client = get_client(db, client_id)
     project_count = (
         db.scalar(select(func.count()).select_from(Project).where(Project.client_id == client_id))
@@ -60,4 +61,5 @@ def delete_client(db: Session, client_id: uuid.UUID) -> None:
     )
     if project_count > 0:
         raise ConflictError(f"Client has {project_count} project(s) and cannot be deleted")
+    trash.archive(db, client, entity_type="client", label=client.name, user=user)
     db.delete(client)

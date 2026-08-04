@@ -19,6 +19,7 @@ from app.modules.projects.schemas import (
     ProjectUpdate,
 )
 from app.modules.tasks.models import Task
+from app.modules.admin import trash
 
 
 def generate_project_code(db: Session) -> str:
@@ -97,7 +98,7 @@ def update_project(db: Session, project_id: uuid.UUID, data: ProjectUpdate) -> P
     return project
 
 
-def delete_project(db: Session, project_id: uuid.UUID) -> None:
+def delete_project(db: Session, project_id: uuid.UUID, user=None) -> None:
     project = get_project(db, project_id)
     task_count = (
         db.scalar(select(func.count()).select_from(Task).where(Task.project_id == project_id)) or 0
@@ -111,6 +112,14 @@ def delete_project(db: Session, project_id: uuid.UUID) -> None:
             "Project has tasks or BOQ data. Cancel it instead of deleting, "
             "or remove its contents first."
         )
+    trash.archive(
+        db,
+        project,
+        entity_type="project",
+        label=f"{project.code} {project.name}",
+        user=user,
+        project_id=project.id,
+    )
     db.delete(project)
 
 
@@ -269,8 +278,10 @@ def update_phase(db: Session, phase_id: uuid.UUID, data: PhaseUpdate) -> Phase:
     return phase
 
 
-def delete_phase(db: Session, phase_id: uuid.UUID) -> None:
-    db.delete(get_phase(db, phase_id))
+def delete_phase(db: Session, phase_id: uuid.UUID, user=None) -> None:
+    phase = get_phase(db, phase_id)
+    trash.archive(db, phase, entity_type="phase", label=phase.name, user=user)
+    db.delete(phase)
 
 
 def reorder_phases(db: Session, project_id: uuid.UUID, phase_ids: list[uuid.UUID]) -> list[Phase]:

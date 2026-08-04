@@ -27,6 +27,7 @@ from app.modules.costs import service as costs_service
 from app.modules.costs.models import CostEntry
 from app.modules.procurement.models import PoItem, PurchaseOrder
 from app.modules.projects.service import get_project
+from app.modules.admin import trash
 
 ZERO = Decimal("0")
 
@@ -122,8 +123,16 @@ def update_section(db: Session, section_id: uuid.UUID, data: BoqSectionUpdate) -
     return section
 
 
-def delete_section(db: Session, section_id: uuid.UUID) -> None:
-    db.delete(get_section(db, section_id))
+def delete_section(db: Session, section_id: uuid.UUID, user=None) -> None:
+    section = get_section(db, section_id)
+    trash.archive(
+        db,
+        section,
+        entity_type="boq_section",
+        label=f"{section.code} {section.title}",
+        user=user,
+    )
+    db.delete(section)
 
 
 # --- Items -----------------------------------------------------------------
@@ -176,8 +185,16 @@ def update_item(db: Session, item_id: uuid.UUID, data: BoqItemUpdate) -> BoqItem
     return item
 
 
-def delete_item(db: Session, item_id: uuid.UUID) -> None:
-    db.delete(get_item(db, item_id))
+def delete_item(db: Session, item_id: uuid.UUID, user=None) -> None:
+    item = get_item(db, item_id)
+    trash.archive(
+        db,
+        item,
+        entity_type="boq_item",
+        label=f"{item.item_code} {item.description}"[:200],
+        user=user,
+    )
+    db.delete(item)
 
 
 # --- Summary ---------------------------------------------------------------

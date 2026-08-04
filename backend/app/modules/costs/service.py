@@ -11,6 +11,7 @@ from app.modules.boq.models import BoqItem
 from app.modules.costs.models import CostEntry
 from app.modules.costs.schemas import CostEntryCreate, CostEntryUpdate
 from app.modules.projects.service import get_project
+from app.modules.admin import trash
 
 
 def list_entries(
@@ -76,8 +77,16 @@ def update_entry(db: Session, entry_id: uuid.UUID, data: CostEntryUpdate) -> Cos
     return entry
 
 
-def delete_entry(db: Session, entry_id: uuid.UUID) -> None:
-    db.delete(get_entry(db, entry_id))
+def delete_entry(db: Session, entry_id: uuid.UUID, user=None) -> None:
+    entry = get_entry(db, entry_id)
+    trash.archive(
+        db,
+        entry,
+        entity_type="cost_entry",
+        label=f"{entry.description} ({entry.amount})",
+        user=user,
+    )
+    db.delete(entry)
 
 
 # --- Committed costs ---------------------------------------------------------

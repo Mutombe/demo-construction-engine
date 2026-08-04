@@ -15,6 +15,7 @@ from app.modules.site.schemas import (
     SiteIssueResolve,
     SiteIssueUpdate,
 )
+from app.modules.admin import trash
 
 # --- Diary ------------------------------------------------------------------
 
@@ -87,8 +88,16 @@ def update_diary_entry(db: Session, entry_id: uuid.UUID, data: DiaryEntryUpdate)
     return entry
 
 
-def delete_diary_entry(db: Session, entry_id: uuid.UUID) -> None:
-    db.delete(get_diary_entry(db, entry_id))
+def delete_diary_entry(db: Session, entry_id: uuid.UUID, user=None) -> None:
+    entry = get_diary_entry(db, entry_id)
+    trash.archive(
+        db,
+        entry,
+        entity_type="diary_entry",
+        label=f"Site diary for {entry.entry_date}",
+        user=user,
+    )
+    db.delete(entry)
 
 
 # --- Issues -----------------------------------------------------------------

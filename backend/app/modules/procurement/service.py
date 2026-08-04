@@ -38,6 +38,7 @@ from app.modules.procurement.schemas import (
     SupplierUpdate,
 )
 from app.modules.projects.service import get_project
+from app.modules.admin import trash
 
 ZERO = Decimal("0")
 
@@ -230,9 +231,10 @@ def issue_rfq(db: Session, rfq_id: uuid.UUID) -> Rfq:
     return rfq
 
 
-def delete_rfq(db: Session, rfq_id: uuid.UUID) -> None:
+def delete_rfq(db: Session, rfq_id: uuid.UUID, user=None) -> None:
     rfq = get_rfq(db, rfq_id)
     _require_draft(rfq)
+    trash.archive(db, rfq, entity_type="rfq", label=f"{rfq.doc_number} {rfq.title}", user=user)
     db.delete(rfq)
 
 
@@ -354,10 +356,18 @@ def update_quote(db: Session, quote_id: uuid.UUID, data: QuoteUpdate) -> Quote:
     return quote
 
 
-def delete_quote(db: Session, quote_id: uuid.UUID) -> None:
+def delete_quote(db: Session, quote_id: uuid.UUID, user=None) -> None:
     quote = get_quote(db, quote_id)
     if quote.status != QuoteStatus.received:
         raise ConflictError("Accepted or rejected quotes cannot be deleted")
+    trash.archive(
+        db,
+        quote,
+        entity_type="quote",
+        label=f"Quote from {quote.supplier.name} on {quote.rfq.doc_number}",
+        user=user,
+        project_id=quote.rfq.project_id,
+    )
     db.delete(quote)
 
 
@@ -571,11 +581,23 @@ def update_po(db: Session, po_id: uuid.UUID, data: PoUpdate) -> PurchaseOrder:
     return po
 
 
-def issue_po(db: Session, po_id: uuid.UUID) -> PurchaseOrder:
+def issue_po(db: Session, po_id: uuid.UUID, actor=None) -> PurchaseOrder:
     po = get_po(db, po_id)
     if po.status != PoStatus.draft:
         raise ConflictError("Only draft purchase orders can be issued")
     po.status = PoStatus.issued
+    from app.modules.admin import service as admin
+
+    admin.record(
+        db,
+        actor,
+        "po_issued",
+        f"Issued {po.doc_number} to {po.supplier.name if po.supplier else 'supplier'} "
+        f"for {po.total_amount}",
+        entity_type="purchase_order",
+        entity_id=po.id,
+        link_path=f"/procurement/pos/{po.id}",
+    )
     return po
 
 

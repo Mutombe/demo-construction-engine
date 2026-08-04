@@ -18,6 +18,7 @@ from app.common.enums import MediaFolder
 from app.core.config import settings
 from app.core.exceptions import ForbiddenError, NotFoundError, ValidationFailedError
 from app.modules.media.models import MediaFile
+from app.modules.admin import trash
 
 ACCEPTED_TYPES: dict[str, str] = {
     "image/jpeg": ".jpg",
@@ -227,12 +228,16 @@ def delete_media(db: Session, media_id: uuid.UUID, user) -> None:
         and media.created_by != user.id
     ):
         raise ForbiddenError("Only the uploader or a project manager can delete this file")
-    for rel in (media.file_path, media.thumb_path):
-        if rel:
-            try:
-                (_media_root() / rel).unlink(missing_ok=True)
-            except OSError:
-                pass  # best-effort cleanup; the DB row is the source of truth
+    # The file itself stays on disk while the row sits in the trash, otherwise
+    # restoring would hand back a document with nothing behind it. Emptying the
+    # trash is what finally removes it.
+    trash.archive(
+        db,
+        media,
+        entity_type="document",
+        label=media.caption or media.original_filename,
+        user=user,
+    )
     db.delete(media)
 
 

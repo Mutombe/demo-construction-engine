@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from app.common.enums import UserRole
 from app.common.pagination import PageParamsDep
 from app.common.schemas import Page
-from app.core.deps import DbDep, require_roles
+from app.core.deps import CurrentUser, DbDep, require_roles
 from app.modules.clients import service
 from app.modules.clients.schemas import ClientCreate, ClientRead, ClientUpdate
 
@@ -43,5 +43,5 @@ def update_client(client_id: uuid.UUID, body: ClientUpdate, db: DbDep) -> Client
 
 
 @router.delete("/{client_id}", status_code=204, dependencies=[pm_write])
-def delete_client(client_id: uuid.UUID, db: DbDep) -> None:
-    service.delete_client(db, client_id)
+def delete_client(client_id: uuid.UUID, db: DbDep, user: CurrentUser) -> None:
+    service.delete_client(db, client_id, user)

@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { AddressBook, Buildings, CaretDoubleLeft, CaretDoubleRight, ChartBar, ClipboardText, Gear, MagnifyingGlass, HardHat, MapTrifold, Money, Package, Receipt, ShoppingCart, SignOut, SquaresFour, Tray } from "@phosphor-icons/react";
+import { AddressBook, Buildings, CaretDoubleLeft, CaretDoubleRight, ChartBar, ClipboardText, Gear, MagnifyingGlass, HardHat, MapTrifold, Money, Package, Receipt, ShieldCheck, ShoppingCart, SignOut, SquaresFour, Tray } from "@phosphor-icons/react";
 import { ClaudeIcon } from "@/components/ui/claude-icon";
 import type { ReactNode } from "react";
 import { create } from "zustand";
@@ -269,17 +269,28 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="space-y-0.5 px-2 pb-2">
           {can(user?.role, "users:manage") && (
             <Link
-              to="/settings/users"
-              title={collapsed ? "Settings" : undefined}
+              to="/admin"
+              title={collapsed ? "Administration" : "People, invites and the activity log"}
               className={cn(
                 "flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-colors hover:bg-sidebar-accent [&_svg]:size-4.5 [&_svg]:shrink-0",
-                pathname.startsWith("/settings") && "bg-sidebar-accent font-medium",
+                pathname.startsWith("/admin") && "bg-sidebar-accent font-medium",
               )}
             >
-              <Gear />
-              {!collapsed && <span>Settings</span>}
+              <ShieldCheck />
+              {!collapsed && <span>Administration</span>}
             </Link>
           )}
+          <Link
+            to="/settings"
+            title={collapsed ? "Settings" : "Your profile, appearance and integrations"}
+            className={cn(
+              "flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-colors hover:bg-sidebar-accent [&_svg]:size-4.5 [&_svg]:shrink-0",
+              pathname.startsWith("/settings") && "bg-sidebar-accent font-medium",
+            )}
+          >
+            <Gear />
+            {!collapsed && <span>Settings</span>}
+          </Link>
           <button
             onClick={toggle}
             className="flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-sm text-sidebar-muted transition-colors hover:bg-sidebar-accent [&_svg]:size-4.5"

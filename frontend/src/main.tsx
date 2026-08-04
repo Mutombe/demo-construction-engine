@@ -4,9 +4,13 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { ConfirmHost } from "@/components/ui/confirm";
 import { restoreSession } from "@/features/auth/api";
+import { initTheme } from "@/features/settings/theme";
 import { Toaster } from "@/lib/toast";
 import { routeTree } from "./routeTree.gen";
 import "./index.css";
+
+// Before React renders, so there is no flash of the wrong theme
+initTheme();
 
 const queryClient = new QueryClient({
   defaultOptions: {

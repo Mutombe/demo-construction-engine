@@ -153,13 +153,25 @@ def test_delete_rules_and_disk_cleanup(client, db, media_root):
     res = client.delete(f"/api/v1/media/{uploaded['id']}", headers=auth_headers(site_b))
     assert res.status_code == 403
 
-    # The uploader can; the file disappears from disk too
+    # The uploader can. The file stays on disk while the record sits in the
+    # trash, because restoring a document with nothing behind it is worse than
+    # not offering restore at all.
     stored = list((media_root / "library").rglob("*.txt"))
     assert len(stored) == 1
     res = client.delete(f"/api/v1/media/{uploaded['id']}", headers=auth_headers(site_a))
     assert res.status_code == 204
-    assert not stored[0].exists()
+    assert stored[0].exists()
     assert client.get(f"/api/v1/media/{uploaded['id']}/file", headers=pm).status_code == 404
+
+    # Emptying the trash is what finally takes the file with it
+    admin = auth_headers(make_user(db, role=UserRole.admin))
+    entry = next(
+        e
+        for e in client.get("/api/v1/admin/trash", headers=admin).json()["items"]
+        if e["entity_id"] == uploaded["id"]
+    )
+    assert client.delete(f"/api/v1/admin/trash/{entry['id']}", headers=admin).status_code == 204
+    assert not stored[0].exists()
 
 
 def test_search_by_filename_and_caption(client, db):

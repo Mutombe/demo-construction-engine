@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.deps import get_current_user
 from app.core.exceptions import register_exception_handlers
+from app.modules.admin.router import public_router as invites_public_router
+from app.modules.admin.router import router as admin_router
 from app.modules.ai.router import router as ai_router
 from app.modules.auth.router import router as auth_router
 from app.modules.boq.router import router as boq_router
@@ -55,6 +57,9 @@ def create_app() -> FastAPI:
 
     api = APIRouter(prefix="/api/v1")
     api.include_router(auth_router)  # login/refresh are anonymous by design
+    # Accepting an invite happens before the account exists, so it cannot sit
+    # behind authentication. The single-use hashed token is the credential.
+    api.include_router(invites_public_router)
 
     # Authenticated by default: anonymous access is impossible by omission
     protected = APIRouter(dependencies=[Depends(get_current_user)])
@@ -79,6 +84,7 @@ def create_app() -> FastAPI:
     protected.include_router(search_router)
     protected.include_router(ingestion_router)
     protected.include_router(ai_router)
+    protected.include_router(admin_router)
     protected.include_router(company_router)
     api.include_router(protected)
 

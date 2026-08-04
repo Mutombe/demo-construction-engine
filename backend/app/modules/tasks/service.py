@@ -25,6 +25,7 @@ from app.modules.tasks.schemas import (
     TaskUpdate,
 )
 from app.modules.users.models import User
+from app.modules.admin import trash
 
 
 def list_tasks(
@@ -116,8 +117,10 @@ def update_task(db: Session, task_id: uuid.UUID, data: TaskUpdate) -> Task:
     return task
 
 
-def delete_task(db: Session, task_id: uuid.UUID) -> None:
-    db.delete(get_task(db, task_id))
+def delete_task(db: Session, task_id: uuid.UUID, user=None) -> None:
+    task = get_task(db, task_id)
+    trash.archive(db, task, entity_type="task", label=task.name, user=user)
+    db.delete(task)
 
 
 def _validate_task_refs(

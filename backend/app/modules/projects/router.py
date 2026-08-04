@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from app.common.enums import ProjectStatus, UserRole
 from app.common.pagination import PageParamsDep
 from app.common.schemas import Page
-from app.core.deps import DbDep, require_roles
+from app.core.deps import CurrentUser, DbDep, require_roles
 from app.modules.projects import service
 from app.modules.projects.schemas import (
     PhaseCreate,
@@ -80,8 +80,8 @@ def update_project(project_id: uuid.UUID, body: ProjectUpdate, db: DbDep) -> Pro
     status_code=204,
     dependencies=[Depends(require_roles())],  # admin only
 )
-def delete_project(project_id: uuid.UUID, db: DbDep) -> None:
-    service.delete_project(db, project_id)
+def delete_project(project_id: uuid.UUID, db: DbDep, user: CurrentUser) -> None:
+    service.delete_project(db, project_id, user)
 
 
 @router.get("/projects/{project_id}/summary", response_model=ProjectSummary)
@@ -124,5 +124,5 @@ def update_phase(phase_id: uuid.UUID, body: PhaseUpdate, db: DbDep) -> PhaseRead
 
 
 @router.delete("/phases/{phase_id}", status_code=204, dependencies=[pm_write])
-def delete_phase(phase_id: uuid.UUID, db: DbDep) -> None:
-    service.delete_phase(db, phase_id)
+def delete_phase(phase_id: uuid.UUID, db: DbDep, user: CurrentUser) -> None:
+    service.delete_phase(db, phase_id, user)

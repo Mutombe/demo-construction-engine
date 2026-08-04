@@ -151,6 +151,17 @@ def approve_claim(db: Session, claim_id: uuid.UUID, approver: User) -> ExpenseCl
     claim.approved_by = approver.id
     claim.decided_at = datetime.now(UTC)
     claim.cost_entry_id = entry.id
+    from app.modules.admin import service as admin
+
+    admin.record(
+        db,
+        approver,
+        "expense_approved",
+        f"Approved {claim.doc_number} for {claim.amount}",
+        entity_type="expense",
+        entity_id=claim.id,
+        link_path=f"/expenses/{claim.id}",
+    )
     notifications.notify(
         db,
         [claim.created_by],

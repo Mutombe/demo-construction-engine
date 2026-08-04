@@ -3,7 +3,7 @@ import uuid
 from fastapi import APIRouter, Depends
 
 from app.common.enums import UserRole
-from app.core.deps import DbDep, require_roles
+from app.core.deps import CurrentUser, DbDep, require_roles
 from app.modules.boq import service
 from app.modules.boq.schemas import (
     BoqItemCreate,
@@ -68,8 +68,8 @@ def update_section(section_id: uuid.UUID, body: BoqSectionUpdate, db: DbDep) -> 
 
 
 @router.delete("/boq/sections/{section_id}", status_code=204, dependencies=[boq_write])
-def delete_section(section_id: uuid.UUID, db: DbDep) -> None:
-    service.delete_section(db, section_id)
+def delete_section(section_id: uuid.UUID, db: DbDep, user: CurrentUser) -> None:
+    service.delete_section(db, section_id, user)
 
 
 @router.post("/boq/sections/{section_id}/items", response_model=BoqItemRead, status_code=201)
@@ -88,5 +88,5 @@ def update_item(item_id: uuid.UUID, body: BoqItemUpdate, db: DbDep) -> BoqItemRe
 
 
 @router.delete("/boq/items/{item_id}", status_code=204, dependencies=[boq_write])
-def delete_item(item_id: uuid.UUID, db: DbDep) -> None:
-    service.delete_item(db, item_id)
+def delete_item(item_id: uuid.UUID, db: DbDep, user: CurrentUser) -> None:
+    service.delete_item(db, item_id, user)
