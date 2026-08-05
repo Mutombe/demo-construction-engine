@@ -38,6 +38,7 @@ import type {
   BoqTree,
   BudgetAlert,
   BudgetAlertsParams,
+  CalendarPayload,
   CashflowForecast,
   CashflowForecastParams,
   ChatRequest,
@@ -82,6 +83,7 @@ import type {
   FinancialTrendParams,
   FolderCounts,
   GanttPayload,
+  GetCalendarParams,
   GetDemandForecastParams,
   GetInventoryAnalyticsParams,
   GetItemConsumptionParams,
@@ -2575,6 +2577,101 @@ export const useCreateTask = <TError = HTTPValidationError,
     }
 
 /**
+ * Every tag in use on this project, so filters offer real options rather
+ * than asking people to remember what they typed.
+ * @summary List Project Tags
+ */
+export const listProjectTags = (
+    projectId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<string[]>(
+      {url: `/api/v1/projects/${projectId}/tags`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getListProjectTagsQueryKey = (projectId: string,) => {
+    return [
+    `/api/v1/projects/${projectId}/tags`
+    ] as const;
+    }
+
+
+export const getListProjectTagsQueryOptions = <TData = Awaited<ReturnType<typeof listProjectTags>>, TError = HTTPValidationError>(projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectTags>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListProjectTagsQueryKey(projectId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectTags>>> = ({ signal }) => listProjectTags(projectId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: projectId !== null && projectId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listProjectTags>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListProjectTagsQueryResult = NonNullable<Awaited<ReturnType<typeof listProjectTags>>>
+export type ListProjectTagsQueryError = HTTPValidationError
+
+
+export function useListProjectTags<TData = Awaited<ReturnType<typeof listProjectTags>>, TError = HTTPValidationError>(
+ projectId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectTags>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectTags>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectTags>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListProjectTags<TData = Awaited<ReturnType<typeof listProjectTags>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectTags>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectTags>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectTags>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListProjectTags<TData = Awaited<ReturnType<typeof listProjectTags>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectTags>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Project Tags
+ */
+
+export function useListProjectTags<TData = Awaited<ReturnType<typeof listProjectTags>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjectTags>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListProjectTagsQueryOptions(projectId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
  * @summary Get Gantt
  */
 export const getGantt = (
@@ -3322,6 +3419,101 @@ export function useGetWorkload<TData = Awaited<ReturnType<typeof getWorkload>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetWorkloadQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Defaults to the current calendar month.
+ * @summary Get Calendar
+ */
+export const getCalendar = (
+    params?: GetCalendarParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<CalendarPayload>(
+      {url: `/api/v1/calendar`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getGetCalendarQueryKey = (params?: GetCalendarParams,) => {
+    return [
+    `/api/v1/calendar`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetCalendarQueryOptions = <TData = Awaited<ReturnType<typeof getCalendar>>, TError = HTTPValidationError>(params?: GetCalendarParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCalendar>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCalendarQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCalendar>>> = ({ signal }) => getCalendar(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCalendar>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCalendarQueryResult = NonNullable<Awaited<ReturnType<typeof getCalendar>>>
+export type GetCalendarQueryError = HTTPValidationError
+
+
+export function useGetCalendar<TData = Awaited<ReturnType<typeof getCalendar>>, TError = HTTPValidationError>(
+ params: undefined |  GetCalendarParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCalendar>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCalendar>>,
+          TError,
+          Awaited<ReturnType<typeof getCalendar>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCalendar<TData = Awaited<ReturnType<typeof getCalendar>>, TError = HTTPValidationError>(
+ params?: GetCalendarParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCalendar>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCalendar>>,
+          TError,
+          Awaited<ReturnType<typeof getCalendar>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCalendar<TData = Awaited<ReturnType<typeof getCalendar>>, TError = HTTPValidationError>(
+ params?: GetCalendarParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCalendar>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Calendar
+ */
+
+export function useGetCalendar<TData = Awaited<ReturnType<typeof getCalendar>>, TError = HTTPValidationError>(
+ params?: GetCalendarParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCalendar>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCalendarQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

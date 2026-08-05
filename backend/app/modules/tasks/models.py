@@ -16,10 +16,11 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.common.enums import DependencyType, WorkStatus
+from app.common.enums import DependencyType, TaskPriority, WorkStatus
 from app.common.models import AuditMixin, TimestampMixin, UUIDPrimaryKeyMixin
 from app.core.database import Base
 
@@ -39,6 +40,23 @@ class Task(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
     )
     phase_id: Mapped[uuid.UUID | None] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("phases.id", ondelete="SET NULL"), index=True
+    )
+    # A subtask is just a task with a parent. Depth is capped at one level in
+    # the service: "break this into steps" is the need, and an arbitrary tree
+    # makes the Gantt and the critical path meaningless.
+    parent_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("tasks.id", ondelete="CASCADE"), index=True
+    )
+    priority: Mapped[TaskPriority] = mapped_column(
+        Enum(TaskPriority, name="task_priority", native_enum=True),
+        default=TaskPriority.normal,
+        server_default=TaskPriority.normal.value,
+    )
+    # A plain array rather than a tag table: tags here are free labels for
+    # filtering, they carry no data of their own and never need renaming in
+    # one place.
+    tags: Mapped[list[str]] = mapped_column(
+        ARRAY(String(40)), default=list, server_default="{}"
     )
     wbs_code: Mapped[str | None] = mapped_column(String(30))
     name: Mapped[str] = mapped_column(String(200))

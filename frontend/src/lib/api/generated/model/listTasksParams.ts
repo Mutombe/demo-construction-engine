@@ -4,10 +4,15 @@
  * Construction ERP API
  * OpenAPI spec version: 0.1.0
  */
+import type { TaskPriority } from './taskPriority.ts';
 import type { WorkStatus } from './workStatus.ts';
 
 export type ListTasksParams = {
 phase_id?: string | null;
 status?: WorkStatus | null;
 assignee_id?: string | null;
+priority?: TaskPriority | null;
+tag?: string | null;
+parent_id?: string | null;
+top_level_only?: boolean;
 };

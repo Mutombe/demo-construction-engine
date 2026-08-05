@@ -19,9 +19,11 @@ import {
 } from "@/components/ui/table";
 import { usePermission } from "@/features/auth/hooks";
 import { WorkStatusBadge } from "@/features/projects/StatusBadge";
+import { TaskBoard } from "@/features/tasks/TaskBoard";
 import { TaskFormDialog } from "@/features/tasks/TaskFormDialog";
 import {
   useDeleteTask,
+  useListProjectTags,
   useListTasks,
   useUpdateTask,
 } from "@/lib/api/generated/endpoints";
@@ -43,6 +45,10 @@ function TasksTab() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<TaskListItem | null>(null);
+  const [view, setView] = useState<"board" | "list">("board");
+  const [priority, setPriority] = useState("");
+  const [tag, setTag] = useState("");
+  const { data: projectTags } = useListProjectTags(projectId);
 
   const today = new Date().toISOString().slice(0, 10);
 
@@ -73,11 +79,57 @@ function TasksTab() {
     }
   };
 
+  const openEditor = (task: TaskListItem) => {
+    setEditing(task);
+    setDialogOpen(true);
+  };
+
+  const visible = (tasks ?? []).filter(
+    (task) =>
+      (priority === "" || task.priority === priority) &&
+      (tag === "" || (task.tags ?? []).includes(tag)),
+  );
+
   return (
     <div>
-      <div className="mb-3 flex justify-end">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <div className="flex rounded-md border p-0.5">
+          {(["board", "list"] as const).map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setView(option)}
+              className={cn(
+                "rounded px-2.5 py-1 text-xs font-medium capitalize transition-colors",
+                view === option
+                  ? "bg-secondary text-secondary-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+        <Select className="w-40" value={priority} onChange={(e) => setPriority(e.target.value)}>
+          <option value="">Any priority</option>
+          <option value="urgent">Urgent</option>
+          <option value="high">High</option>
+          <option value="normal">Normal</option>
+          <option value="low">Low</option>
+        </Select>
+        {projectTags && projectTags.length > 0 && (
+          <Select className="w-40" value={tag} onChange={(e) => setTag(e.target.value)}>
+            <option value="">Any tag</option>
+            {projectTags.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </Select>
+        )}
         <Can perm="task:write">
           <Button
+            className="ml-auto"
             onClick={() => {
               setEditing(null);
               setDialogOpen(true);
@@ -88,7 +140,11 @@ function TasksTab() {
         </Can>
       </div>
 
-      <div className="rounded-lg border bg-card">
+      {view === "board" && (
+        <TaskBoard tasks={visible} canWrite={canWrite} onOpen={openEditor} />
+      )}
+
+      <div className={cn("rounded-lg border bg-card", view !== "list" && "hidden")}>
         <Table>
           <TableHeader>
             <TableRow>
@@ -104,14 +160,14 @@ function TasksTab() {
           </TableHeader>
           <TableBody>
             {isLoading && <TableSkeleton columns={canWrite ? 8 : 7} rows={6} />}
-            {!isLoading && !tasks?.length && (
+            {!isLoading && visible.length === 0 && (
               <TableRow>
                 <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
                   No tasks yet.
                 </TableCell>
               </TableRow>
             )}
-            {tasks?.map((task) => {
+            {visible.map((task) => {
               const isOverdue =
                 task.planned_end &&
                 task.planned_end < today &&

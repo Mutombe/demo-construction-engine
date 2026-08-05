@@ -19,6 +19,7 @@ import {
   useAddDependency,
   useCreateTask,
   useListPhases,
+  useListTasks,
   useListUsers,
   useRemoveDependency,
   useUpdateTask,
@@ -30,6 +31,9 @@ import { STATUS_LABELS } from "@/lib/format";
 const schema = z.object({
   name: z.string().min(1, "Required"),
   wbs_code: z.string().optional(),
+  priority: z.string().optional(),
+  tags: z.string().optional(),
+  parent_id: z.string().optional(),
   phase_id: z.string().optional(),
   assignee_id: z.string().optional(),
   status: z.enum(["not_started", "in_progress", "blocked", "done", "cancelled"]),
@@ -57,6 +61,8 @@ export function TaskFormDialog({
   const queryClient = useQueryClient();
   const isAdmin = usePermission("users:manage");
   const { data: phases } = useListPhases(projectId, { query: { enabled: open } });
+  // Only top-level tasks can be a parent, so the list is filtered at render.
+  const { data: siblings } = useListTasks(projectId, undefined, { query: { enabled: open } });
   const { data: users } = useListUsers(
     { page_size: 200 },
     { query: { enabled: open && isAdmin } },
@@ -78,6 +84,9 @@ export function TaskFormDialog({
       reset({
         name: task?.name ?? "",
         wbs_code: task?.wbs_code ?? "",
+        priority: task?.priority ?? "normal",
+        tags: (task?.tags ?? []).join(", "),
+        parent_id: task?.parent_id ?? "",
         phase_id: task?.phase_id ?? "",
         assignee_id: task?.assignee_id ?? "",
         status: (task?.status as FormValues["status"]) ?? "not_started",
@@ -94,6 +103,13 @@ export function TaskFormDialog({
     const payload = {
       name: values.name,
       wbs_code: values.wbs_code || null,
+      priority: (values.priority || "normal") as never,
+      parent_id: values.parent_id || null,
+      tags: (values.tags ?? "")
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean)
+        .slice(0, 12),
       phase_id: values.phase_id || null,
       assignee_id: values.assignee_id || null,
       status: values.status,
@@ -180,6 +196,33 @@ export function TaskFormDialog({
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="t-priority">Priority</Label>
+              <Select id="t-priority" {...register("priority")}>
+                <option value="low">Low</option>
+                <option value="normal">Normal</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="t-parent">Subtask Of</Label>
+              <Select id="t-parent" {...register("parent_id")}>
+                <option value="">Not a subtask</option>
+                {(siblings ?? [])
+                  .filter((t) => t.id !== task?.id && !t.parent_id)
+                  .map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+              </Select>
+            </div>
+            <div className="col-span-2 space-y-1.5">
+              <Label htmlFor="t-tags">Tags</Label>
+              <Input id="t-tags" placeholder="concrete, critical" {...register("tags")} />
+              <p className="text-xs text-muted-foreground">Separate with commas</p>
+            </div>
             <div className="space-y-1.5">
               <Label htmlFor="t-status">Status</Label>
               <Select id="t-status" {...register("status")}>

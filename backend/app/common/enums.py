@@ -25,6 +25,13 @@ class WorkStatus(StrEnum):
     cancelled = "cancelled"
 
 
+class TaskPriority(StrEnum):
+    low = "low"
+    normal = "normal"
+    high = "high"
+    urgent = "urgent"
+
+
 class DependencyType(StrEnum):
     FS = "FS"  # finish-to-start
     SS = "SS"  # start-to-start

@@ -4,7 +4,7 @@ from collections import defaultdict
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
-from app.common.enums import WorkStatus
+from app.common.enums import TaskPriority, WorkStatus
 from app.core.exceptions import (
     ConflictError,
     DependencyCycleError,
@@ -34,6 +34,10 @@ def list_tasks(
     phase_id: uuid.UUID | None = None,
     status: WorkStatus | None = None,
     assignee_id: uuid.UUID | None = None,
+    priority: TaskPriority | None = None,
+    tag: str | None = None,
+    parent_id: uuid.UUID | None = None,
+    top_level_only: bool = False,
 ) -> list[Task]:
     get_project(db, project_id)
     query = (
@@ -47,6 +51,14 @@ def list_tasks(
         query = query.where(Task.status == status)
     if assignee_id is not None:
         query = query.where(Task.assignee_id == assignee_id)
+    if priority is not None:
+        query = query.where(Task.priority == priority)
+    if tag:
+        query = query.where(Task.tags.any(tag))
+    if parent_id is not None:
+        query = query.where(Task.parent_id == parent_id)
+    elif top_level_only:
+        query = query.where(Task.parent_id.is_(None))
     return list(db.scalars(query.order_by(Task.sort_order, Task.created_at)))
 
 
@@ -89,15 +101,43 @@ def create_task(
     get_project(db, project_id)
     _validate_task_refs(db, project_id, data.phase_id, data.assignee_id)
     _validate_wbs_unique(db, project_id, data.wbs_code)
+    _validate_parent(db, None, data.parent_id, project_id)
     task = Task(**data.model_dump(), project_id=project_id, created_by=created_by)
     db.add(task)
     db.flush()
     return get_task(db, task.id)
 
 
+def _validate_parent(db: Session, task: Task | None, parent_id, project_id) -> None:
+    """A subtask hangs off exactly one task, in the same project, one level deep.
+
+    Deeper nesting would make the Gantt bars and the critical path meaningless,
+    and the need people actually have is "break this into steps".
+    """
+    if parent_id is None:
+        return
+    if task is not None and parent_id == task.id:
+        raise ValidationFailedError("A task cannot be its own parent")
+    parent = db.get(Task, parent_id)
+    if parent is None:
+        raise NotFoundError("Parent task not found")
+    if parent.project_id != project_id:
+        raise ValidationFailedError("The parent task belongs to a different project")
+    if parent.parent_id is not None:
+        raise ValidationFailedError("Subtasks cannot be nested more than one level")
+    if task is not None and db.scalar(
+        select(func.count()).select_from(Task).where(Task.parent_id == task.id)
+    ):
+        raise ValidationFailedError(
+            "This task has subtasks of its own, so it cannot become a subtask"
+        )
+
+
 def update_task(db: Session, task_id: uuid.UUID, data: TaskUpdate) -> Task:
     task = get_task(db, task_id)
     updates = data.model_dump(exclude_unset=True)
+    if "parent_id" in updates:
+        _validate_parent(db, task, updates["parent_id"], task.project_id)
     if "phase_id" in updates or "assignee_id" in updates:
         _validate_task_refs(
             db,
@@ -339,3 +379,26 @@ def count_overdue(db: Session, project_id: uuid.UUID) -> int:
         )
         or 0
     )
+
+
+def subtask_rollup(db: Session, project_id: uuid.UUID) -> dict[uuid.UUID, tuple[int, int]]:
+    """parent id -> (subtasks, of those finished), in one query."""
+    rows = db.execute(
+        select(
+            Task.parent_id,
+            func.count(),
+            func.count().filter(Task.status == WorkStatus.done),
+        )
+        .where(Task.project_id == project_id, Task.parent_id.is_not(None))
+        .group_by(Task.parent_id)
+    ).all()
+    return {row[0]: (row[1], row[2]) for row in rows}
+
+
+def project_tags(db: Session, project_id: uuid.UUID) -> list[str]:
+    rows = db.execute(
+        select(func.unnest(Task.tags).label("tag"))
+        .where(Task.project_id == project_id)
+        .distinct()
+    ).all()
+    return sorted(row[0] for row in rows if row[0])

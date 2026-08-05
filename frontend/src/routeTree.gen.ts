@@ -13,6 +13,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAssistantRouteImport } from './routes/_app/assistant'
+import { Route as AppCalendarRouteImport } from './routes/_app/calendar'
 import { Route as AppMapRouteImport } from './routes/_app/map'
 import { Route as AppWorkloadRouteImport } from './routes/_app/workload'
 import { Route as AcceptInviteTokenRouteImport } from './routes/accept-invite.$token'
@@ -69,6 +70,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppAssistantRoute = AppAssistantRouteImport.update({
   id: '/assistant',
   path: '/assistant',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCalendarRoute = AppCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMapRoute = AppMapRouteImport.update({
@@ -279,6 +285,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
   '/assistant': typeof AppAssistantRoute
+  '/calendar': typeof AppCalendarRoute
   '/map': typeof AppMapRoute
   '/workload': typeof AppWorkloadRoute
   '/accept-invite/$token': typeof AcceptInviteTokenRoute
@@ -321,6 +328,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/assistant': typeof AppAssistantRoute
+  '/calendar': typeof AppCalendarRoute
   '/map': typeof AppMapRoute
   '/workload': typeof AppWorkloadRoute
   '/accept-invite/$token': typeof AcceptInviteTokenRoute
@@ -365,6 +373,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/_app/assistant': typeof AppAssistantRoute
+  '/_app/calendar': typeof AppCalendarRoute
   '/_app/map': typeof AppMapRoute
   '/_app/workload': typeof AppWorkloadRoute
   '/accept-invite/$token': typeof AcceptInviteTokenRoute
@@ -411,6 +420,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/assistant'
+    | '/calendar'
     | '/map'
     | '/workload'
     | '/accept-invite/$token'
@@ -453,6 +463,7 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/assistant'
+    | '/calendar'
     | '/map'
     | '/workload'
     | '/accept-invite/$token'
@@ -496,6 +507,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/login'
     | '/_app/assistant'
+    | '/_app/calendar'
     | '/_app/map'
     | '/_app/workload'
     | '/accept-invite/$token'
@@ -572,6 +584,13 @@ declare module '@tanstack/react-router' {
       path: '/assistant'
       fullPath: '/assistant'
       preLoaderRoute: typeof AppAssistantRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/calendar': {
+      id: '/_app/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof AppCalendarRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/map': {
@@ -913,6 +932,7 @@ const AppProjectsProjectIdRouteWithChildren =
 
 interface AppRouteChildren {
   AppAssistantRoute: typeof AppAssistantRoute
+  AppCalendarRoute: typeof AppCalendarRoute
   AppMapRoute: typeof AppMapRoute
   AppWorkloadRoute: typeof AppWorkloadRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -943,6 +963,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAssistantRoute: AppAssistantRoute,
+  AppCalendarRoute: AppCalendarRoute,
   AppMapRoute: AppMapRoute,
   AppWorkloadRoute: AppWorkloadRoute,
   AppIndexRoute: AppIndexRoute,

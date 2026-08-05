@@ -4,13 +4,16 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.common.enums import DependencyType, WorkStatus
+from app.common.enums import DependencyType, TaskPriority, WorkStatus
 
 
 class TaskBase(BaseModel):
     name: str = Field(min_length=1, max_length=200)
     description: str | None = None
     phase_id: uuid.UUID | None = None
+    parent_id: uuid.UUID | None = None
+    priority: TaskPriority = TaskPriority.normal
+    tags: list[str] = Field(default_factory=list, max_length=12)
     wbs_code: str | None = Field(default=None, max_length=30)
     assignee_id: uuid.UUID | None = None
     status: WorkStatus = WorkStatus.not_started
@@ -32,6 +35,9 @@ class TaskUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=200)
     description: str | None = None
     phase_id: uuid.UUID | None = None
+    parent_id: uuid.UUID | None = None
+    priority: TaskPriority | None = None
+    tags: list[str] | None = Field(default=None, max_length=12)
     wbs_code: str | None = Field(default=None, max_length=30)
     assignee_id: uuid.UUID | None = None
     status: WorkStatus | None = None
@@ -67,6 +73,9 @@ class TaskListItem(TaskRead):
     assignee_name: str | None = None
     phase_name: str | None = None
     predecessor_ids: list[uuid.UUID] = []
+    subtask_count: int = 0
+    subtasks_done: int = 0
+    comment_count: int = 0
 
 
 class DependencyCreate(BaseModel):
@@ -165,3 +174,20 @@ class Workload(BaseModel):
     end: date
     concurrency_limit: int
     people: list[WorkloadPerson]
+
+
+class CalendarEvent(BaseModel):
+    kind: str
+    day: date
+    title: str
+    project_id: uuid.UUID
+    project_code: str
+    link: str
+    priority: str | None
+    overdue: bool
+
+
+class CalendarPayload(BaseModel):
+    start: date
+    end: date
+    events: list[CalendarEvent]

@@ -4,12 +4,16 @@
  * Construction ERP API
  * OpenAPI spec version: 0.1.0
  */
+import type { TaskPriority } from './taskPriority.ts';
 import type { WorkStatus } from './workStatus.ts';
 
 export interface TaskUpdate {
   name?: string | null;
   description?: string | null;
   phase_id?: string | null;
+  parent_id?: string | null;
+  priority?: TaskPriority | null;
+  tags?: string[] | null;
   wbs_code?: string | null;
   assignee_id?: string | null;
   status?: WorkStatus | null;
