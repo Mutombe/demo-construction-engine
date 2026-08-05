@@ -175,7 +175,7 @@ def get_balance_sheet(db: DbDep, as_at: date | None = None) -> BalanceSheet:
 @router.get("/unposted", response_model=list[UnpostedEntry], dependencies=[books_read])
 def list_unposted(db: DbDep) -> list[UnpostedEntry]:
     """The control that makes a posting failure visible. Should be empty."""
-    return [
+    rows = [
         UnpostedEntry(
             id=e.id,
             entry_date=e.entry_date,
@@ -185,6 +185,17 @@ def list_unposted(db: DbDep) -> list[UnpostedEntry]:
         )
         for e in service.unposted_cost_entries(db)
     ]
+    rows += [
+        UnpostedEntry(
+            id=v.id,
+            entry_date=v.period_end,
+            description=f"{v.doc_number} certified, not in the books",
+            amount=v.net_certified,
+            project_id=v.project_id,
+        )
+        for v in service.unposted_valuations(db)
+    ]
+    return rows
 
 
 @router.post("/unposted/post", response_model=dict)

@@ -459,13 +459,41 @@ def unposted_cost_entries(db: Session) -> list:
     )
 
 
+def unposted_valuations(db: Session) -> list:
+    """Certificates with no journal.
+
+    Costs are only half the ledger. A book carrying every cost and no revenue
+    is not merely incomplete, it reads as a catastrophic loss — so the control
+    covers both sides.
+    """
+    from app.modules.valuations.models import Valuation
+
+    posted = select(Journal.source_id).where(
+        Journal.source == JournalSource.valuation, Journal.source_id.is_not(None)
+    )
+    return list(
+        db.scalars(
+            select(Valuation)
+            .where(
+                Valuation.id.notin_(posted),
+                Valuation.status.in_(("issued", "paid")),
+            )
+            # Oldest first: retention is a running difference against the
+            # previous certificate, so they have to be replayed in order.
+            .order_by(Valuation.project_id, Valuation.valuation_number)
+        )
+    )
+
+
 def post_missing(db: Session, user=None) -> int:
-    """Catch up anything the control above found. Idempotent by construction:
-    an entry that now has a journal is no longer in the list."""
-    entries = unposted_cost_entries(db)
+    """Catch up anything the controls found. Idempotent by construction: a
+    record that now has a journal is no longer in the list."""
     posted = 0
-    for entry in entries:
+    for entry in unposted_cost_entries(db):
         if post_cost_entry(db, entry, user) is not None:
+            posted += 1
+    for valuation in unposted_valuations(db):
+        if post_valuation(db, valuation, user) is not None:
             posted += 1
     return posted
 

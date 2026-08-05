@@ -515,3 +515,32 @@ def test_a_system_account_cannot_be_switched_off(client, db):
     )
     assert res.status_code == 409
     assert "automatic posting" in res.json()["error"]["detail"]
+
+
+def test_the_control_covers_revenue_as_well_as_cost(client, db):
+    """A book carrying every cost and no revenue does not read as incomplete,
+    it reads as a catastrophic loss."""
+    headers = _admin(db)
+    project = make_project(db, contract_value=Decimal("80000"), retention_pct=Decimal("5"))
+    valuation = client.post(
+        f"/api/v1/projects/{project.id}/valuations",
+        json={"period_end": str(date.today()), "gross_valuation": "12000"},
+        headers=headers,
+    ).json()
+    client.post(f"/api/v1/valuations/{valuation['id']}/issue", json={}, headers=headers)
+
+    # Simulate a certificate that never reached the ledger
+    journal = db.scalar(select(Journal).where(Journal.source == "valuation"))
+    db.delete(journal)
+    db.flush()
+
+    unposted = client.get("/api/v1/accounting/unposted", headers=headers).json()
+    assert any("certified" in row["description"] for row in unposted)
+
+    assert client.post("/api/v1/accounting/unposted/post", headers=headers).json()["posted"] == 1
+    assert client.get("/api/v1/accounting/unposted", headers=headers).json() == []
+    # Read the ledger rather than the cached account balance: deleting the
+    # journal above cascaded its ledger rows but left the cache behind, which
+    # is only reachable from a test — the product never deletes a journal.
+    income = client.get("/api/v1/accounting/income-statement", headers=headers).json()
+    assert Decimal(income["revenue_total"]) == Decimal("12000.00")
