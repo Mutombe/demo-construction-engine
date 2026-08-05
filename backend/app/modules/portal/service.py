@@ -155,3 +155,61 @@ def own_valuation(db: Session, client: Client, valuation_id: uuid.UUID) -> Valua
         raise NotFoundError("Valuation not found")
     _own_project(db, client, valuation.project_id)
     return valuation
+
+
+def project_photos(db: Session, client: Client, project_id: uuid.UUID):
+    """Progress photos for one of the client's projects, oldest day first.
+
+    Only the photos folder is ever reachable here — the same filter the staff
+    timeline uses — so contracts, invoices and scanned delivery notes sitting
+    in the same media library can never surface on a client link.
+    """
+    from app.modules.media import service as media_service
+    from app.modules.portal.schemas import (
+        PortalPhoto,
+        PortalPhotoDay,
+        PortalPhotoTimeline,
+    )
+
+    project = _own_project(db, client, project_id)
+    timeline = media_service.photo_timeline(db, "project", project.id)
+    days = [
+        PortalPhotoDay(
+            day=day.day,
+            photos=[
+                PortalPhoto(id=p.id, caption=p.caption, has_thumbnail=p.has_thumbnail)
+                for p in day.photos
+            ],
+        )
+        # Staff read newest-first to see what just happened; a client is
+        # watching the building go up, so this runs the other way.
+        for day in reversed(timeline.days)
+    ]
+    return PortalPhotoTimeline(
+        project_id=project.id,
+        total_photos=timeline.total_photos,
+        first_photo=timeline.first_photo,
+        last_photo=timeline.last_photo,
+        days=days,
+    )
+
+
+def own_photo(db: Session, client: Client, media_id: uuid.UUID):
+    """The guard for serving an image on a portal link.
+
+    Checks the file is a progress photo, that it hangs off a project, and that
+    the project is this client's. Without all three a link holder could walk
+    media ids and read another client's files.
+    """
+    from app.common.enums import MediaFolder
+    from app.modules.media.models import MediaFile
+
+    media = db.get(MediaFile, media_id)
+    if (
+        media is None
+        or media.folder != MediaFolder.photos
+        or media.entity_type != "project"
+    ):
+        raise NotFoundError("Photo not found")
+    _own_project(db, client, media.entity_id)
+    return media

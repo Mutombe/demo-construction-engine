@@ -48,6 +48,25 @@ export interface PortalValuation {
   paid_date: string | null;
 }
 
+export interface PortalPhoto {
+  id: string;
+  caption: string | null;
+  has_thumbnail: boolean;
+}
+
+export interface PortalPhotoDay {
+  day: string;
+  photos: PortalPhoto[];
+}
+
+export interface PortalPhotoTimeline {
+  project_id: string;
+  total_photos: number;
+  first_photo: string | null;
+  last_photo: string | null;
+  days: PortalPhotoDay[];
+}
+
 export class PortalError extends Error {
   constructor(
     public status: number,
@@ -95,4 +114,22 @@ export async function downloadCertificate(token: string, valuation: PortalValuat
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
+}
+
+export const fetchPhotos = (token: string, projectId: string) =>
+  portalFetch<PortalPhotoTimeline>(token, `/projects/${projectId}/photos`);
+
+/** Photos are behind the token like everything else, so they cannot be loaded
+ *  by pointing an <img> at a URL — fetch the bytes, hand back an object URL. */
+export async function fetchPhotoUrl(
+  token: string,
+  photoId: string,
+  thumb = false,
+): Promise<string> {
+  const res = await fetch(
+    `/api/v1/portal/photos/${photoId}/file${thumb ? "?thumb=true" : ""}`,
+    { headers: { "X-Portal-Token": token } },
+  );
+  if (!res.ok) throw new PortalError(res.status, "Could not load photo");
+  return URL.createObjectURL(await res.blob());
 }

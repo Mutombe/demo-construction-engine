@@ -1,6 +1,7 @@
 import uuid
 
 from fastapi import APIRouter, Depends, Response
+from fastapi.responses import FileResponse
 
 from app.common.enums import UserRole
 from app.core.deps import DbDep, require_roles
@@ -10,6 +11,7 @@ from app.modules.portal.schemas import (
     PortalLinkCreate,
     PortalLinkCreated,
     PortalLinkRead,
+    PortalPhotoTimeline,
     PortalProjectDetail,
     PortalSummary,
     PortalValuation,
@@ -87,3 +89,25 @@ def portal_valuation_certificate(
             "Content-Disposition": f'attachment; filename="{valuation.doc_number}_certificate.pdf"'
         },
     )
+
+
+@portal_router.get(
+    "/projects/{project_id}/photos", response_model=PortalPhotoTimeline
+)
+def portal_project_photos(
+    project_id: uuid.UUID, db: DbDep, client: PortalClient
+) -> PortalPhotoTimeline:
+    return service.project_photos(db, client, project_id)
+
+
+@portal_router.get("/photos/{media_id}/file")
+def portal_photo_file(
+    media_id: uuid.UUID, db: DbDep, client: PortalClient, thumb: bool = False
+) -> FileResponse:
+    """Images are served through the token like everything else here, never
+    from a public static mount."""
+    from app.modules.media import service as media_service
+
+    media = service.own_photo(db, client, media_id)
+    path = media_service.resolve_path(media, thumbnail=thumb)
+    return FileResponse(path, media_type=media.media_type)

@@ -82,3 +82,27 @@ class PortalValuation(BaseModel):
     net_certified: Decimal
     issued_date: date | None
     paid_date: date | None
+
+
+class PortalPhoto(BaseModel):
+    """Deliberately narrow: a client sees the picture and when it was taken,
+    not who uploaded it, the original filename or the storage path."""
+
+    id: uuid.UUID
+    caption: str | None
+    has_thumbnail: bool
+
+
+class PortalPhotoDay(BaseModel):
+    day: date
+    photos: list[PortalPhoto]
+
+
+class PortalPhotoTimeline(BaseModel):
+    """Runs forwards, oldest day first: the client is watching it get built."""
+
+    project_id: uuid.UUID
+    total_photos: int
+    first_photo: date | None
+    last_photo: date | None
+    days: list[PortalPhotoDay]

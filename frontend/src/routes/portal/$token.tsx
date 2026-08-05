@@ -11,6 +11,7 @@ import {
   type PortalProject,
   type PortalValuation,
 } from "@/features/portal/api";
+import { PortalPhotos } from "@/features/portal/PortalPhotos";
 import { fmtDate, money, moneyExact } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -292,6 +293,8 @@ function ProjectView({
       {project.description && (
         <p className="text-sm leading-relaxed text-muted-foreground">{project.description}</p>
       )}
+
+      <PortalPhotos token={token} projectId={projectId} />
 
       <section>
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
