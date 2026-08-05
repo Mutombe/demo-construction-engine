@@ -1,12 +1,13 @@
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 
 from app.common.enums import UserRole
 from app.common.pagination import PageParamsDep
 from app.common.schemas import Page
 from app.core.deps import CurrentUser, DbDep, require_roles
 from app.modules.procurement import rfq_portal, service
+from app.modules.procurement.pdf import rfq_pdf
 from app.modules.procurement.schemas import (
     RfqInviteCreated,
     RfqInviteRead,
@@ -309,4 +310,17 @@ def supplier_submit_quote(
         doc_number=invite.rfq.doc_number,
         total_amount=quote.total_amount,
         received_date=quote.received_date,
+    )
+
+
+@router.get("/rfqs/{rfq_id}/pdf")
+def download_rfq_pdf(rfq_id: uuid.UUID, db: DbDep, _=proc_write) -> Response:
+    """The request as a supplier receives it: scope and quantities, no rates."""
+    rfq = service.get_rfq(db, rfq_id)
+    return Response(
+        content=rfq_pdf(db, rfq),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{rfq.doc_number}_rfq.pdf"'
+        },
     )

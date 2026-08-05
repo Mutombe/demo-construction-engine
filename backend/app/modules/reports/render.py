@@ -1,5 +1,6 @@
 import csv
 import io
+from datetime import date
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -84,3 +85,66 @@ def to_xlsx(table: ReportTable) -> bytes:
     buffer = io.BytesIO()
     wb.save(buffer)
     return buffer.getvalue()
+
+
+def to_pdf(table: ReportTable, company_name: str = "Construction ERP") -> bytes:
+    """The same table, for someone who is going to print it or send it on.
+
+    Landscape, because a report built for a spreadsheet has more columns than
+    a portrait page can carry without shrinking the type past reading size.
+    """
+    from app.common.pdf import Col, DocumentPdf
+
+    doc = DocumentPdf(
+        company_name=company_name,
+        doc_title=table.title,
+        doc_number=date.today().isoformat(),
+        orientation="L",
+    )
+
+    # Widths come from the spreadsheet hints, normalised to the page: a column
+    # someone sized for Excel is the best available signal of what matters.
+    total_width = sum(column.width for column in table.columns) or 1
+    cols = [
+        Col(
+            column.label,
+            column.width / total_width,
+            "R" if column.kind in ("money", "qty", "int", "pct") else "L",
+        )
+        for column in table.columns
+    ]
+
+    rows = [
+        [_pdf_value(row.get(column.key), column.kind) for column in table.columns]
+        for row in table.rows
+    ]
+    totals = None
+    if table.totals:
+        totals = [
+            _pdf_value(table.totals.get(column.key), column.kind)
+            if column.key in table.totals
+            else ("TOTAL" if column is table.columns[0] else "")
+            for column in table.columns
+        ]
+
+    if rows:
+        doc.table(cols=cols, rows=rows, totals=totals)
+    else:
+        doc.note("Nothing to report for this selection.")
+    return doc.render()
+
+
+def _pdf_value(value, kind: ColumnKind) -> str:
+    from app.common.pdf import money
+
+    if value is None or value == "":
+        return "-"
+    if kind == "money":
+        return money(value)
+    if kind == "pct":
+        return f"{float(value) * 100:,.1f}%"
+    if kind == "qty":
+        return f"{float(value):,.3f}"
+    if kind == "int":
+        return f"{int(value):,}"
+    return str(value)

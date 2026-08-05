@@ -72,8 +72,21 @@ def _photo(photo_id: str) -> bytes | None:
 
 
 def seed_media(db) -> None:
+    """Skipped with SEED_SKIP_MEDIA=1.
+
+    Media rows point at files on the API server's own disk. Seeding them from
+    a laptop against a remote database writes the images locally and leaves the
+    server holding rows for files it has never seen — broken thumbnails that
+    look like a bug in the app rather than a seeding mistake.
+    """
+    import os
+
     from app.modules.media.models import MediaFile
     from app.modules.media.service import save_media
+
+    if os.environ.get("SEED_SKIP_MEDIA") == "1":
+        print("media: skipped (SEED_SKIP_MEDIA)")
+        return
 
     if db.scalar(select(func.count()).select_from(MediaFile)):
         print("media: already seeded")

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { DownloadSimple, FileXls } from "@phosphor-icons/react";
+import { DownloadSimple, FilePdf, FileXls } from "@phosphor-icons/react";
 import { useState, type ReactNode } from "react";
 import { toast } from "@/lib/toast";
 import { PageHeader } from "@/components/layout/AppShell";
@@ -26,7 +26,7 @@ function ExportButtons({
   stem: string;
 }) {
   const [busy, setBusy] = useState(false);
-  const run = async (format: "csv" | "xlsx") => {
+  const run = async (format: "csv" | "xlsx" | "pdf") => {
     setBusy(true);
     try {
       const search = new URLSearchParams({ ...params, format }).toString();
@@ -41,6 +41,15 @@ function ExportButtons({
     <div className="flex gap-2">
       <Button variant="outline" size="sm" disabled={disabled || busy} onClick={() => void run("csv")}>
         <DownloadSimple /> CSV
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={disabled || busy}
+        title="A printable copy to send on"
+        onClick={() => void run("pdf")}
+      >
+        <FilePdf /> PDF
       </Button>
       <Button size="sm" disabled={disabled || busy} onClick={() => void run("xlsx")}>
         <FileXls /> Excel

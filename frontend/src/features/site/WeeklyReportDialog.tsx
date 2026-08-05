@@ -2,7 +2,9 @@ import { Copy } from "@phosphor-icons/react";
 import { ClaudeIcon } from "@/components/ui/claude-icon";
 import { useEffect, useState } from "react";
 import { toast } from "@/lib/toast";
+import { FilePdf } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import { downloadFile } from "@/lib/api/download";
 import {
   Dialog,
   DialogContent,
@@ -67,6 +69,25 @@ export function WeeklyReportDialog({
     }
   };
 
+  const [downloading, setDownloading] = useState(false);
+
+  /** Rebuilt from the week's data rather than from the text on screen: a PDF
+   *  that says it covers a week has to be produced from that week. */
+  const download = async () => {
+    setDownloading(true);
+    try {
+      await downloadFile(
+        "/api/v1/ai/site/weekly-report/pdf",
+        `weekly_report_${period?.end ?? weekStart}.pdf`,
+        { method: "POST", body: { project_id: projectId, week_start: weekStart } },
+      );
+    } catch {
+      toast.error("Could not build the report");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   const copy = async () => {
     await navigator.clipboard.writeText(markdown);
     toast.success("Report copied to clipboard");
@@ -97,6 +118,16 @@ export function WeeklyReportDialog({
               <ClaudeIcon />
               {generateMutation.isPending ? "Writing report…" : markdown ? "Regenerate" : "Generate"}
             </Button>
+            {markdown && (
+              <Button
+                variant="outline"
+                disabled={downloading}
+                title="A copy you can send to the client"
+                onClick={() => void download()}
+              >
+                <FilePdf /> {downloading ? "Preparing…" : "PDF"}
+              </Button>
+            )}
             {markdown && (
               <Button variant="outline" onClick={() => void copy()}>
                 <Copy /> Copy

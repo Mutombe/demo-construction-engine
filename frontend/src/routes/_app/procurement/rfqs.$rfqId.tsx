@@ -1,10 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { FileText, PaperPlaneTilt, Plus, ShoppingCart } from "@phosphor-icons/react";
+import { FilePdf, FileText, PaperPlaneTilt, Plus, ShoppingCart } from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "@/lib/toast";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Can } from "@/components/layout/Can";
+import { downloadFile } from "@/lib/api/download";
 import { SendRfqDialog } from "@/features/procurement/SendRfqDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -113,6 +114,20 @@ function RfqDetailPage() {
               </Button>
             </Can>
           )}
+          <Can perm="procurement:write">
+            <Button
+              variant="outline"
+              title="The request as a supplier receives it"
+              onClick={() =>
+                void downloadFile(
+                  `/api/v1/rfqs/${rfqId}/pdf`,
+                  `${rfq.doc_number}_rfq.pdf`,
+                ).catch(() => toast.error("Download failed"))
+              }
+            >
+              <FilePdf /> PDF
+            </Button>
+          </Can>
           {rfq.status !== "draft" && (
             <Can perm="procurement:write">
               <Button variant="outline" onClick={() => setQuoteDialogOpen(true)}>

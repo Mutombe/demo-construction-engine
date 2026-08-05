@@ -1,12 +1,14 @@
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from fastapi.responses import StreamingResponse
 
 from app.common.enums import UserRole
 from app.core.deps import DbDep, require_roles
 from app.core.exceptions import AiNotConfiguredError
 from app.modules.ai import service
+from app.modules.procurement.pdf import weekly_report_pdf
+from app.modules.projects.service import get_project
 from app.modules.ai.client import ai_available
 from app.modules.ai.schemas import (
     AiStatus,
@@ -88,4 +90,33 @@ def chat(body: ChatRequest, db: DbDep) -> StreamingResponse:
         service.chat_stream(db, body.messages, body.project_id),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+@router.post(
+    "/ai/site/weekly-report/pdf",
+    dependencies=[Depends(require_roles(UserRole.site_manager, UserRole.project_manager))],
+)
+def download_weekly_report(body: WeeklyReportRequest, db: DbDep) -> Response:
+    """The same report as the screen, as something you can hand to a client.
+
+    Regenerated rather than taking the text from the browser: a PDF that says
+    it covers a week has to be built from that week's data, not from whatever
+    happens to be on the page.
+    """
+    _require_ai()
+    draft = service.generate_weekly_report(db, body.project_id, body.week_start, body.week_end)
+    project = get_project(db, body.project_id)
+    content = weekly_report_pdf(
+        db, project, draft.period_start, draft.period_end, draft.markdown
+    )
+    return Response(
+        content=content,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="{project.code}_weekly_report_'
+                f'{draft.period_end.isoformat()}.pdf"'
+            )
+        },
     )

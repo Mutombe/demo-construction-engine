@@ -7,6 +7,7 @@ page numbers. All money is rendered pre-formatted by callers via `money()`.
 """
 
 from dataclasses import dataclass
+import re
 from decimal import Decimal
 
 from fpdf import FPDF
@@ -31,6 +32,16 @@ _LATIN_FALLBACKS = str.maketrans(
 )
 
 
+def _strip_inline(text: str) -> str:
+    """Drops the emphasis markers rather than printing them. fpdf has no rich
+    text, so **bold** would otherwise reach the page as literal asterisks."""
+    text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
+    text = re.sub(r"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)", r"\1", text)
+    text = re.sub(r"`(.+?)`", r"\1", text)
+    text = re.sub(r"\[(.+?)\]\((.+?)\)", r"\1 (\2)", text)
+    return text.strip()
+
+
 def _latin(text: str) -> str:
     """Core PDF fonts are latin-1 only; degrade gracefully instead of 500ing
     on an em dash in a project name."""
@@ -45,8 +56,14 @@ class Col:
 
 
 class DocumentPdf(FPDF):
-    def __init__(self, company_name: str, doc_title: str, doc_number: str):
-        super().__init__(orientation="P", unit="mm", format="A4")
+    def __init__(
+        self,
+        company_name: str,
+        doc_title: str,
+        doc_number: str,
+        orientation: str = "P",
+    ):
+        super().__init__(orientation=orientation, unit="mm", format="A4")
         self.company_name = company_name
         self.doc_title = doc_title
         self.doc_number = doc_number
@@ -206,3 +223,49 @@ class DocumentPdf(FPDF):
 
     def render(self) -> bytes:
         return bytes(self.output())
+
+    # --- prose --------------------------------------------------------------
+
+    def markdown_block(self, text: str) -> None:
+        """Renders the subset of Markdown the AI writers actually emit.
+
+        Headings, bullets, numbered lists and paragraphs. Anything else prints
+        as plain text rather than as syntax — someone reading a printed report
+        should never meet a stray asterisk.
+        """
+        for raw in (text or "").split("\n"):
+            line = raw.rstrip()
+            if not line.strip():
+                self.ln(2.5)
+                continue
+
+            if line.lstrip().startswith("#"):
+                stripped = line.lstrip()
+                level = len(stripped) - len(stripped.lstrip("#"))
+                heading = _strip_inline(stripped.lstrip("#").strip())
+                self.ln(2)
+                self.set_font("helvetica", "B", 12 if level <= 2 else 10.5)
+                self.set_text_color(*(BRAND if level <= 2 else INK))
+                self.multi_cell(self.usable, 6, heading)
+                self.set_text_color(*INK)
+                continue
+
+            stripped = line.strip()
+            bullet = stripped[:2] in ("- ", "* ", "+ ")
+            numbered = bool(re.match(r"^\d+[.)]\s", stripped))
+            if bullet or numbered:
+                if bullet:
+                    body, marker = stripped[2:], "•"
+                else:
+                    marker = stripped.split(maxsplit=1)[0]
+                    body = re.sub(r"^\d+[.)]\s*", "", stripped)
+                self.set_font("helvetica", "", 9.5)
+                left = self.get_x()
+                self.cell(6, 5.5, f"  {marker}")
+                self.set_x(left + 6)
+                self.multi_cell(self.usable - 6, 5.5, _strip_inline(body))
+                self.set_x(left)
+                continue
+
+            self.set_font("helvetica", "", 9.5)
+            self.multi_cell(self.usable, 5.5, _strip_inline(stripped))
