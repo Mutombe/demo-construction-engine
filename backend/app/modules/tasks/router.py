@@ -1,10 +1,14 @@
 import uuid
+from datetime import date, timedelta
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from app.common.enums import UserRole, WorkStatus
 from app.core.deps import CurrentUser, DbDep, require_roles
+from app.core.exceptions import ValidationFailedError
 from app.modules.tasks import service
+from app.modules.tasks import workload as workload_service
+from app.modules.tasks.workload import DEFAULT_CONCURRENCY_LIMIT
 from app.modules.tasks.schemas import (
     DependencyCreate,
     DependencyRead,
@@ -13,6 +17,7 @@ from app.modules.tasks.schemas import (
     TaskListItem,
     TaskRead,
     TaskUpdate,
+    Workload,
 )
 
 router = APIRouter(tags=["tasks"])
@@ -116,3 +121,25 @@ def add_dependency(task_id: uuid.UUID, body: DependencyCreate, db: DbDep) -> Dep
 )
 def remove_dependency(task_id: uuid.UUID, predecessor_id: uuid.UUID, db: DbDep) -> None:
     service.remove_dependency(db, task_id, predecessor_id)
+
+
+@router.get("/workload", response_model=Workload)
+def get_workload(
+    db: DbDep,
+    start: date | None = None,
+    end: date | None = None,
+    project_id: uuid.UUID | None = None,
+    limit: int = Query(default=DEFAULT_CONCURRENCY_LIMIT, ge=1, le=10),
+) -> Workload:
+    """Defaults to the next four weeks, which is the horizon a site actually
+    reschedules within."""
+    today = date.today()
+    start = start or today
+    end = end or (start + timedelta(days=27))
+    if end < start:
+        raise ValidationFailedError("The end of the window cannot precede its start")
+    if (end - start).days > 120:
+        raise ValidationFailedError("Windows longer than 120 days are not supported")
+    return Workload.model_validate(
+        workload_service.workload(db, start, end, project_id, limit), from_attributes=True
+    )

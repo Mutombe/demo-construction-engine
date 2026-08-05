@@ -10,6 +10,7 @@ export interface TimesheetRead {
   id: string;
   worker_id: string;
   project_id: string;
+  task_id?: string | null;
   work_date: string;
   /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
   quantity: string;

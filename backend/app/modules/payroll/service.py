@@ -149,6 +149,7 @@ def _require_unpaid(sheet: Timesheet) -> None:
 def create_timesheet(db: Session, data: TimesheetCreate, created_by: uuid.UUID) -> Timesheet:
     get_worker(db, data.worker_id)
     get_project(db, data.project_id)
+    _check_task(db, data.task_id, data.project_id)
     existing = db.scalar(
         select(Timesheet).where(
             Timesheet.worker_id == data.worker_id,
@@ -162,6 +163,20 @@ def create_timesheet(db: Session, data: TimesheetCreate, created_by: uuid.UUID) 
     db.add(sheet)
     db.flush()
     return sheet
+
+
+def _check_task(db: Session, task_id, project_id) -> None:
+    """A task named on a timesheet has to belong to the project being booked
+    to, or the hours land on someone else's job."""
+    if task_id is None:
+        return
+    from app.modules.tasks.models import Task
+
+    task = db.get(Task, task_id)
+    if task is None:
+        raise NotFoundError("Task not found")
+    if task.project_id != project_id:
+        raise ValidationFailedError("That task belongs to a different project")
 
 
 def bulk_create_timesheets(
@@ -212,7 +227,10 @@ def bulk_create_timesheets(
 def update_timesheet(db: Session, timesheet_id: uuid.UUID, data: TimesheetUpdate) -> Timesheet:
     sheet = get_timesheet(db, timesheet_id)
     _require_unpaid(sheet)
-    for field, value in data.model_dump(exclude_unset=True).items():
+    updates = data.model_dump(exclude_unset=True)
+    if "task_id" in updates:
+        _check_task(db, updates["task_id"], sheet.project_id)
+    for field, value in updates.items():
         setattr(sheet, field, value)
     return sheet
 

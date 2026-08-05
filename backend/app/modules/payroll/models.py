@@ -78,6 +78,12 @@ class Timesheet(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
     project_id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), index=True
     )
+    # Optional: hours have always been booked to a project, and most sites will
+    # keep doing that. Naming a task as well is what makes "how long did this
+    # take" answerable, so it is an addition rather than a replacement.
+    task_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("tasks.id", ondelete="SET NULL"), index=True
+    )
     work_date: Mapped[date] = mapped_column(Date, index=True)
     quantity: Mapped[Decimal] = mapped_column(Numeric(5, 2))
     overtime_quantity: Mapped[Decimal] = mapped_column(Numeric(5, 2), default=Decimal("0"))

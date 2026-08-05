@@ -125,3 +125,43 @@ class GanttPayload(BaseModel):
     project_finish: date | None = None  # earliest finish across the network
     has_baseline: bool = False
     worst_slippage_days: int | None = None
+
+
+class WorkloadTask(BaseModel):
+    id: uuid.UUID
+    name: str
+    project_id: uuid.UUID
+    project_name: str
+    project_code: str
+    status: str
+    planned_start: date | None
+    planned_end: date | None
+    progress_pct: int
+    is_scheduled: bool
+
+
+class WorkloadDay(BaseModel):
+    day: date
+    task_count: int
+    over: bool
+
+
+class WorkloadPerson(BaseModel):
+    user_id: uuid.UUID | None
+    full_name: str
+    role: str | None
+    open_tasks: int
+    busy_days: int
+    peak_concurrency: int
+    overloaded_days: int
+    hours_booked: float
+    next_free_day: date | None
+    days: list[WorkloadDay]
+    tasks: list[WorkloadTask]
+
+
+class Workload(BaseModel):
+    start: date
+    end: date
+    concurrency_limit: int
+    people: list[WorkloadPerson]

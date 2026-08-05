@@ -6,6 +6,7 @@
  */
 
 export interface TimesheetUpdate {
+  task_id?: string | null;
   quantity?: number | string | null;
   overtime_quantity?: number | string | null;
   notes?: string | null;

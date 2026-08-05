@@ -10,6 +10,7 @@ from app.modules.ai.router import router as ai_router
 from app.modules.auth.router import router as auth_router
 from app.modules.boq.router import router as boq_router
 from app.modules.clients.router import router as clients_router
+from app.modules.comments.router import router as comments_router
 from app.modules.company.router import router as company_router
 from app.modules.costs.router import router as costs_router
 from app.modules.dashboard.router import router as dashboard_router
@@ -86,6 +87,7 @@ def create_app() -> FastAPI:
     protected.include_router(ai_router)
     protected.include_router(admin_router)
     protected.include_router(company_router)
+    protected.include_router(comments_router)
     api.include_router(protected)
 
     # Client portal: separate auth surface (X-Portal-Token), deliberately NOT

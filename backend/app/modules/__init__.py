@@ -2,6 +2,7 @@
 from app.modules.admin import models as admin_models  # noqa: F401
 from app.modules.boq import models as boq_models  # noqa: F401
 from app.modules.clients import models as clients_models  # noqa: F401
+from app.modules.comments import models as comments_models  # noqa: F401
 from app.modules.company import models as company_models  # noqa: F401
 from app.modules.costs import models as costs_models  # noqa: F401
 from app.modules.expenses import models as expenses_models  # noqa: F401

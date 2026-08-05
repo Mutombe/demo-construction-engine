@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAssistantRouteImport } from './routes/_app/assistant'
 import { Route as AppMapRouteImport } from './routes/_app/map'
+import { Route as AppWorkloadRouteImport } from './routes/_app/workload'
 import { Route as AcceptInviteTokenRouteImport } from './routes/accept-invite.$token'
 import { Route as PortalTokenRouteImport } from './routes/portal/$token'
 import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
@@ -73,6 +74,11 @@ const AppAssistantRoute = AppAssistantRouteImport.update({
 const AppMapRoute = AppMapRouteImport.update({
   id: '/map',
   path: '/map',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppWorkloadRoute = AppWorkloadRouteImport.update({
+  id: '/workload',
+  path: '/workload',
   getParentRoute: () => AppRoute,
 } as any)
 const AcceptInviteTokenRoute = AcceptInviteTokenRouteImport.update({
@@ -274,6 +280,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/assistant': typeof AppAssistantRoute
   '/map': typeof AppMapRoute
+  '/workload': typeof AppWorkloadRoute
   '/accept-invite/$token': typeof AcceptInviteTokenRoute
   '/portal/$token': typeof PortalTokenRoute
   '/clients/$clientId': typeof AppClientsClientIdRoute
@@ -315,6 +322,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/assistant': typeof AppAssistantRoute
   '/map': typeof AppMapRoute
+  '/workload': typeof AppWorkloadRoute
   '/accept-invite/$token': typeof AcceptInviteTokenRoute
   '/portal/$token': typeof PortalTokenRoute
   '/': typeof AppIndexRoute
@@ -358,6 +366,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_app/assistant': typeof AppAssistantRoute
   '/_app/map': typeof AppMapRoute
+  '/_app/workload': typeof AppWorkloadRoute
   '/accept-invite/$token': typeof AcceptInviteTokenRoute
   '/portal/$token': typeof PortalTokenRoute
   '/_app/': typeof AppIndexRoute
@@ -403,6 +412,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/assistant'
     | '/map'
+    | '/workload'
     | '/accept-invite/$token'
     | '/portal/$token'
     | '/clients/$clientId'
@@ -444,6 +454,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/assistant'
     | '/map'
+    | '/workload'
     | '/accept-invite/$token'
     | '/portal/$token'
     | '/'
@@ -486,6 +497,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/_app/assistant'
     | '/_app/map'
+    | '/_app/workload'
     | '/accept-invite/$token'
     | '/portal/$token'
     | '/_app/'
@@ -567,6 +579,13 @@ declare module '@tanstack/react-router' {
       path: '/map'
       fullPath: '/map'
       preLoaderRoute: typeof AppMapRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/workload': {
+      id: '/_app/workload'
+      path: '/workload'
+      fullPath: '/workload'
+      preLoaderRoute: typeof AppWorkloadRouteImport
       parentRoute: typeof AppRoute
     }
     '/accept-invite/$token': {
@@ -895,6 +914,7 @@ const AppProjectsProjectIdRouteWithChildren =
 interface AppRouteChildren {
   AppAssistantRoute: typeof AppAssistantRoute
   AppMapRoute: typeof AppMapRoute
+  AppWorkloadRoute: typeof AppWorkloadRoute
   AppIndexRoute: typeof AppIndexRoute
   AppClientsClientIdRoute: typeof AppClientsClientIdRoute
   AppExpensesClaimIdRoute: typeof AppExpensesClaimIdRoute
@@ -924,6 +944,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAssistantRoute: AppAssistantRoute,
   AppMapRoute: AppMapRoute,
+  AppWorkloadRoute: AppWorkloadRoute,
   AppIndexRoute: AppIndexRoute,
   AppClientsClientIdRoute: AppClientsClientIdRoute,
   AppExpensesClaimIdRoute: AppExpensesClaimIdRoute,

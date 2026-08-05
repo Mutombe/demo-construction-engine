@@ -8,6 +8,7 @@
 export interface TimesheetCreate {
   worker_id: string;
   project_id: string;
+  task_id?: string | null;
   work_date: string;
   quantity: number | string;
   overtime_quantity?: number | string;

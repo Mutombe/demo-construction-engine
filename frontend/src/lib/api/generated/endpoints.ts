@@ -44,6 +44,9 @@ import type {
   ClientCreate,
   ClientRead,
   ClientUpdate,
+  CommentCreate,
+  CommentRead,
+  CommentUpdate,
   CompanyOverview,
   CompanySettingsRead,
   CompanySettingsUpdate,
@@ -52,6 +55,7 @@ import type {
   CostEntryCreate,
   CostEntryRead,
   CostEntryUpdate,
+  CreateCommentParams,
   DeadlineItem,
   DeadlinesParams,
   DeletedRecordRead,
@@ -83,6 +87,7 @@ import type {
   GetItemConsumptionParams,
   GetMediaFolderCountsParams,
   GetPhotoTimelineParams,
+  GetWorkloadParams,
   GlobalSearchParams,
   GoodsInRequest,
   HTTPValidationError,
@@ -99,6 +104,7 @@ import type {
   IssueRequest,
   ListActivityParams,
   ListClientsParams,
+  ListCommentsParams,
   ListCostEntriesParams,
   ListDiaryEntriesParams,
   ListExpenseClaimsParams,
@@ -175,6 +181,8 @@ import type {
   PortalLinkCreate,
   PortalLinkCreated,
   PortalLinkRead,
+  PortalPhotoFileParams,
+  PortalPhotoTimeline,
   PortalProjectDetail,
   PortalSummary,
   PortalValuation,
@@ -252,7 +260,8 @@ import type {
   WeeklyReportRequest,
   WorkerCreate,
   WorkerRead,
-  WorkerUpdate
+  WorkerUpdate,
+  Workload
 } from './model';
 
 import { apiMutator } from '../axios.ts';
@@ -3228,6 +3237,102 @@ export const useRemoveDependency = <TError = HTTPValidationError,
       > => {
       return useMutation(getRemoveDependencyMutationOptions(options), queryClient);
     }
+
+/**
+ * Defaults to the next four weeks, which is the horizon a site actually
+ * reschedules within.
+ * @summary Get Workload
+ */
+export const getWorkload = (
+    params?: GetWorkloadParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<Workload>(
+      {url: `/api/v1/workload`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getGetWorkloadQueryKey = (params?: GetWorkloadParams,) => {
+    return [
+    `/api/v1/workload`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetWorkloadQueryOptions = <TData = Awaited<ReturnType<typeof getWorkload>>, TError = HTTPValidationError>(params?: GetWorkloadParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkload>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWorkloadQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWorkload>>> = ({ signal }) => getWorkload(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWorkload>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetWorkloadQueryResult = NonNullable<Awaited<ReturnType<typeof getWorkload>>>
+export type GetWorkloadQueryError = HTTPValidationError
+
+
+export function useGetWorkload<TData = Awaited<ReturnType<typeof getWorkload>>, TError = HTTPValidationError>(
+ params: undefined |  GetWorkloadParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkload>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getWorkload>>,
+          TError,
+          Awaited<ReturnType<typeof getWorkload>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetWorkload<TData = Awaited<ReturnType<typeof getWorkload>>, TError = HTTPValidationError>(
+ params?: GetWorkloadParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkload>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getWorkload>>,
+          TError,
+          Awaited<ReturnType<typeof getWorkload>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetWorkload<TData = Awaited<ReturnType<typeof getWorkload>>, TError = HTTPValidationError>(
+ params?: GetWorkloadParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkload>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Workload
+ */
+
+export function useGetWorkload<TData = Awaited<ReturnType<typeof getWorkload>>, TError = HTTPValidationError>(
+ params?: GetWorkloadParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkload>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetWorkloadQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 /**
  * @summary Get Boq
@@ -17472,6 +17577,296 @@ export const useUpdateSettings = <TError = HTTPValidationError,
     }
 
 /**
+ * @summary List Comments
+ */
+export const listComments = (
+    params: ListCommentsParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<CommentRead[]>(
+      {url: `/api/v1/comments`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getListCommentsQueryKey = (params?: ListCommentsParams,) => {
+    return [
+    `/api/v1/comments`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListCommentsQueryOptions = <TData = Awaited<ReturnType<typeof listComments>>, TError = HTTPValidationError>(params: ListCommentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listComments>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCommentsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listComments>>> = ({ signal }) => listComments(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listComments>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListCommentsQueryResult = NonNullable<Awaited<ReturnType<typeof listComments>>>
+export type ListCommentsQueryError = HTTPValidationError
+
+
+export function useListComments<TData = Awaited<ReturnType<typeof listComments>>, TError = HTTPValidationError>(
+ params: ListCommentsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listComments>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listComments>>,
+          TError,
+          Awaited<ReturnType<typeof listComments>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListComments<TData = Awaited<ReturnType<typeof listComments>>, TError = HTTPValidationError>(
+ params: ListCommentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listComments>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listComments>>,
+          TError,
+          Awaited<ReturnType<typeof listComments>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListComments<TData = Awaited<ReturnType<typeof listComments>>, TError = HTTPValidationError>(
+ params: ListCommentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listComments>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Comments
+ */
+
+export function useListComments<TData = Awaited<ReturnType<typeof listComments>>, TError = HTTPValidationError>(
+ params: ListCommentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listComments>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListCommentsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Create Comment
+ */
+export const createComment = (
+    commentCreate: CommentCreate,
+    params: CreateCommentParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<CommentRead>(
+      {url: `/api/v1/comments`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: commentCreate,
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getCreateCommentMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createComment>>, TError,{data: CommentCreate;params: CreateCommentParams}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof createComment>>, TError,{data: CommentCreate;params: CreateCommentParams}, TContext> => {
+
+const mutationKey = ['createComment'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createComment>>, {data: CommentCreate;params: CreateCommentParams}> = (props) => {
+          const {data,params} = props ?? {};
+
+          return  createComment(data,params,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCommentMutationResult = NonNullable<Awaited<ReturnType<typeof createComment>>>
+    export type CreateCommentMutationBody = CommentCreate
+    export type CreateCommentMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Comment
+ */
+export const useCreateComment = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createComment>>, TError,{data: CommentCreate;params: CreateCommentParams}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createComment>>,
+        TError,
+        {data: CommentCreate;params: CreateCommentParams},
+        TContext
+      > => {
+      return useMutation(getCreateCommentMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Update Comment
+ */
+export const updateComment = (
+    commentId: string,
+    commentUpdate: CommentUpdate,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<CommentRead>(
+      {url: `/api/v1/comments/${commentId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: commentUpdate, signal
+    },
+      );
+    }
+
+
+
+
+export const getUpdateCommentMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateComment>>, TError,{commentId: string;data: CommentUpdate}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof updateComment>>, TError,{commentId: string;data: CommentUpdate}, TContext> => {
+
+const mutationKey = ['updateComment'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateComment>>, {commentId: string;data: CommentUpdate}> = (props) => {
+          const {commentId,data} = props ?? {};
+
+          return  updateComment(commentId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateCommentMutationResult = NonNullable<Awaited<ReturnType<typeof updateComment>>>
+    export type UpdateCommentMutationBody = CommentUpdate
+    export type UpdateCommentMutationError = HTTPValidationError
+
+    /**
+ * @summary Update Comment
+ */
+export const useUpdateComment = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateComment>>, TError,{commentId: string;data: CommentUpdate}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateComment>>,
+        TError,
+        {commentId: string;data: CommentUpdate},
+        TContext
+      > => {
+      return useMutation(getUpdateCommentMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Delete Comment
+ */
+export const deleteComment = (
+    commentId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<void>(
+      {url: `/api/v1/comments/${commentId}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getDeleteCommentMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteComment>>, TError,{commentId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof deleteComment>>, TError,{commentId: string}, TContext> => {
+
+const mutationKey = ['deleteComment'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteComment>>, {commentId: string}> = (props) => {
+          const {commentId} = props ?? {};
+
+          return  deleteComment(commentId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteCommentMutationResult = NonNullable<Awaited<ReturnType<typeof deleteComment>>>
+
+    export type DeleteCommentMutationError = HTTPValidationError
+
+    /**
+ * @summary Delete Comment
+ */
+export const useDeleteComment = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteComment>>, TError,{commentId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteComment>>,
+        TError,
+        {commentId: string},
+        TContext
+      > => {
+      return useMutation(getDeleteCommentMutationOptions(options), queryClient);
+    }
+
+/**
  * @summary Portal Summary
  */
 export const portalSummary = (
@@ -17831,6 +18226,202 @@ export function usePortalValuationCertificate<TData = Awaited<ReturnType<typeof 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getPortalValuationCertificateQueryOptions(valuationId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Portal Project Photos
+ */
+export const portalProjectPhotos = (
+    projectId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<PortalPhotoTimeline>(
+      {url: `/api/v1/portal/projects/${projectId}/photos`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getPortalProjectPhotosQueryKey = (projectId: string,) => {
+    return [
+    `/api/v1/portal/projects/${projectId}/photos`
+    ] as const;
+    }
+
+
+export const getPortalProjectPhotosQueryOptions = <TData = Awaited<ReturnType<typeof portalProjectPhotos>>, TError = HTTPValidationError>(projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalProjectPhotos>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPortalProjectPhotosQueryKey(projectId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof portalProjectPhotos>>> = ({ signal }) => portalProjectPhotos(projectId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: projectId !== null && projectId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof portalProjectPhotos>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PortalProjectPhotosQueryResult = NonNullable<Awaited<ReturnType<typeof portalProjectPhotos>>>
+export type PortalProjectPhotosQueryError = HTTPValidationError
+
+
+export function usePortalProjectPhotos<TData = Awaited<ReturnType<typeof portalProjectPhotos>>, TError = HTTPValidationError>(
+ projectId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalProjectPhotos>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof portalProjectPhotos>>,
+          TError,
+          Awaited<ReturnType<typeof portalProjectPhotos>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePortalProjectPhotos<TData = Awaited<ReturnType<typeof portalProjectPhotos>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalProjectPhotos>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof portalProjectPhotos>>,
+          TError,
+          Awaited<ReturnType<typeof portalProjectPhotos>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePortalProjectPhotos<TData = Awaited<ReturnType<typeof portalProjectPhotos>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalProjectPhotos>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Portal Project Photos
+ */
+
+export function usePortalProjectPhotos<TData = Awaited<ReturnType<typeof portalProjectPhotos>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalProjectPhotos>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPortalProjectPhotosQueryOptions(projectId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Images are served through the token like everything else here, never
+ * from a public static mount.
+ * @summary Portal Photo File
+ */
+export const portalPhotoFile = (
+    mediaId: string,
+    params?: PortalPhotoFileParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<unknown>(
+      {url: `/api/v1/portal/photos/${mediaId}/file`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getPortalPhotoFileQueryKey = (mediaId: string,
+    params?: PortalPhotoFileParams,) => {
+    return [
+    `/api/v1/portal/photos/${mediaId}/file`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getPortalPhotoFileQueryOptions = <TData = Awaited<ReturnType<typeof portalPhotoFile>>, TError = HTTPValidationError>(mediaId: string,
+    params?: PortalPhotoFileParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalPhotoFile>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPortalPhotoFileQueryKey(mediaId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof portalPhotoFile>>> = ({ signal }) => portalPhotoFile(mediaId,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: mediaId !== null && mediaId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof portalPhotoFile>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PortalPhotoFileQueryResult = NonNullable<Awaited<ReturnType<typeof portalPhotoFile>>>
+export type PortalPhotoFileQueryError = HTTPValidationError
+
+
+export function usePortalPhotoFile<TData = Awaited<ReturnType<typeof portalPhotoFile>>, TError = HTTPValidationError>(
+ mediaId: string,
+    params: undefined |  PortalPhotoFileParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalPhotoFile>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof portalPhotoFile>>,
+          TError,
+          Awaited<ReturnType<typeof portalPhotoFile>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePortalPhotoFile<TData = Awaited<ReturnType<typeof portalPhotoFile>>, TError = HTTPValidationError>(
+ mediaId: string,
+    params?: PortalPhotoFileParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalPhotoFile>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof portalPhotoFile>>,
+          TError,
+          Awaited<ReturnType<typeof portalPhotoFile>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePortalPhotoFile<TData = Awaited<ReturnType<typeof portalPhotoFile>>, TError = HTTPValidationError>(
+ mediaId: string,
+    params?: PortalPhotoFileParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalPhotoFile>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Portal Photo File
+ */
+
+export function usePortalPhotoFile<TData = Awaited<ReturnType<typeof portalPhotoFile>>, TError = HTTPValidationError>(
+ mediaId: string,
+    params?: PortalPhotoFileParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalPhotoFile>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPortalPhotoFileQueryOptions(mediaId,params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

@@ -69,6 +69,7 @@ class WorkerRead(WorkerBase):
 class TimesheetCreate(BaseModel):
     worker_id: uuid.UUID
     project_id: uuid.UUID
+    task_id: uuid.UUID | None = None
     work_date: date
     quantity: Decimal = Field(gt=0)
     overtime_quantity: Decimal = Field(default=Decimal("0"), ge=0)
@@ -76,6 +77,7 @@ class TimesheetCreate(BaseModel):
 
 
 class TimesheetUpdate(BaseModel):
+    task_id: uuid.UUID | None = None
     quantity: Decimal | None = Field(default=None, gt=0)
     overtime_quantity: Decimal | None = Field(default=None, ge=0)
     notes: str | None = None
@@ -99,6 +101,7 @@ class TimesheetRead(BaseModel):
     id: uuid.UUID
     worker_id: uuid.UUID
     project_id: uuid.UUID
+    task_id: uuid.UUID | None = None
     work_date: date
     quantity: Decimal
     overtime_quantity: Decimal

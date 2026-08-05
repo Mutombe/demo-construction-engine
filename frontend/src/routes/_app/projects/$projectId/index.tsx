@@ -2,6 +2,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { Can } from "@/components/layout/Can";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EntityLink } from "@/components/ui/linked-row";
+import { CommentThread } from "@/features/comments/CommentThread";
 import { PortalAccessCard } from "@/features/portal/PortalAccessCard";
 import { WorkStatusBadge } from "@/features/projects/StatusBadge";
 import {
@@ -179,6 +180,15 @@ function OverviewTab() {
             <PortalAccessCard clientId={project.client_id} clientName={project.client_name} />
           </Can>
         )}
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Discussion</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CommentThread entityType="project" entityId={projectId} />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
