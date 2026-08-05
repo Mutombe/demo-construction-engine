@@ -482,6 +482,16 @@ def goods_in(
         )
     )
     db.flush()
+    # Stock arriving is an asset swap, not a project cost: the job is charged
+    # when the material is issued. Posted here rather than at the purchase
+    # order because this is the single door stock comes through — a direct
+    # receipt and a PO delivery both land on the books the same way.
+    accounting.post_goods_in(
+        db,
+        amount=qty * data.unit_cost,
+        reference=data.reference or item.code,
+        when=data.movement_date or date.today(),
+    )
     return item
 
 

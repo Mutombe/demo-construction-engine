@@ -544,3 +544,48 @@ def test_the_control_covers_revenue_as_well_as_cost(client, db):
     # is only reachable from a test — the product never deletes a journal.
     income = client.get("/api/v1/accounting/income-statement", headers=headers).json()
     assert Decimal(income["revenue_total"]) == Decimal("12000.00")
+
+
+def test_stock_received_directly_reaches_the_books(client, db):
+    """Production showed inventory going negative: stock was being issued out
+    of an account nothing had ever been received into, because only purchase
+    orders posted. Every receipt goes through goods-in, so that is where it
+    belongs."""
+    headers = _admin(db)
+    item = client.post(
+        "/api/v1/stock-items",
+        json={"code": "SAND-1", "name": "Sand", "unit": "m3", "reorder_level": "0"},
+        headers=headers,
+    ).json()
+    client.post(
+        f"/api/v1/stock-items/{item['id']}/goods-in",
+        json={"quantity": "20", "unit_cost": "15.00", "reference": "Opening stock"},
+        headers=headers,
+    )
+
+    assert _balance(client, headers, "1300") == Decimal("300.00")
+    assert _balance(client, headers, "2000") == Decimal("300.00")
+
+
+def test_issuing_stock_never_drives_inventory_below_what_arrived(client, db):
+    headers = _admin(db)
+    project = make_project(db)
+    item = client.post(
+        "/api/v1/stock-items",
+        json={"code": "CEM-1", "name": "Cement", "unit": "bag", "reorder_level": "0"},
+        headers=headers,
+    ).json()
+    client.post(
+        f"/api/v1/stock-items/{item['id']}/goods-in",
+        json={"quantity": "100", "unit_cost": "12.00"},
+        headers=headers,
+    )
+    client.post(
+        f"/api/v1/stock-items/{item['id']}/issue",
+        json={"project_id": str(project.id), "quantity": "30"},
+        headers=headers,
+    )
+
+    # 1200 in, 360 issued to the job: the asset is what is left, not a deficit
+    assert _balance(client, headers, "1300") == Decimal("840.00")
+    assert _balance(client, headers, "5900") == Decimal("360.00")

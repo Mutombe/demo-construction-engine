@@ -619,19 +619,6 @@ def receive_po(db: Session, po_id: uuid.UUID, body: PoReceive, user_id: uuid.UUI
 
     if body.destination == PoDestination.store:
         _receive_to_store(db, po, body, when, user_id)
-        # Stock arriving is an asset swap, not a project cost: the job is
-        # charged when the material is issued, not when it lands in the store.
-        # Recomputed from quantity and price rather than read off `amount` or
-        # `total_amount`: both are database-generated columns, so their values
-        # are not yet visible on these objects at this point in the flush.
-        accounting.post_goods_in(
-            db,
-            amount=sum(
-                ((item.quantity * item.unit_price) for item in po.items), Decimal("0")
-            ),
-            reference=po.doc_number,
-            when=when,
-        )
     else:
         for item in po.items:
             entry = CostEntry(
