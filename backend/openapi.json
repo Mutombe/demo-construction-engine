@@ -12557,6 +12557,826 @@
         }
       }
     },
+    "/api/v1/accounting/accounts": {
+      "get": {
+        "tags": [
+          "accounting"
+        ],
+        "summary": "List Accounts",
+        "operationId": "list_accounts",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "active_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Active Only"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccountRead"
+                  },
+                  "title": "Response List Accounts"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "accounting"
+        ],
+        "summary": "Create Account",
+        "operationId": "create_account",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounting/accounts/{account_id}": {
+      "patch": {
+        "tags": [
+          "accounting"
+        ],
+        "summary": "Update Account",
+        "operationId": "update_account",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Account Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounting/accounts/{account_id}/ledger": {
+      "get": {
+        "tags": [
+          "accounting"
+        ],
+        "summary": "Get Account Ledger",
+        "operationId": "get_account_ledger",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Account Id"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LedgerRow"
+                  },
+                  "title": "Response Get Account Ledger"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounting/journals": {
+      "get": {
+        "tags": [
+          "accounting"
+        ],
+        "summary": "List Journals",
+        "operationId": "list_journals",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          },
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JournalRead"
+                  },
+                  "title": "Response List Journals"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "accounting"
+        ],
+        "summary": "Create Journal",
+        "description": "Creates a draft. Posting is a separate, deliberate act.",
+        "operationId": "create_journal",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JournalCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounting/journals/{journal_id}": {
+      "get": {
+        "tags": [
+          "accounting"
+        ],
+        "summary": "Get Journal",
+        "operationId": "get_journal",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "journal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Journal Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounting/journals/{journal_id}/post": {
+      "post": {
+        "tags": [
+          "accounting"
+        ],
+        "summary": "Post Journal",
+        "operationId": "post_journal",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "journal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Journal Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounting/journals/{journal_id}/reverse": {
+      "post": {
+        "tags": [
+          "accounting"
+        ],
+        "summary": "Reverse Journal",
+        "description": "Corrects by writing the mirror image. Nothing is ever deleted.",
+        "operationId": "reverse_journal",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "journal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Journal Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounting/trial-balance": {
+      "get": {
+        "tags": [
+          "accounting"
+        ],
+        "summary": "Get Trial Balance",
+        "operationId": "get_trial_balance",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "as_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As At"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrialBalance"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounting/income-statement": {
+      "get": {
+        "tags": [
+          "accounting"
+        ],
+        "summary": "Get Income Statement",
+        "operationId": "get_income_statement",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          },
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncomeStatement"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounting/balance-sheet": {
+      "get": {
+        "tags": [
+          "accounting"
+        ],
+        "summary": "Get Balance Sheet",
+        "operationId": "get_balance_sheet",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "as_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As At"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BalanceSheet"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounting/unposted": {
+      "get": {
+        "tags": [
+          "accounting"
+        ],
+        "summary": "List Unposted",
+        "description": "The control that makes a posting failure visible. Should be empty.",
+        "operationId": "list_unposted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/UnpostedEntry"
+                  },
+                  "type": "array",
+                  "title": "Response List Unposted"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/accounting/unposted/post": {
+      "post": {
+        "tags": [
+          "accounting"
+        ],
+        "summary": "Post Unposted",
+        "operationId": "post_unposted",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Post Unposted"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/accounting/period-summary": {
+      "get": {
+        "tags": [
+          "accounting"
+        ],
+        "summary": "Period Summary",
+        "description": "The two numbers a director asks for first, without opening a statement.",
+        "operationId": "period_summary",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Period Summary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/portal/summary": {
       "get": {
         "tags": [
@@ -12915,6 +13735,156 @@
   },
   "components": {
     "schemas": {
+      "AccountCreate": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 10,
+            "minLength": 1,
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "account_type": {
+            "$ref": "#/components/schemas/AccountType"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "account_type"
+        ],
+        "title": "AccountCreate"
+      },
+      "AccountRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "account_type": {
+            "$ref": "#/components/schemas/AccountType"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "is_system": {
+            "type": "boolean",
+            "title": "Is System"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "balance": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Balance"
+          },
+          "normal_balance": {
+            "type": "string",
+            "title": "Normal Balance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "name",
+          "account_type",
+          "description",
+          "is_system",
+          "is_active",
+          "balance",
+          "normal_balance"
+        ],
+        "title": "AccountRead"
+      },
+      "AccountType": {
+        "type": "string",
+        "enum": [
+          "asset",
+          "liability",
+          "equity",
+          "revenue",
+          "expense"
+        ],
+        "title": "AccountType"
+      },
+      "AccountUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "AccountUpdate"
+      },
       "ActivityLogRead": {
         "properties": {
           "id": {
@@ -13070,6 +14040,73 @@
           "available"
         ],
         "title": "AiStatus"
+      },
+      "BalanceSheet": {
+        "properties": {
+          "as_at": {
+            "type": "string",
+            "format": "date",
+            "title": "As At"
+          },
+          "assets": {
+            "items": {
+              "$ref": "#/components/schemas/StatementLine"
+            },
+            "type": "array",
+            "title": "Assets"
+          },
+          "liabilities": {
+            "items": {
+              "$ref": "#/components/schemas/StatementLine"
+            },
+            "type": "array",
+            "title": "Liabilities"
+          },
+          "equity": {
+            "items": {
+              "$ref": "#/components/schemas/StatementLine"
+            },
+            "type": "array",
+            "title": "Equity"
+          },
+          "asset_total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Asset Total"
+          },
+          "liability_total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Liability Total"
+          },
+          "equity_total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Equity Total"
+          },
+          "result_for_period": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Result For Period"
+          },
+          "balanced": {
+            "type": "boolean",
+            "title": "Balanced"
+          }
+        },
+        "type": "object",
+        "required": [
+          "as_at",
+          "assets",
+          "liabilities",
+          "equity",
+          "asset_total",
+          "liability_total",
+          "equity_total",
+          "result_for_period",
+          "balanced"
+        ],
+        "title": "BalanceSheet"
       },
       "Body_upload_ingestion_item": {
         "properties": {
@@ -16865,6 +17902,60 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "IncomeStatement": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date",
+            "title": "End"
+          },
+          "revenue": {
+            "items": {
+              "$ref": "#/components/schemas/StatementLine"
+            },
+            "type": "array",
+            "title": "Revenue"
+          },
+          "expenses": {
+            "items": {
+              "$ref": "#/components/schemas/StatementLine"
+            },
+            "type": "array",
+            "title": "Expenses"
+          },
+          "revenue_total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Revenue Total"
+          },
+          "expense_total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Expense Total"
+          },
+          "net_result": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Net Result"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "revenue",
+          "expenses",
+          "revenue_total",
+          "expense_total",
+          "net_result"
+        ],
+        "title": "IncomeStatement"
+      },
       "IngestionChannel": {
         "type": "string",
         "enum": [
@@ -17608,6 +18699,462 @@
           "resolved"
         ],
         "title": "IssueStatus"
+      },
+      "JournalCreate": {
+        "properties": {
+          "journal_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Journal Date"
+          },
+          "memo": {
+            "type": "string",
+            "maxLength": 400,
+            "minLength": 1,
+            "title": "Memo"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/JournalLineIn"
+            },
+            "type": "array",
+            "minItems": 2,
+            "title": "Lines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "journal_date",
+          "memo",
+          "lines"
+        ],
+        "title": "JournalCreate"
+      },
+      "JournalDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "doc_number": {
+            "type": "string",
+            "title": "Doc Number"
+          },
+          "journal_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Journal Date"
+          },
+          "memo": {
+            "type": "string",
+            "title": "Memo"
+          },
+          "status": {
+            "$ref": "#/components/schemas/JournalStatus"
+          },
+          "source": {
+            "$ref": "#/components/schemas/JournalSource"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Id"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total"
+          },
+          "posted_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Posted At"
+          },
+          "reversal_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reversal Of"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/JournalLineRead"
+            },
+            "type": "array",
+            "title": "Lines",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "doc_number",
+          "journal_date",
+          "memo",
+          "status",
+          "source",
+          "source_id",
+          "project_id",
+          "total",
+          "posted_at",
+          "reversal_of"
+        ],
+        "title": "JournalDetail"
+      },
+      "JournalLineIn": {
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Account Id"
+          },
+          "debit": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Debit",
+            "default": "0"
+          },
+          "credit": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Credit",
+            "default": "0"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "account_id"
+        ],
+        "title": "JournalLineIn"
+      },
+      "JournalLineRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "account_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Account Id"
+          },
+          "debit": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Debit"
+          },
+          "credit": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Credit"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "account_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Code"
+          },
+          "account_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "account_id",
+          "debit",
+          "credit",
+          "description"
+        ],
+        "title": "JournalLineRead"
+      },
+      "JournalRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "doc_number": {
+            "type": "string",
+            "title": "Doc Number"
+          },
+          "journal_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Journal Date"
+          },
+          "memo": {
+            "type": "string",
+            "title": "Memo"
+          },
+          "status": {
+            "$ref": "#/components/schemas/JournalStatus"
+          },
+          "source": {
+            "$ref": "#/components/schemas/JournalSource"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Id"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total"
+          },
+          "posted_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Posted At"
+          },
+          "reversal_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reversal Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "doc_number",
+          "journal_date",
+          "memo",
+          "status",
+          "source",
+          "source_id",
+          "project_id",
+          "total",
+          "posted_at",
+          "reversal_of"
+        ],
+        "title": "JournalRead"
+      },
+      "JournalSource": {
+        "type": "string",
+        "enum": [
+          "manual",
+          "cost_entry",
+          "valuation",
+          "goods_in",
+          "reversal"
+        ],
+        "title": "JournalSource",
+        "description": "What caused the journal. Manual is the only one a person writes."
+      },
+      "JournalStatus": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "posted",
+          "reversed"
+        ],
+        "title": "JournalStatus"
+      },
+      "LedgerRow": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "entry_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Entry Date"
+          },
+          "doc_number": {
+            "type": "string",
+            "title": "Doc Number"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "debit": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Debit"
+          },
+          "credit": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Credit"
+          },
+          "balance_after": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Balance After"
+          },
+          "journal_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Journal Id"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "entry_date",
+          "doc_number",
+          "description",
+          "debit",
+          "credit",
+          "balance_after",
+          "journal_id",
+          "project_id"
+        ],
+        "title": "LedgerRow"
       },
       "LineFinding": {
         "properties": {
@@ -24802,6 +26349,30 @@
         "type": "object",
         "title": "SiteIssueUpdate"
       },
+      "StatementLine": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "amount"
+        ],
+        "title": "StatementLine"
+      },
       "StockBatchRead": {
         "properties": {
           "id": {
@@ -27999,6 +29570,136 @@
           "paid"
         ],
         "title": "TrendMonth"
+      },
+      "TrialBalance": {
+        "properties": {
+          "as_at": {
+            "type": "string",
+            "format": "date",
+            "title": "As At"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/TrialBalanceRow"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "total_debit": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Debit"
+          },
+          "total_credit": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Credit"
+          },
+          "balanced": {
+            "type": "boolean",
+            "title": "Balanced"
+          }
+        },
+        "type": "object",
+        "required": [
+          "as_at",
+          "rows",
+          "total_debit",
+          "total_credit",
+          "balanced"
+        ],
+        "title": "TrialBalance"
+      },
+      "TrialBalanceRow": {
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Account Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "account_type": {
+            "type": "string",
+            "title": "Account Type"
+          },
+          "debit": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Debit"
+          },
+          "credit": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Credit"
+          },
+          "balance": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Balance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "account_id",
+          "code",
+          "name",
+          "account_type",
+          "debit",
+          "credit",
+          "balance"
+        ],
+        "title": "TrialBalanceRow"
+      },
+      "UnpostedEntry": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "entry_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Entry Date"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "entry_date",
+          "description",
+          "amount",
+          "project_id"
+        ],
+        "title": "UnpostedEntry"
       },
       "UnreadCount": {
         "properties": {

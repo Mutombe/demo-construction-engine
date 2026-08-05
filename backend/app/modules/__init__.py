@@ -1,4 +1,5 @@
 # Import every module's models so Base.metadata (and Alembic autogenerate) sees all tables.
+from app.modules.accounting import models as accounting_models  # noqa: F401
 from app.modules.admin import models as admin_models  # noqa: F401
 from app.modules.boq import models as boq_models  # noqa: F401
 from app.modules.clients import models as clients_models  # noqa: F401

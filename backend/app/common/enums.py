@@ -228,3 +228,27 @@ class PoStatus(StrEnum):
     issued = "issued"
     received = "received"
     cancelled = "cancelled"
+
+
+class AccountType(StrEnum):
+    asset = "asset"
+    liability = "liability"
+    equity = "equity"
+    revenue = "revenue"
+    expense = "expense"
+
+
+class JournalStatus(StrEnum):
+    draft = "draft"
+    posted = "posted"
+    reversed = "reversed"
+
+
+class JournalSource(StrEnum):
+    """What caused the journal. Manual is the only one a person writes."""
+
+    manual = "manual"
+    cost_entry = "cost_entry"
+    valuation = "valuation"
+    goods_in = "goods_in"
+    reversal = "reversal"

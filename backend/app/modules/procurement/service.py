@@ -39,6 +39,7 @@ from app.modules.procurement.schemas import (
 )
 from app.modules.projects.service import get_project
 from app.modules.admin import trash
+from app.modules.accounting import service as accounting
 
 ZERO = Decimal("0")
 
@@ -618,21 +619,35 @@ def receive_po(db: Session, po_id: uuid.UUID, body: PoReceive, user_id: uuid.UUI
 
     if body.destination == PoDestination.store:
         _receive_to_store(db, po, body, when, user_id)
+        # Stock arriving is an asset swap, not a project cost: the job is
+        # charged when the material is issued, not when it lands in the store.
+        # Recomputed from quantity and price rather than read off `amount` or
+        # `total_amount`: both are database-generated columns, so their values
+        # are not yet visible on these objects at this point in the flush.
+        accounting.post_goods_in(
+            db,
+            amount=sum(
+                ((item.quantity * item.unit_price) for item in po.items), Decimal("0")
+            ),
+            reference=po.doc_number,
+            when=when,
+        )
     else:
         for item in po.items:
-            db.add(
-                CostEntry(
-                    project_id=po.project_id,
-                    boq_item_id=item.boq_item_id,
-                    entry_date=when,
-                    description=f"PO {po.doc_number}: {item.description}",
-                    amount=item.amount,
-                    quantity=item.quantity,
-                    source=CostSource.purchase_order,
-                    reference=po.doc_number,
-                    created_by=user_id,
-                )
+            entry = CostEntry(
+                project_id=po.project_id,
+                boq_item_id=item.boq_item_id,
+                entry_date=when,
+                description=f"PO {po.doc_number}: {item.description}",
+                amount=item.amount,
+                quantity=item.quantity,
+                source=CostSource.purchase_order,
+                reference=po.doc_number,
+                created_by=user_id,
             )
+            db.add(entry)
+            db.flush()
+            accounting.post_cost_entry(db, entry)
 
     po.status = PoStatus.received
     po.received_date = when

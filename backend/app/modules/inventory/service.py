@@ -26,6 +26,7 @@ from app.modules.inventory.schemas import (
     StockItemUpdate,
 )
 from app.modules.projects.service import get_project
+from app.modules.accounting import service as accounting
 
 CENT = Decimal("0.01")
 
@@ -519,6 +520,7 @@ def issue_to_project(
     )
     db.add(entry)
     db.flush()
+    accounting.post_cost_entry(db, entry)
 
     item.qty_on_hand -= data.quantity  # WAC unchanged on issue
     level.quantity -= data.quantity

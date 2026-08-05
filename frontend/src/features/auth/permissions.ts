@@ -32,6 +32,7 @@ export type Permission =
   | "requisition:create"
   | "requisition:action"
   | "users:manage"
+  | "accounting:read"
   | "settings:manage";
 
 const READ_ALL: Permission[] = [
@@ -50,6 +51,7 @@ const READ_ALL: Permission[] = [
  *  means the displayed matrix cannot drift from actual behaviour. */
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   admin: [
+    "accounting:read",
     ...READ_ALL,
     "project:write",
     "task:write",
@@ -76,6 +78,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "settings:manage",
   ],
   project_manager: [
+    "accounting:read",
     ...READ_ALL,
     "project:write",
     "task:write",

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppAccountingRouteImport } from './routes/_app/accounting'
 import { Route as AppAssistantRouteImport } from './routes/_app/assistant'
 import { Route as AppCalendarRouteImport } from './routes/_app/calendar'
 import { Route as AppMapRouteImport } from './routes/_app/map'
@@ -65,6 +66,11 @@ const LoginRoute = LoginRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAccountingRoute = AppAccountingRouteImport.update({
+  id: '/accounting',
+  path: '/accounting',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAssistantRoute = AppAssistantRouteImport.update({
@@ -284,6 +290,7 @@ const AppProjectsProjectIdValuationsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
+  '/accounting': typeof AppAccountingRoute
   '/assistant': typeof AppAssistantRoute
   '/calendar': typeof AppCalendarRoute
   '/map': typeof AppMapRoute
@@ -327,6 +334,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/accounting': typeof AppAccountingRoute
   '/assistant': typeof AppAssistantRoute
   '/calendar': typeof AppCalendarRoute
   '/map': typeof AppMapRoute
@@ -372,6 +380,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/_app/accounting': typeof AppAccountingRoute
   '/_app/assistant': typeof AppAssistantRoute
   '/_app/calendar': typeof AppCalendarRoute
   '/_app/map': typeof AppMapRoute
@@ -419,6 +428,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/accounting'
     | '/assistant'
     | '/calendar'
     | '/map'
@@ -462,6 +472,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
+    | '/accounting'
     | '/assistant'
     | '/calendar'
     | '/map'
@@ -506,6 +517,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_app'
     | '/login'
+    | '/_app/accounting'
     | '/_app/assistant'
     | '/_app/calendar'
     | '/_app/map'
@@ -577,6 +589,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/accounting': {
+      id: '/_app/accounting'
+      path: '/accounting'
+      fullPath: '/accounting'
+      preLoaderRoute: typeof AppAccountingRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/assistant': {
@@ -931,6 +950,7 @@ const AppProjectsProjectIdRouteWithChildren =
   AppProjectsProjectIdRoute._addFileChildren(AppProjectsProjectIdRouteChildren)
 
 interface AppRouteChildren {
+  AppAccountingRoute: typeof AppAccountingRoute
   AppAssistantRoute: typeof AppAssistantRoute
   AppCalendarRoute: typeof AppCalendarRoute
   AppMapRoute: typeof AppMapRoute
@@ -962,6 +982,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAccountingRoute: AppAccountingRoute,
   AppAssistantRoute: AppAssistantRoute,
   AppCalendarRoute: AppCalendarRoute,
   AppMapRoute: AppMapRoute,

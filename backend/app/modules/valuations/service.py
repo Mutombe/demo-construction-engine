@@ -23,6 +23,7 @@ from app.modules.valuations.schemas import (
     ValuationUpdate,
 )
 from app.modules.admin import trash
+from app.modules.accounting import service as accounting
 
 ZERO = Decimal("0")
 CENT = Decimal("0.01")
@@ -257,6 +258,8 @@ def issue_valuation(
     )
     valuation.status = ValuationStatus.issued
     valuation.issued_date = issued_date or date.today()
+    db.flush()
+    accounting.post_valuation(db, valuation)
     from app.modules.admin import service as admin
     from app.modules.users.models import User
 

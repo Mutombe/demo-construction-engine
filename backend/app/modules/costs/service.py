@@ -12,6 +12,7 @@ from app.modules.costs.models import CostEntry
 from app.modules.costs.schemas import CostEntryCreate, CostEntryUpdate
 from app.modules.projects.service import get_project
 from app.modules.admin import trash
+from app.modules.accounting import service as accounting
 
 
 def list_entries(
@@ -64,6 +65,7 @@ def create_entry(
     entry = CostEntry(**data.model_dump(), project_id=project_id, created_by=created_by)
     db.add(entry)
     db.flush()
+    accounting.post_cost_entry(db, entry)
     return entry
 
 

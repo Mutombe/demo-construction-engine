@@ -5,6 +5,7 @@ from app.core.config import settings
 from app.core.deps import get_current_user
 from app.core.exceptions import register_exception_handlers
 from app.modules.admin.router import public_router as invites_public_router
+from app.modules.accounting.router import router as accounting_router
 from app.modules.admin.router import router as admin_router
 from app.modules.ai.router import router as ai_router
 from app.modules.auth.router import router as auth_router
@@ -88,6 +89,7 @@ def create_app() -> FastAPI:
     protected.include_router(admin_router)
     protected.include_router(company_router)
     protected.include_router(comments_router)
+    protected.include_router(accounting_router)
     api.include_router(protected)
 
     # Client portal: separate auth surface (X-Portal-Token), deliberately NOT

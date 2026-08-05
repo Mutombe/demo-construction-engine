@@ -15,6 +15,7 @@ from app.modules.notifications import service as notifications
 from app.modules.projects.models import Project
 from app.modules.projects.service import get_project
 from app.modules.users.models import User
+from app.modules.accounting import service as accounting
 
 
 def claim_read(db: Session, claim: ExpenseClaim) -> ExpenseClaimRead:
@@ -147,6 +148,7 @@ def approve_claim(db: Session, claim_id: uuid.UUID, approver: User) -> ExpenseCl
     )
     db.add(entry)
     db.flush()
+    accounting.post_cost_entry(db, entry, approver)
     claim.status = ExpenseStatus.approved
     claim.approved_by = approver.id
     claim.decided_at = datetime.now(UTC)

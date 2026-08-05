@@ -23,6 +23,7 @@ from app.modules.payroll.schemas import (
 from app.modules.projects.models import Project
 from app.modules.projects.service import get_project
 from app.modules.admin import trash
+from app.modules.accounting import service as accounting
 
 CENT = Decimal("0.01")
 OT_MULTIPLIER = Decimal("1.5")
@@ -458,17 +459,18 @@ def approve_pay_run(db: Session, pay_run_id: uuid.UUID, approver_id: uuid.UUID) 
     for project_id, amount in per_project.items():
         if amount == 0:
             continue
-        db.add(
-            CostEntry(
-                project_id=uuid.UUID(project_id),
-                entry_date=run.period_end,
-                description=f"Pay run {run.doc_number}: site labour",
-                amount=amount,
-                source=CostSource.payroll,
-                reference=run.doc_number,
-                created_by=approver_id,
-            )
+        entry = CostEntry(
+            project_id=uuid.UUID(project_id),
+            entry_date=run.period_end,
+            description=f"Pay run {run.doc_number}: site labour",
+            amount=amount,
+            source=CostSource.payroll,
+            reference=run.doc_number,
+            created_by=approver_id,
         )
+        db.add(entry)
+        db.flush()
+        accounting.post_cost_entry(db, entry)
 
     for sheet in sheets:
         sheet.pay_run_id = run.id
