@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "@/lib/toast";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Can } from "@/components/layout/Can";
+import { SendRfqDialog } from "@/features/procurement/SendRfqDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,6 +47,7 @@ function RfqDetailPage() {
   const { data: rfq } = useGetRfq(rfqId);
   const { data: quotes } = useListQuotes(rfqId);
   const issueMutation = useIssueRfq();
+  const [sendOpen, setSendOpen] = useState(false);
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
   const [poQuoteId, setPoQuoteId] = useState<string | null>(null);
 
@@ -106,7 +108,14 @@ function RfqDetailPage() {
           )}
           {rfq.status !== "draft" && (
             <Can perm="procurement:write">
-              <Button onClick={() => setQuoteDialogOpen(true)}>
+              <Button onClick={() => setSendOpen(true)}>
+                <PaperPlaneTilt /> Send to Suppliers
+              </Button>
+            </Can>
+          )}
+          {rfq.status !== "draft" && (
+            <Can perm="procurement:write">
+              <Button variant="outline" onClick={() => setQuoteDialogOpen(true)}>
                 <Plus /> Record Quote
               </Button>
             </Can>
@@ -220,6 +229,7 @@ function RfqDetailPage() {
       </div>
 
       <QuoteExtractDialog open={quoteDialogOpen} onOpenChange={setQuoteDialogOpen} rfq={rfq} />
+      <SendRfqDialog rfqId={rfqId} open={sendOpen} onOpenChange={setSendOpen} />
       {poQuoteId && (
         <PoFromQuoteDialog
           open={poQuoteId !== null}

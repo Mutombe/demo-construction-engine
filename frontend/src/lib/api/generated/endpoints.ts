@@ -230,7 +230,10 @@ import type {
   RfqDetail,
   RfqDraft,
   RfqGenerateRequest,
+  RfqInviteCreated,
+  RfqInviteRead,
   RfqItemsReplace,
+  RfqSendRequest,
   RfqUpdate,
   SearchResults,
   SiteIssueCreate,
@@ -251,7 +254,10 @@ import type {
   StocktakeDetail,
   SupplierActivity,
   SupplierCreate,
+  SupplierQuoteReceipt,
+  SupplierQuoteSubmit,
   SupplierRead,
+  SupplierRfqView,
   SupplierUpdate,
   TaskCreate,
   TaskListItem,
@@ -7126,6 +7132,229 @@ export function useDownloadPurchaseOrderPdf<TData = Awaited<ReturnType<typeof do
 
 
 
+
+/**
+ * One link per supplier. Each is shown exactly once, like a portal link.
+ * @summary Send Rfq
+ */
+export const sendRfq = (
+    rfqId: string,
+    rfqSendRequest: RfqSendRequest,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<RfqInviteCreated[]>(
+      {url: `/api/v1/rfqs/${rfqId}/send`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: rfqSendRequest, signal
+    },
+      );
+    }
+
+
+
+
+export const getSendRfqMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendRfq>>, TError,{rfqId: string;data: RfqSendRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof sendRfq>>, TError,{rfqId: string;data: RfqSendRequest}, TContext> => {
+
+const mutationKey = ['sendRfq'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendRfq>>, {rfqId: string;data: RfqSendRequest}> = (props) => {
+          const {rfqId,data} = props ?? {};
+
+          return  sendRfq(rfqId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendRfqMutationResult = NonNullable<Awaited<ReturnType<typeof sendRfq>>>
+    export type SendRfqMutationBody = RfqSendRequest
+    export type SendRfqMutationError = HTTPValidationError
+
+    /**
+ * @summary Send Rfq
+ */
+export const useSendRfq = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendRfq>>, TError,{rfqId: string;data: RfqSendRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof sendRfq>>,
+        TError,
+        {rfqId: string;data: RfqSendRequest},
+        TContext
+      > => {
+      return useMutation(getSendRfqMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary List Rfq Invites
+ */
+export const listRfqInvites = (
+    rfqId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<RfqInviteRead[]>(
+      {url: `/api/v1/rfqs/${rfqId}/invites`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getListRfqInvitesQueryKey = (rfqId: string,) => {
+    return [
+    `/api/v1/rfqs/${rfqId}/invites`
+    ] as const;
+    }
+
+
+export const getListRfqInvitesQueryOptions = <TData = Awaited<ReturnType<typeof listRfqInvites>>, TError = HTTPValidationError>(rfqId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRfqInvites>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListRfqInvitesQueryKey(rfqId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listRfqInvites>>> = ({ signal }) => listRfqInvites(rfqId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: rfqId !== null && rfqId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listRfqInvites>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListRfqInvitesQueryResult = NonNullable<Awaited<ReturnType<typeof listRfqInvites>>>
+export type ListRfqInvitesQueryError = HTTPValidationError
+
+
+export function useListRfqInvites<TData = Awaited<ReturnType<typeof listRfqInvites>>, TError = HTTPValidationError>(
+ rfqId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRfqInvites>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listRfqInvites>>,
+          TError,
+          Awaited<ReturnType<typeof listRfqInvites>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListRfqInvites<TData = Awaited<ReturnType<typeof listRfqInvites>>, TError = HTTPValidationError>(
+ rfqId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRfqInvites>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listRfqInvites>>,
+          TError,
+          Awaited<ReturnType<typeof listRfqInvites>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListRfqInvites<TData = Awaited<ReturnType<typeof listRfqInvites>>, TError = HTTPValidationError>(
+ rfqId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRfqInvites>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Rfq Invites
+ */
+
+export function useListRfqInvites<TData = Awaited<ReturnType<typeof listRfqInvites>>, TError = HTTPValidationError>(
+ rfqId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRfqInvites>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListRfqInvitesQueryOptions(rfqId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Revoke Rfq Invite
+ */
+export const revokeRfqInvite = (
+    inviteId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<RfqInviteRead>(
+      {url: `/api/v1/rfq-invites/${inviteId}/revoke`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getRevokeRfqInviteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeRfqInvite>>, TError,{inviteId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof revokeRfqInvite>>, TError,{inviteId: string}, TContext> => {
+
+const mutationKey = ['revokeRfqInvite'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof revokeRfqInvite>>, {inviteId: string}> = (props) => {
+          const {inviteId} = props ?? {};
+
+          return  revokeRfqInvite(inviteId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RevokeRfqInviteMutationResult = NonNullable<Awaited<ReturnType<typeof revokeRfqInvite>>>
+
+    export type RevokeRfqInviteMutationError = HTTPValidationError
+
+    /**
+ * @summary Revoke Rfq Invite
+ */
+export const useRevokeRfqInvite = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeRfqInvite>>, TError,{inviteId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof revokeRfqInvite>>,
+        TError,
+        {inviteId: string},
+        TContext
+      > => {
+      return useMutation(getRevokeRfqInviteMutationOptions(options), queryClient);
+    }
 
 /**
  * @summary List Requisitions
@@ -19877,3 +20106,167 @@ export function usePortalPhotoFile<TData = Awaited<ReturnType<typeof portalPhoto
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+
+
+
+
+
+
+/**
+ * @summary Supplier View Rfq
+ */
+export const supplierViewRfq = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<SupplierRfqView>(
+      {url: `/api/v1/rfq-portal/rfq`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSupplierViewRfqQueryKey = () => {
+    return [
+    `/api/v1/rfq-portal/rfq`
+    ] as const;
+    }
+
+
+export const getSupplierViewRfqQueryOptions = <TData = Awaited<ReturnType<typeof supplierViewRfq>>, TError = HTTPValidationError>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof supplierViewRfq>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSupplierViewRfqQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof supplierViewRfq>>> = ({ signal }) => supplierViewRfq(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof supplierViewRfq>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SupplierViewRfqQueryResult = NonNullable<Awaited<ReturnType<typeof supplierViewRfq>>>
+export type SupplierViewRfqQueryError = HTTPValidationError
+
+
+export function useSupplierViewRfq<TData = Awaited<ReturnType<typeof supplierViewRfq>>, TError = HTTPValidationError>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof supplierViewRfq>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof supplierViewRfq>>,
+          TError,
+          Awaited<ReturnType<typeof supplierViewRfq>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSupplierViewRfq<TData = Awaited<ReturnType<typeof supplierViewRfq>>, TError = HTTPValidationError>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof supplierViewRfq>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof supplierViewRfq>>,
+          TError,
+          Awaited<ReturnType<typeof supplierViewRfq>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSupplierViewRfq<TData = Awaited<ReturnType<typeof supplierViewRfq>>, TError = HTTPValidationError>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof supplierViewRfq>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Supplier View Rfq
+ */
+
+export function useSupplierViewRfq<TData = Awaited<ReturnType<typeof supplierViewRfq>>, TError = HTTPValidationError>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof supplierViewRfq>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSupplierViewRfqQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Supplier Submit Quote
+ */
+export const supplierSubmitQuote = (
+    supplierQuoteSubmit: SupplierQuoteSubmit,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<SupplierQuoteReceipt>(
+      {url: `/api/v1/rfq-portal/quote`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: supplierQuoteSubmit, signal
+    },
+      );
+    }
+
+
+
+
+export const getSupplierSubmitQuoteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof supplierSubmitQuote>>, TError,{data: SupplierQuoteSubmit}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof supplierSubmitQuote>>, TError,{data: SupplierQuoteSubmit}, TContext> => {
+
+const mutationKey = ['supplierSubmitQuote'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof supplierSubmitQuote>>, {data: SupplierQuoteSubmit}> = (props) => {
+          const {data} = props ?? {};
+
+          return  supplierSubmitQuote(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SupplierSubmitQuoteMutationResult = NonNullable<Awaited<ReturnType<typeof supplierSubmitQuote>>>
+    export type SupplierSubmitQuoteMutationBody = SupplierQuoteSubmit
+    export type SupplierSubmitQuoteMutationError = HTTPValidationError
+
+    /**
+ * @summary Supplier Submit Quote
+ */
+export const useSupplierSubmitQuote = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof supplierSubmitQuote>>, TError,{data: SupplierQuoteSubmit}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof supplierSubmitQuote>>,
+        TError,
+        {data: SupplierQuoteSubmit},
+        TContext
+      > => {
+      return useMutation(getSupplierSubmitQuoteMutationOptions(options), queryClient);
+    }

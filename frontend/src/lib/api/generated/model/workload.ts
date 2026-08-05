@@ -5,10 +5,12 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { WorkloadPerson } from './workloadPerson.ts';
+import type { WorkloadWorker } from './workloadWorker.ts';
 
 export interface Workload {
   start: string;
   end: string;
   concurrency_limit: number;
   people: WorkloadPerson[];
+  workers?: WorkloadWorker[];
 }

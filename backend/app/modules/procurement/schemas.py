@@ -292,3 +292,70 @@ class SupplierActivity(BaseModel):
     quotes: list[SupplierQuoteActivity]
     totals: SupplierActivityTotals
     scorecard: SupplierScorecard
+
+
+# --- Supplier-facing RFQ portal ---------------------------------------------
+
+
+class RfqSendRequest(BaseModel):
+    supplier_ids: list[uuid.UUID] = Field(min_length=1)
+    expires_in_days: int = Field(default=21, ge=1, le=120)
+
+
+class RfqInviteRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    supplier_id: uuid.UUID
+    supplier_name: str | None = None
+    expires_at: datetime
+    sent_at: datetime | None
+    opened_at: datetime | None
+    responded_at: datetime | None
+    status: str = "sent"
+
+
+class RfqInviteCreated(RfqInviteRead):
+    """The link is returned once here and cannot be recovered afterwards."""
+
+    url: str
+
+
+class SupplierRfqItem(BaseModel):
+    id: uuid.UUID
+    description: str
+    unit: str
+    quantity: Decimal
+
+
+class SupplierRfqView(BaseModel):
+    rfq_id: uuid.UUID
+    doc_number: str
+    title: str
+    body: str | None
+    due_date: date | None
+    buyer_name: str
+    supplier_name: str
+    already_responded: bool
+    items: list[SupplierRfqItem]
+
+
+class SupplierQuoteLine(BaseModel):
+    rfq_item_id: uuid.UUID
+    quantity: Decimal | None = Field(default=None, gt=0)
+    unit_price: Decimal | None = Field(default=None, ge=0)
+
+
+class SupplierQuoteSubmit(BaseModel):
+    items: list[SupplierQuoteLine] = Field(min_length=1)
+    valid_until: date | None = None
+    payment_terms: str | None = Field(default=None, max_length=255)
+    delivery_terms: str | None = Field(default=None, max_length=255)
+    notes: str | None = None
+
+
+class SupplierQuoteReceipt(BaseModel):
+    quote_id: uuid.UUID
+    doc_number: str
+    total_amount: Decimal
+    received_date: date

@@ -169,11 +169,34 @@ class WorkloadPerson(BaseModel):
     tasks: list[WorkloadTask]
 
 
+class WorkerDayLoad(BaseModel):
+    day: date
+    booked: Decimal
+    overtime: Decimal
+    jobs: int
+    over: bool
+
+
+class WorkloadWorker(BaseModel):
+    worker_id: uuid.UUID
+    full_name: str
+    trade: str
+    pay_basis: str
+    days_booked: int
+    total_booked: Decimal
+    total_overtime: Decimal
+    projects: int
+    split_days: int
+    over_days: int
+    days: list[WorkerDayLoad]
+
+
 class Workload(BaseModel):
     start: date
     end: date
     concurrency_limit: int
     people: list[WorkloadPerson]
+    workers: list[WorkloadWorker] = []
 
 
 class CalendarEvent(BaseModel):

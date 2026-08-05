@@ -116,6 +116,10 @@ function WorkloadPage() {
         </Card>
       )}
 
+      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        Staff and their open jobs
+      </h2>
+
       <div className="space-y-3">
         {data?.people.map((person) => (
           <Card key={person.user_id ?? "unassigned"}>
@@ -192,6 +196,76 @@ function WorkloadPage() {
           </Card>
         ))}
       </div>
+
+      {data && (data.workers ?? []).length > 0 && (
+        <>
+          <h2 className="mb-2 mt-6 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Site labour and time booked
+          </h2>
+          <Card>
+            <CardContent className="p-0">
+              <div className="divide-y">
+                {(data.workers ?? []).map((worker) => (
+                  <div key={worker.worker_id} className="flex flex-wrap items-center gap-3 p-3">
+                    <div className="min-w-40">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{worker.full_name}</span>
+                        {worker.over_days > 0 && (
+                          <Badge variant="warning">
+                            {worker.over_days} over a full day
+                          </Badge>
+                        )}
+                        {worker.split_days > 0 && worker.over_days === 0 && (
+                          <Tooltip content="Booked on more than one job that day, which is allowed but worth knowing">
+                            <Badge variant="outline">{worker.split_days} split</Badge>
+                          </Tooltip>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {worker.trade} · paid {worker.pay_basis}
+                      </p>
+                    </div>
+                    <p className="min-w-44 text-xs text-muted-foreground">
+                      {worker.days_booked} {worker.days_booked === 1 ? "day" : "days"} booked ·{" "}
+                      {Number(worker.total_booked)}{" "}
+                      {worker.pay_basis === "hourly" ? "hours" : "days"}
+                      {Number(worker.total_overtime) > 0 && (
+                        <> · {Number(worker.total_overtime)} overtime</>
+                      )}
+                      {worker.projects > 1 && <> · {worker.projects} jobs</>}
+                    </p>
+                    <div className="flex flex-1 flex-wrap gap-0.5">
+                      {worker.days.map((day) => (
+                        <Tooltip
+                          key={day.day}
+                          content={`${new Date(`${day.day}T00:00:00`).toLocaleDateString(undefined, {
+                            weekday: "short",
+                            day: "numeric",
+                            month: "short",
+                          })} — ${Number(day.booked)} booked${
+                            day.jobs > 1 ? ` across ${day.jobs} jobs` : ""
+                          }`}
+                        >
+                          <span
+                            className={cn(
+                              "h-6 w-2.5 rounded-sm",
+                              day.over
+                                ? "bg-warning"
+                                : Number(day.booked) > 0
+                                  ? "bg-primary/70"
+                                  : "bg-muted/60",
+                            )}
+                          />
+                        </Tooltip>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
 }

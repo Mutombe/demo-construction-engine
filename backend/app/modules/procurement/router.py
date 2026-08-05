@@ -6,8 +6,14 @@ from app.common.enums import UserRole
 from app.common.pagination import PageParamsDep
 from app.common.schemas import Page
 from app.core.deps import CurrentUser, DbDep, require_roles
-from app.modules.procurement import service
+from app.modules.procurement import rfq_portal, service
 from app.modules.procurement.schemas import (
+    RfqInviteCreated,
+    RfqInviteRead,
+    RfqSendRequest,
+    SupplierQuoteReceipt,
+    SupplierQuoteSubmit,
+    SupplierRfqView,
     PoCreate,
     PoDetail,
     PoRead,
@@ -220,4 +226,87 @@ def download_purchase_order_pdf(po_id: uuid.UUID, db: DbDep):
         content=po_pdf(db, po),
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{po.doc_number}.pdf"'},
+    )
+
+
+# --- Sending an RFQ to suppliers --------------------------------------------
+
+
+@router.post("/rfqs/{rfq_id}/send", response_model=list[RfqInviteCreated], status_code=201)
+def send_rfq(
+    rfq_id: uuid.UUID, body: RfqSendRequest, db: DbDep, user: CurrentUser, _=proc_write
+) -> list[RfqInviteCreated]:
+    """One link per supplier. Each is shown exactly once, like a portal link."""
+    issued = rfq_portal.send_rfq(db, rfq_id, body.supplier_ids, body.expires_in_days, user.id)
+    return [
+        RfqInviteCreated(
+            id=invite.id,
+            supplier_id=invite.supplier_id,
+            supplier_name=invite.supplier.name,
+            expires_at=invite.expires_at,
+            sent_at=invite.sent_at,
+            opened_at=invite.opened_at,
+            responded_at=invite.responded_at,
+            status=rfq_portal.invite_status(invite),
+            url=rfq_portal.invite_url(raw),
+        )
+        for invite, raw in issued
+    ]
+
+
+@router.get("/rfqs/{rfq_id}/invites", response_model=list[RfqInviteRead])
+def list_rfq_invites(rfq_id: uuid.UUID, db: DbDep, _=proc_write) -> list[RfqInviteRead]:
+    return [
+        RfqInviteRead(
+            id=invite.id,
+            supplier_id=invite.supplier_id,
+            supplier_name=invite.supplier.name,
+            expires_at=invite.expires_at,
+            sent_at=invite.sent_at,
+            opened_at=invite.opened_at,
+            responded_at=invite.responded_at,
+            status=rfq_portal.invite_status(invite),
+        )
+        for invite in rfq_portal.list_invites(db, rfq_id)
+    ]
+
+
+@router.post("/rfq-invites/{invite_id}/revoke", response_model=RfqInviteRead)
+def revoke_rfq_invite(invite_id: uuid.UUID, db: DbDep, _=proc_write) -> RfqInviteRead:
+    invite = rfq_portal.revoke_invite(db, invite_id)
+    return RfqInviteRead(
+        id=invite.id,
+        supplier_id=invite.supplier_id,
+        supplier_name=invite.supplier.name,
+        expires_at=invite.expires_at,
+        sent_at=invite.sent_at,
+        opened_at=invite.opened_at,
+        responded_at=invite.responded_at,
+        status=rfq_portal.invite_status(invite),
+    )
+
+
+# --- The supplier's own surface ---------------------------------------------
+#
+# Its own router, authed by X-Rfq-Token, and NEVER mounted under the staff
+# `protected` router: the visitor here is an outsider with a link, not a user.
+
+supplier_router = APIRouter(prefix="/rfq-portal", tags=["rfq-portal"])
+
+
+@supplier_router.get("/rfq", response_model=SupplierRfqView)
+def supplier_view_rfq(db: DbDep, invite: rfq_portal.SupplierInvite) -> SupplierRfqView:
+    return SupplierRfqView.model_validate(rfq_portal.rfq_for_supplier(db, invite))
+
+
+@supplier_router.post("/quote", response_model=SupplierQuoteReceipt, status_code=201)
+def supplier_submit_quote(
+    body: SupplierQuoteSubmit, db: DbDep, invite: rfq_portal.SupplierInvite
+) -> SupplierQuoteReceipt:
+    quote = rfq_portal.submit_quote(db, invite, body)
+    return SupplierQuoteReceipt(
+        quote_id=quote.id,
+        doc_number=invite.rfq.doc_number,
+        total_amount=quote.total_amount,
+        received_date=quote.received_date,
     )

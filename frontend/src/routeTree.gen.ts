@@ -19,6 +19,7 @@ import { Route as AppMapRouteImport } from './routes/_app/map'
 import { Route as AppWorkloadRouteImport } from './routes/_app/workload'
 import { Route as AcceptInviteTokenRouteImport } from './routes/accept-invite.$token'
 import { Route as PortalTokenRouteImport } from './routes/portal/$token'
+import { Route as RfqTokenRouteImport } from './routes/rfq/$token'
 import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
 import { Route as AppClientsIndexRouteImport } from './routes/_app/clients/index'
 import { Route as AppClientsClientIdRouteImport } from './routes/_app/clients/$clientId'
@@ -101,6 +102,11 @@ const AcceptInviteTokenRoute = AcceptInviteTokenRouteImport.update({
 const PortalTokenRoute = PortalTokenRouteImport.update({
   id: '/portal/$token',
   path: '/portal/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RfqTokenRoute = RfqTokenRouteImport.update({
+  id: '/rfq/$token',
+  path: '/rfq/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
@@ -297,6 +303,7 @@ export interface FileRoutesByFullPath {
   '/workload': typeof AppWorkloadRoute
   '/accept-invite/$token': typeof AcceptInviteTokenRoute
   '/portal/$token': typeof PortalTokenRoute
+  '/rfq/$token': typeof RfqTokenRoute
   '/clients/$clientId': typeof AppClientsClientIdRoute
   '/expenses/$claimId': typeof AppExpensesClaimIdRoute
   '/inventory/$itemId': typeof AppInventoryItemIdRoute
@@ -341,6 +348,7 @@ export interface FileRoutesByTo {
   '/workload': typeof AppWorkloadRoute
   '/accept-invite/$token': typeof AcceptInviteTokenRoute
   '/portal/$token': typeof PortalTokenRoute
+  '/rfq/$token': typeof RfqTokenRoute
   '/': typeof AppIndexRoute
   '/clients/$clientId': typeof AppClientsClientIdRoute
   '/expenses/$claimId': typeof AppExpensesClaimIdRoute
@@ -387,6 +395,7 @@ export interface FileRoutesById {
   '/_app/workload': typeof AppWorkloadRoute
   '/accept-invite/$token': typeof AcceptInviteTokenRoute
   '/portal/$token': typeof PortalTokenRoute
+  '/rfq/$token': typeof RfqTokenRoute
   '/_app/': typeof AppIndexRoute
   '/_app/clients/$clientId': typeof AppClientsClientIdRoute
   '/_app/expenses/$claimId': typeof AppExpensesClaimIdRoute
@@ -435,6 +444,7 @@ export interface FileRouteTypes {
     | '/workload'
     | '/accept-invite/$token'
     | '/portal/$token'
+    | '/rfq/$token'
     | '/clients/$clientId'
     | '/expenses/$claimId'
     | '/inventory/$itemId'
@@ -479,6 +489,7 @@ export interface FileRouteTypes {
     | '/workload'
     | '/accept-invite/$token'
     | '/portal/$token'
+    | '/rfq/$token'
     | '/'
     | '/clients/$clientId'
     | '/expenses/$claimId'
@@ -524,6 +535,7 @@ export interface FileRouteTypes {
     | '/_app/workload'
     | '/accept-invite/$token'
     | '/portal/$token'
+    | '/rfq/$token'
     | '/_app/'
     | '/_app/clients/$clientId'
     | '/_app/expenses/$claimId'
@@ -566,6 +578,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   AcceptInviteTokenRoute: typeof AcceptInviteTokenRoute
   PortalTokenRoute: typeof PortalTokenRoute
+  RfqTokenRoute: typeof RfqTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -638,6 +651,13 @@ declare module '@tanstack/react-router' {
       path: '/portal/$token'
       fullPath: '/portal/$token'
       preLoaderRoute: typeof PortalTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rfq/$token': {
+      id: '/rfq/$token'
+      path: '/rfq/$token'
+      fullPath: '/rfq/$token'
+      preLoaderRoute: typeof RfqTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/admin/': {
@@ -1020,6 +1040,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   AcceptInviteTokenRoute: AcceptInviteTokenRoute,
   PortalTokenRoute: PortalTokenRoute,
+  RfqTokenRoute: RfqTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

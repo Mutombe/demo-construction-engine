@@ -1,6 +1,7 @@
 """Who is carrying too much."""
 
 from datetime import date, timedelta
+from decimal import Decimal
 
 from app.common.enums import UserRole, WorkStatus
 from tests.factories import auth_headers, make_project, make_task, make_user
@@ -196,3 +197,108 @@ def test_a_backwards_window_is_refused(client, db):
         f"/api/v1/workload?start={MONDAY}&end={MONDAY - timedelta(days=5)}", headers=headers
     )
     assert res.status_code == 422
+
+
+# --- Site labour -------------------------------------------------------------
+
+
+def _worker(client, headers, name, basis="daily", rate="40.00"):
+    return client.post(
+        "/api/v1/workers",
+        json={"full_name": name, "trade": "General", "pay_basis": basis, "rate": rate},
+        headers=headers,
+    ).json()
+
+
+def _book(client, headers, worker, project, day, quantity="1", overtime="0"):
+    return client.post(
+        "/api/v1/timesheets",
+        json={
+            "worker_id": worker["id"],
+            "project_id": str(project.id),
+            "work_date": str(day),
+            "quantity": quantity,
+            "overtime_quantity": overtime,
+        },
+        headers=headers,
+    )
+
+
+def _worker_row(body, name):
+    return next(w for w in body["workers"] if w["full_name"] == name)
+
+
+def test_site_labour_is_measured_by_time_booked_not_tasks(client, db):
+    """A worker is not a system user and can never be an assignee, so the only
+    honest measure of their load is the time actually booked against them."""
+    headers = auth_headers(make_user(db, role=UserRole.project_manager))
+    project = make_project(db)
+    worker = _worker(client, headers, "Tendai Moyo")
+    for offset in range(3):
+        _book(client, headers, worker, project, MONDAY + timedelta(days=offset))
+
+    body = _workload(client, headers, start=MONDAY, end=MONDAY + timedelta(days=6))
+    row = _worker_row(body, "Tendai Moyo")
+    assert row["days_booked"] == 3
+    assert Decimal(row["total_booked"]) == Decimal("3.00")
+    assert row["projects"] == 1
+    assert row["over_days"] == 0
+
+
+def test_a_worker_on_two_sites_in_one_day_shows_as_split(client, db):
+    """The unique constraint allows it on purpose — people genuinely move
+    between sites — but a planner should be able to see it."""
+    headers = auth_headers(make_user(db, role=UserRole.project_manager))
+    here, there = make_project(db), make_project(db)
+    worker = _worker(client, headers, "Split Worker")
+    _book(client, headers, worker, here, MONDAY, quantity="0.5")
+    _book(client, headers, worker, there, MONDAY, quantity="0.5")
+
+    row = _worker_row(
+        _workload(client, headers, start=MONDAY, end=MONDAY + timedelta(days=6)), "Split Worker"
+    )
+    assert row["split_days"] == 1
+    assert row["projects"] == 2
+    assert row["over_days"] == 0  # half a day each still adds to one day
+
+
+def test_booking_more_than_a_full_day_is_flagged(client, db):
+    headers = auth_headers(make_user(db, role=UserRole.project_manager))
+    here, there = make_project(db), make_project(db)
+    worker = _worker(client, headers, "Overbooked")
+    _book(client, headers, worker, here, MONDAY)
+    _book(client, headers, worker, there, MONDAY)
+
+    row = _worker_row(
+        _workload(client, headers, start=MONDAY, end=MONDAY + timedelta(days=6)), "Overbooked"
+    )
+    assert row["over_days"] == 1
+    assert Decimal(row["total_booked"]) == Decimal("2.00")
+
+
+def test_a_full_day_means_eight_hours_for_an_hourly_worker(client, db):
+    """One is a full day on a daily rate and nonsense on an hourly one, so the
+    threshold follows how the worker is actually paid."""
+    headers = auth_headers(make_user(db, role=UserRole.project_manager))
+    project = make_project(db)
+    worker = _worker(client, headers, "Hourly Hand", basis="hourly", rate="5.00")
+    _book(client, headers, worker, project, MONDAY, quantity="8", overtime="2")
+
+    row = _worker_row(
+        _workload(client, headers, start=MONDAY, end=MONDAY + timedelta(days=6)), "Hourly Hand"
+    )
+    assert row["over_days"] == 0
+    assert Decimal(row["total_overtime"]) == Decimal("2.00")
+
+
+def test_worker_load_can_be_narrowed_to_one_project(client, db):
+    headers = auth_headers(make_user(db, role=UserRole.project_manager))
+    here, there = make_project(db), make_project(db)
+    worker = _worker(client, headers, "Across Jobs")
+    _book(client, headers, worker, here, MONDAY, quantity="0.5")
+    _book(client, headers, worker, there, MONDAY, quantity="0.5")
+
+    scoped = _workload(
+        client, headers, start=MONDAY, end=MONDAY + timedelta(days=6), project_id=here.id
+    )
+    assert _worker_row(scoped, "Across Jobs")["projects"] == 1

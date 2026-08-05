@@ -1,8 +1,9 @@
 import uuid
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 from sqlalchemy import (
+    DateTime,
     Boolean,
     Computed,
     Date,
@@ -180,3 +181,31 @@ class PoItem(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     )
 
     po: Mapped[PurchaseOrder] = relationship(back_populates="items")
+
+
+class RfqInvite(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
+    """A link that lets one supplier price one RFQ.
+
+    Same shape as the client portal token: only the sha256 hash is stored, the
+    raw link is shown once. Scoped to a single (rfq, supplier) pair so a
+    supplier can never reach another RFQ, and never sees a competitor's price.
+    """
+
+    __tablename__ = "rfq_invites"
+    __table_args__ = (UniqueConstraint("rfq_id", "supplier_id"),)
+
+    rfq_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("rfqs.id", ondelete="CASCADE"), index=True
+    )
+    supplier_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("suppliers.id", ondelete="CASCADE"), index=True
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    opened_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    rfq: Mapped["Rfq"] = relationship()
+    supplier: Mapped["Supplier"] = relationship()

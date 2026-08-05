@@ -24,6 +24,7 @@ from app.modules.payroll.router import router as payroll_router
 from app.modules.portal.router import links_router as portal_links_router
 from app.modules.portal.router import portal_router
 from app.modules.procurement.router import router as procurement_router
+from app.modules.procurement.router import supplier_router as rfq_portal_router
 from app.modules.requisitions.router import router as requisitions_router
 from app.modules.projects.router import router as projects_router
 from app.modules.reports.router import router as reports_router
@@ -95,6 +96,9 @@ def create_app() -> FastAPI:
     # Client portal: separate auth surface (X-Portal-Token), deliberately NOT
     # under `protected` — portal visitors are clients, not staff users.
     api.include_router(portal_router)
+    # Suppliers pricing an RFQ: a fourth auth surface (X-Rfq-Token), also
+    # deliberately outside `protected`.
+    api.include_router(rfq_portal_router)
 
     app.include_router(api)
     return app

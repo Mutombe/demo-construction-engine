@@ -4745,6 +4745,169 @@
         }
       }
     },
+    "/api/v1/rfqs/{rfq_id}/send": {
+      "post": {
+        "tags": [
+          "procurement"
+        ],
+        "summary": "Send Rfq",
+        "description": "One link per supplier. Each is shown exactly once, like a portal link.",
+        "operationId": "send_rfq",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rfq_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rfq Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RfqSendRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RfqInviteCreated"
+                  },
+                  "title": "Response Send Rfq"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rfqs/{rfq_id}/invites": {
+      "get": {
+        "tags": [
+          "procurement"
+        ],
+        "summary": "List Rfq Invites",
+        "operationId": "list_rfq_invites",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rfq_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rfq Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RfqInviteRead"
+                  },
+                  "title": "Response List Rfq Invites"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rfq-invites/{invite_id}/revoke": {
+      "post": {
+        "tags": [
+          "procurement"
+        ],
+        "summary": "Revoke Rfq Invite",
+        "operationId": "revoke_rfq_invite",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "invite_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Invite Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RfqInviteRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/requisitions": {
       "get": {
         "tags": [
@@ -13716,6 +13879,114 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rfq-portal/rfq": {
+      "get": {
+        "tags": [
+          "rfq-portal"
+        ],
+        "summary": "Supplier View Rfq",
+        "operationId": "supplier_view_rfq",
+        "parameters": [
+          {
+            "name": "x-rfq-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Rfq-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierRfqView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rfq-portal/quote": {
+      "post": {
+        "tags": [
+          "rfq-portal"
+        ],
+        "summary": "Supplier Submit Quote",
+        "operationId": "supplier_submit_quote",
+        "parameters": [
+          {
+            "name": "x-rfq-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Rfq-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplierQuoteSubmit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierQuoteReceipt"
+                }
               }
             }
           },
@@ -25811,6 +26082,174 @@
         ],
         "title": "RfqGenerateRequest"
       },
+      "RfqInviteCreated": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "supplier_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Supplier Id"
+          },
+          "supplier_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Name"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At"
+          },
+          "opened_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opened At"
+          },
+          "responded_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responded At"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "sent"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "supplier_id",
+          "expires_at",
+          "sent_at",
+          "opened_at",
+          "responded_at",
+          "url"
+        ],
+        "title": "RfqInviteCreated",
+        "description": "The link is returned once here and cannot be recovered afterwards."
+      },
+      "RfqInviteRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "supplier_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Supplier Id"
+          },
+          "supplier_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Name"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At"
+          },
+          "opened_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opened At"
+          },
+          "responded_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responded At"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "sent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "supplier_id",
+          "expires_at",
+          "sent_at",
+          "opened_at",
+          "responded_at"
+        ],
+        "title": "RfqInviteRead"
+      },
       "RfqItemCreate": {
         "properties": {
           "boq_item_id": {
@@ -25973,6 +26412,31 @@
           "created_at"
         ],
         "title": "RfqRead"
+      },
+      "RfqSendRequest": {
+        "properties": {
+          "supplier_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Supplier Ids"
+          },
+          "expires_in_days": {
+            "type": "integer",
+            "maximum": 120.0,
+            "minimum": 1.0,
+            "title": "Expires In Days",
+            "default": 21
+          }
+        },
+        "type": "object",
+        "required": [
+          "supplier_ids"
+        ],
+        "title": "RfqSendRequest"
       },
       "RfqStatus": {
         "type": "string",
@@ -27984,6 +28448,147 @@
         ],
         "title": "SupplierQuoteActivity"
       },
+      "SupplierQuoteLine": {
+        "properties": {
+          "rfq_item_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Rfq Item Id"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "unit_price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Price"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rfq_item_id"
+        ],
+        "title": "SupplierQuoteLine"
+      },
+      "SupplierQuoteReceipt": {
+        "properties": {
+          "quote_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Quote Id"
+          },
+          "doc_number": {
+            "type": "string",
+            "title": "Doc Number"
+          },
+          "total_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Amount"
+          },
+          "received_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Received Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "quote_id",
+          "doc_number",
+          "total_amount",
+          "received_date"
+        ],
+        "title": "SupplierQuoteReceipt"
+      },
+      "SupplierQuoteSubmit": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SupplierQuoteLine"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Items"
+          },
+          "valid_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid Until"
+          },
+          "payment_terms": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Terms"
+          },
+          "delivery_terms": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Terms"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "SupplierQuoteSubmit"
+      },
       "SupplierRead": {
         "properties": {
           "name": {
@@ -28097,6 +28702,108 @@
           "created_at"
         ],
         "title": "SupplierRead"
+      },
+      "SupplierRfqItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "quantity": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Quantity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "description",
+          "unit",
+          "quantity"
+        ],
+        "title": "SupplierRfqItem"
+      },
+      "SupplierRfqView": {
+        "properties": {
+          "rfq_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Rfq Id"
+          },
+          "doc_number": {
+            "type": "string",
+            "title": "Doc Number"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "buyer_name": {
+            "type": "string",
+            "title": "Buyer Name"
+          },
+          "supplier_name": {
+            "type": "string",
+            "title": "Supplier Name"
+          },
+          "already_responded": {
+            "type": "boolean",
+            "title": "Already Responded"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SupplierRfqItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rfq_id",
+          "doc_number",
+          "title",
+          "body",
+          "due_date",
+          "buyer_name",
+          "supplier_name",
+          "already_responded",
+          "items"
+        ],
+        "title": "SupplierRfqView"
       },
       "SupplierScorecard": {
         "properties": {
@@ -30700,6 +31407,42 @@
         ],
         "title": "WorkerCreate"
       },
+      "WorkerDayLoad": {
+        "properties": {
+          "day": {
+            "type": "string",
+            "format": "date",
+            "title": "Day"
+          },
+          "booked": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Booked"
+          },
+          "overtime": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Overtime"
+          },
+          "jobs": {
+            "type": "integer",
+            "title": "Jobs"
+          },
+          "over": {
+            "type": "boolean",
+            "title": "Over"
+          }
+        },
+        "type": "object",
+        "required": [
+          "day",
+          "booked",
+          "overtime",
+          "jobs",
+          "over"
+        ],
+        "title": "WorkerDayLoad"
+      },
       "WorkerRead": {
         "properties": {
           "full_name": {
@@ -30896,6 +31639,14 @@
             },
             "type": "array",
             "title": "People"
+          },
+          "workers": {
+            "items": {
+              "$ref": "#/components/schemas/WorkloadWorker"
+            },
+            "type": "array",
+            "title": "Workers",
+            "default": []
           }
         },
         "type": "object",
@@ -31098,6 +31849,75 @@
           "is_scheduled"
         ],
         "title": "WorkloadTask"
+      },
+      "WorkloadWorker": {
+        "properties": {
+          "worker_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Worker Id"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "trade": {
+            "type": "string",
+            "title": "Trade"
+          },
+          "pay_basis": {
+            "type": "string",
+            "title": "Pay Basis"
+          },
+          "days_booked": {
+            "type": "integer",
+            "title": "Days Booked"
+          },
+          "total_booked": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Booked"
+          },
+          "total_overtime": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Overtime"
+          },
+          "projects": {
+            "type": "integer",
+            "title": "Projects"
+          },
+          "split_days": {
+            "type": "integer",
+            "title": "Split Days"
+          },
+          "over_days": {
+            "type": "integer",
+            "title": "Over Days"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/WorkerDayLoad"
+            },
+            "type": "array",
+            "title": "Days"
+          }
+        },
+        "type": "object",
+        "required": [
+          "worker_id",
+          "full_name",
+          "trade",
+          "pay_basis",
+          "days_booked",
+          "total_booked",
+          "total_overtime",
+          "projects",
+          "split_days",
+          "over_days",
+          "days"
+        ],
+        "title": "WorkloadWorker"
       }
     },
     "securitySchemes": {

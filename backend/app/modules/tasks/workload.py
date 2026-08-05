@@ -15,6 +15,7 @@ is "is anyone being asked to be in two places at once".
 import uuid
 from dataclasses import dataclass, field
 from datetime import date, timedelta
+from decimal import Decimal
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -29,8 +30,34 @@ from app.modules.users.models import User
 # A foreman genuinely runs two fronts at once; three is a warning.
 DEFAULT_CONCURRENCY_LIMIT = 2
 
+ZERO = Decimal("0")
+
 # Open means "still someone's problem".
 OPEN_STATUSES = (WorkStatus.not_started, WorkStatus.in_progress, WorkStatus.blocked)
+
+
+@dataclass
+class WorkerDay:
+    day: date
+    booked: Decimal
+    overtime: Decimal
+    jobs: int
+    over: bool
+
+
+@dataclass
+class WorkerLoad:
+    worker_id: uuid.UUID
+    full_name: str
+    trade: str
+    pay_basis: str
+    days_booked: int
+    total_booked: Decimal
+    total_overtime: Decimal
+    projects: int
+    split_days: int
+    over_days: int
+    days: list[WorkerDay] = field(default_factory=list)
 
 
 @dataclass
@@ -158,7 +185,100 @@ def workload(
         "end": end,
         "concurrency_limit": limit,
         "people": ordered,
+        "workers": worker_load(db, start, end, project_id),
     }
+
+
+def worker_load(
+    db: Session,
+    start: date,
+    end: date,
+    project_id: uuid.UUID | None = None,
+) -> list["WorkerLoad"]:
+    """The other half of who is busy.
+
+    Staff are measured by the tasks assigned to them; site labour is measured
+    by the time actually booked against them, because a worker is not a system
+    user and is never an assignee. A day is "split" when the same worker has
+    time on more than one job that day, which the unique constraint on
+    (worker, project, day) allows on purpose — someone genuinely can move
+    between sites — but it is worth seeing.
+    """
+    from app.modules.payroll.models import Worker
+
+    stmt = (
+        select(
+            Worker.id,
+            Worker.full_name,
+            Worker.trade,
+            Worker.pay_basis,
+            Timesheet.work_date,
+            Timesheet.project_id,
+            Timesheet.quantity,
+            Timesheet.overtime_quantity,
+        )
+        .join(Timesheet, Timesheet.worker_id == Worker.id)
+        .where(Timesheet.work_date >= start, Timesheet.work_date <= end)
+    )
+    if project_id is not None:
+        stmt = stmt.where(Timesheet.project_id == project_id)
+
+    days = _window_days(start, end)
+    collected: dict[uuid.UUID, dict] = {}
+    for row in db.execute(stmt).all():
+        worker_id, name, trade, basis, work_date, job, quantity, overtime = row
+        entry = collected.setdefault(
+            worker_id,
+            {
+                "worker_id": worker_id,
+                "full_name": name,
+                "trade": trade,
+                "pay_basis": basis.value,
+                "per_day": {},
+                "projects": set(),
+            },
+        )
+        day = entry["per_day"].setdefault(work_date, {"booked": ZERO, "overtime": ZERO, "jobs": set()})
+        day["booked"] += Decimal(quantity)
+        day["overtime"] += Decimal(overtime or 0)
+        day["jobs"].add(job)
+        entry["projects"].add(job)
+
+    out: list[WorkerLoad] = []
+    for entry in collected.values():
+        per_day = entry["per_day"]
+        # A full day is 1 on a daily rate and 8 hours on an hourly one, which
+        # is what "booked twice" has to be measured against.
+        full_day = Decimal("1") if entry["pay_basis"] == "daily" else Decimal("8")
+        worked = [
+            WorkerDay(
+                day=day,
+                booked=per_day.get(day, {}).get("booked", ZERO),
+                overtime=per_day.get(day, {}).get("overtime", ZERO),
+                jobs=len(per_day.get(day, {}).get("jobs", ())),
+                over=per_day.get(day, {}).get("booked", ZERO) > full_day,
+            )
+            for day in days
+        ]
+        booked_days = [d for d in worked if d.booked > 0]
+        out.append(
+            WorkerLoad(
+                worker_id=entry["worker_id"],
+                full_name=entry["full_name"],
+                trade=entry["trade"],
+                pay_basis=entry["pay_basis"],
+                days_booked=len(booked_days),
+                total_booked=sum((d.booked for d in worked), ZERO),
+                total_overtime=sum((d.overtime for d in worked), ZERO),
+                projects=len(entry["projects"]),
+                split_days=sum(1 for d in worked if d.jobs > 1),
+                over_days=sum(1 for d in worked if d.over),
+                days=worked,
+            )
+        )
+    # Busiest first, same as staff: the screen exists to find who to move.
+    out.sort(key=lambda w: (-w.over_days, -w.split_days, -w.days_booked))
+    return out
 
 
 def _assignee_names(db: Session) -> dict[uuid.UUID, tuple[str, str]]:
