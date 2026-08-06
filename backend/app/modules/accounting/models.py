@@ -42,6 +42,31 @@ class Account(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         Enum(AccountType, name="account_type", native_enum=True)
     )
     description: Mapped[str | None] = mapped_column(Text)
+
+    # --- Six-level taxonomy -------------------------------------------------
+    # Levels 1 and 2 are derived from account_type on save, so they can never
+    # disagree with it. Levels 3 to 5 are chosen; level 6 is the code itself.
+    report_type: Mapped[str] = mapped_column(String(20), default="balance_sheet")
+    account_class: Mapped[str] = mapped_column(String(20), default="asset")
+    account_subclass: Mapped[str] = mapped_column(String(30), default="current_assets", index=True)
+    account_type_label: Mapped[str | None] = mapped_column(String(60))
+    account_subtype: Mapped[str | None] = mapped_column(String(60))
+
+    # A parent turns a flat chart into sub-accounts: 5000 Materials with
+    # 5010 Cement and 5020 Steel underneath, each posting in its own right
+    # while the parent reports the total.
+    parent_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("accounts.id", ondelete="RESTRICT"), index=True
+    )
+    # Postable=False makes an account a heading: it groups, it does not receive
+    # entries. Posting to a heading is how a chart quietly stops adding up.
+    is_postable: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    # Every account holds exactly one currency. A USD account and a ZWL
+    # account are different accounts, which is what keeps a trial balance
+    # meaningful without a running conversion.
+    currency: Mapped[str] = mapped_column(String(3), default="USD", index=True)
+
     # System accounts are the ones automatic posting depends on finding, so
     # they cannot be deleted or retyped out from under it.
     is_system: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -207,3 +232,92 @@ class PaymentAllocation(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     amount: Mapped[Decimal] = mapped_column(Numeric(16, 2))
 
     payment: Mapped[SupplierPayment] = relationship(back_populates="allocations")
+
+
+class ExchangeRate(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """A rate that applied on a date, kept rather than overwritten.
+
+    History matters: a journal posted in March must keep translating at
+    March's rate no matter what today's is, or last year's accounts change
+    every time somebody updates a number.
+    """
+
+    __tablename__ = "exchange_rates"
+    __table_args__ = (
+        UniqueConstraint("from_currency", "to_currency", "effective_date"),
+    )
+
+    from_currency: Mapped[str] = mapped_column(String(3), index=True)
+    to_currency: Mapped[str] = mapped_column(String(3), index=True)
+    rate: Mapped[Decimal] = mapped_column(Numeric(18, 6))
+    effective_date: Mapped[date] = mapped_column(Date, index=True)
+    source: Mapped[str | None] = mapped_column(String(100))
+
+
+class FiscalPeriod(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """A month you can shut.
+
+    Closing is what stops last quarter's numbers moving after they have been
+    reported. Posting into a closed period is refused rather than silently
+    accepted and quietly changing a statement somebody has already read.
+    """
+
+    __tablename__ = "fiscal_periods"
+    __table_args__ = (UniqueConstraint("year", "month"),)
+
+    year: Mapped[int] = mapped_column(Integer, index=True)
+    month: Mapped[int] = mapped_column(Integer)
+    starts_on: Mapped[date] = mapped_column(Date)
+    ends_on: Mapped[date] = mapped_column(Date)
+    is_closed: Mapped[bool] = mapped_column(Boolean, default=False)
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    closed_by: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL", use_alter=True)
+    )
+
+
+class BankAccount(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
+    """A real account at a real bank, tied to the GL account that mirrors it.
+
+    Two balances on purpose: `book_balance` is what the ledger says, the
+    statement is what the bank says, and reconciliation is the work of
+    explaining the difference. Collapsing them into one number removes the
+    only thing that would have caught a missing entry.
+    """
+
+    __tablename__ = "bank_accounts"
+
+    name: Mapped[str] = mapped_column(String(120))
+    bank_name: Mapped[str | None] = mapped_column(String(120))
+    account_number: Mapped[str | None] = mapped_column(String(50))
+    branch: Mapped[str | None] = mapped_column(String(120))
+    currency: Mapped[str] = mapped_column(String(3), default="USD")
+    kind: Mapped[str] = mapped_column(String(20), default="bank")  # bank | cash | mobile
+    gl_account_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("accounts.id", ondelete="RESTRICT"), unique=True
+    )
+    opening_balance: Mapped[Decimal] = mapped_column(Numeric(16, 2), default=ZERO)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    gl_account = relationship("Account")
+
+
+class BankTransaction(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """A line off the bank statement, before anyone has decided what it is."""
+
+    __tablename__ = "bank_transactions"
+
+    bank_account_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("bank_accounts.id", ondelete="CASCADE"), index=True
+    )
+    transaction_date: Mapped[date] = mapped_column(Date, index=True)
+    description: Mapped[str] = mapped_column(Text)
+    reference: Mapped[str | None] = mapped_column(String(80))
+    # One signed column rather than two: a statement line is money in or money
+    # out, and two nullable columns invite a row that is somehow both.
+    amount: Mapped[Decimal] = mapped_column(Numeric(16, 2))
+    # Set when the line has been matched to a journal in our own books.
+    matched_journal_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("journals.id", ondelete="SET NULL"), index=True
+    )
+    matched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

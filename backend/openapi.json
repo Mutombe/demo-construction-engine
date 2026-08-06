@@ -13908,6 +13908,259 @@
         }
       }
     },
+    "/api/v1/permissions/catalogue": {
+      "get": {
+        "tags": [
+          "permissions"
+        ],
+        "summary": "Get Catalogue",
+        "description": "What can be granted, and what to call it on screen.",
+        "operationId": "get_catalogue",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Catalogue"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/permissions/matrix": {
+      "get": {
+        "tags": [
+          "permissions"
+        ],
+        "summary": "Get Matrix",
+        "operationId": "get_matrix",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "type": "object",
+                  "title": "Response Get Matrix"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "permissions"
+        ],
+        "summary": "Update Matrix",
+        "description": "Admin is not editable here on purpose: an editable matrix with no floor\nis one bad click away from a company with nobody who can fix it.",
+        "operationId": "update_matrix",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatrixUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "type": "object",
+                  "title": "Response Update Matrix"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/permissions/users/{user_id}": {
+      "get": {
+        "tags": [
+          "permissions"
+        ],
+        "summary": "Get User Permissions",
+        "operationId": "get_user_permissions",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get User Permissions"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "permissions"
+        ],
+        "summary": "Update User Permissions",
+        "operationId": "update_user_permissions",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OverrideUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Update User Permissions"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/permissions/me": {
+      "get": {
+        "tags": [
+          "permissions"
+        ],
+        "summary": "My Permissions",
+        "description": "What the signed-in person may do. The frontend gates on this rather\nthan on a table compiled into the bundle, so an edit takes effect on the\nnext page load instead of the next deploy.",
+        "operationId": "my_permissions",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "title": "Response My Permissions"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/portal/summary": {
       "get": {
         "tags": [
@@ -20149,6 +20402,29 @@
         ],
         "title": "MatrixSupplier"
       },
+      "MatrixUpdate": {
+        "properties": {
+          "role": {
+            "$ref": "#/components/schemas/UserRole"
+          },
+          "permission": {
+            "type": "string",
+            "maxLength": 40,
+            "title": "Permission"
+          },
+          "allowed": {
+            "type": "boolean",
+            "title": "Allowed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "permission",
+          "allowed"
+        ],
+        "title": "MatrixUpdate"
+      },
       "MeUpdate": {
         "properties": {
           "full_name": {
@@ -20713,6 +20989,31 @@
           "total_amount"
         ],
         "title": "OverdueDelivery"
+      },
+      "OverrideUpdate": {
+        "properties": {
+          "permission": {
+            "type": "string",
+            "maxLength": 40,
+            "title": "Permission"
+          },
+          "allowed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allowed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "permission"
+        ],
+        "title": "OverrideUpdate"
       },
       "Page_ActivityLogRead_": {
         "properties": {

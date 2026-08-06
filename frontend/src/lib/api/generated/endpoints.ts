@@ -91,15 +91,18 @@ import type {
   GetAccountLedgerParams,
   GetBalanceSheetParams,
   GetCalendarParams,
+  GetCatalogue200,
   GetDemandForecastParams,
   GetIncomeStatementParams,
   GetInventoryAnalyticsParams,
   GetItemConsumptionParams,
+  GetMatrix200,
   GetMediaFolderCountsParams,
   GetPayablesParams,
   GetPhotoTimelineParams,
   GetReceivablesParams,
   GetTrialBalanceParams,
+  GetUserPermissions200,
   GetWorkloadParams,
   GlobalSearchParams,
   GoodsInRequest,
@@ -152,6 +155,7 @@ import type {
   ListValuationsParams,
   ListWorkersParams,
   LoginRequest,
+  MatrixUpdate,
   MeUpdate,
   MeasurementContext,
   MeasurementSet,
@@ -160,6 +164,7 @@ import type {
   NavCounts,
   NotificationRead,
   OpenPurchaseOrder,
+  OverrideUpdate,
   PageActivityLogRead,
   PageClientRead,
   PageCostEntryRead,
@@ -280,6 +285,8 @@ import type {
   TrialBalance,
   UnpostedEntry,
   UnreadCount,
+  UpdateMatrix200,
+  UpdateUserPermissions200,
   UserCreate,
   UserRead,
   UserUpdate,
@@ -20161,6 +20168,515 @@ export const useCreatePayment = <TError = HTTPValidationError,
       > => {
       return useMutation(getCreatePaymentMutationOptions(options), queryClient);
     }
+
+/**
+ * What can be granted, and what to call it on screen.
+ * @summary Get Catalogue
+ */
+export const getCatalogue = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<GetCatalogue200>(
+      {url: `/api/v1/permissions/catalogue`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetCatalogueQueryKey = () => {
+    return [
+    `/api/v1/permissions/catalogue`
+    ] as const;
+    }
+
+
+export const getGetCatalogueQueryOptions = <TData = Awaited<ReturnType<typeof getCatalogue>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogue>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCatalogueQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCatalogue>>> = ({ signal }) => getCatalogue(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCatalogue>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCatalogueQueryResult = NonNullable<Awaited<ReturnType<typeof getCatalogue>>>
+export type GetCatalogueQueryError = unknown
+
+
+export function useGetCatalogue<TData = Awaited<ReturnType<typeof getCatalogue>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogue>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCatalogue>>,
+          TError,
+          Awaited<ReturnType<typeof getCatalogue>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCatalogue<TData = Awaited<ReturnType<typeof getCatalogue>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogue>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCatalogue>>,
+          TError,
+          Awaited<ReturnType<typeof getCatalogue>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCatalogue<TData = Awaited<ReturnType<typeof getCatalogue>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogue>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Catalogue
+ */
+
+export function useGetCatalogue<TData = Awaited<ReturnType<typeof getCatalogue>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCatalogue>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCatalogueQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get Matrix
+ */
+export const getMatrix = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<GetMatrix200>(
+      {url: `/api/v1/permissions/matrix`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetMatrixQueryKey = () => {
+    return [
+    `/api/v1/permissions/matrix`
+    ] as const;
+    }
+
+
+export const getGetMatrixQueryOptions = <TData = Awaited<ReturnType<typeof getMatrix>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMatrix>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMatrixQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMatrix>>> = ({ signal }) => getMatrix(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMatrix>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMatrixQueryResult = NonNullable<Awaited<ReturnType<typeof getMatrix>>>
+export type GetMatrixQueryError = unknown
+
+
+export function useGetMatrix<TData = Awaited<ReturnType<typeof getMatrix>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMatrix>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMatrix>>,
+          TError,
+          Awaited<ReturnType<typeof getMatrix>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMatrix<TData = Awaited<ReturnType<typeof getMatrix>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMatrix>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMatrix>>,
+          TError,
+          Awaited<ReturnType<typeof getMatrix>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMatrix<TData = Awaited<ReturnType<typeof getMatrix>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMatrix>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Matrix
+ */
+
+export function useGetMatrix<TData = Awaited<ReturnType<typeof getMatrix>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMatrix>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMatrixQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Admin is not editable here on purpose: an editable matrix with no floor
+ * is one bad click away from a company with nobody who can fix it.
+ * @summary Update Matrix
+ */
+export const updateMatrix = (
+    matrixUpdate: MatrixUpdate,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<UpdateMatrix200>(
+      {url: `/api/v1/permissions/matrix`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: matrixUpdate, signal
+    },
+      );
+    }
+
+
+
+
+export const getUpdateMatrixMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMatrix>>, TError,{data: MatrixUpdate}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof updateMatrix>>, TError,{data: MatrixUpdate}, TContext> => {
+
+const mutationKey = ['updateMatrix'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMatrix>>, {data: MatrixUpdate}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateMatrix(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateMatrixMutationResult = NonNullable<Awaited<ReturnType<typeof updateMatrix>>>
+    export type UpdateMatrixMutationBody = MatrixUpdate
+    export type UpdateMatrixMutationError = HTTPValidationError
+
+    /**
+ * @summary Update Matrix
+ */
+export const useUpdateMatrix = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMatrix>>, TError,{data: MatrixUpdate}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateMatrix>>,
+        TError,
+        {data: MatrixUpdate},
+        TContext
+      > => {
+      return useMutation(getUpdateMatrixMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Get User Permissions
+ */
+export const getUserPermissions = (
+    userId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<GetUserPermissions200>(
+      {url: `/api/v1/permissions/users/${userId}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetUserPermissionsQueryKey = (userId: string,) => {
+    return [
+    `/api/v1/permissions/users/${userId}`
+    ] as const;
+    }
+
+
+export const getGetUserPermissionsQueryOptions = <TData = Awaited<ReturnType<typeof getUserPermissions>>, TError = HTTPValidationError>(userId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserPermissions>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUserPermissionsQueryKey(userId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserPermissions>>> = ({ signal }) => getUserPermissions(userId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: userId !== null && userId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUserPermissions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetUserPermissionsQueryResult = NonNullable<Awaited<ReturnType<typeof getUserPermissions>>>
+export type GetUserPermissionsQueryError = HTTPValidationError
+
+
+export function useGetUserPermissions<TData = Awaited<ReturnType<typeof getUserPermissions>>, TError = HTTPValidationError>(
+ userId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserPermissions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUserPermissions>>,
+          TError,
+          Awaited<ReturnType<typeof getUserPermissions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUserPermissions<TData = Awaited<ReturnType<typeof getUserPermissions>>, TError = HTTPValidationError>(
+ userId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserPermissions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUserPermissions>>,
+          TError,
+          Awaited<ReturnType<typeof getUserPermissions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUserPermissions<TData = Awaited<ReturnType<typeof getUserPermissions>>, TError = HTTPValidationError>(
+ userId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserPermissions>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get User Permissions
+ */
+
+export function useGetUserPermissions<TData = Awaited<ReturnType<typeof getUserPermissions>>, TError = HTTPValidationError>(
+ userId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserPermissions>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetUserPermissionsQueryOptions(userId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Update User Permissions
+ */
+export const updateUserPermissions = (
+    userId: string,
+    overrideUpdate: OverrideUpdate,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<UpdateUserPermissions200>(
+      {url: `/api/v1/permissions/users/${userId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: overrideUpdate, signal
+    },
+      );
+    }
+
+
+
+
+export const getUpdateUserPermissionsMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateUserPermissions>>, TError,{userId: string;data: OverrideUpdate}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof updateUserPermissions>>, TError,{userId: string;data: OverrideUpdate}, TContext> => {
+
+const mutationKey = ['updateUserPermissions'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateUserPermissions>>, {userId: string;data: OverrideUpdate}> = (props) => {
+          const {userId,data} = props ?? {};
+
+          return  updateUserPermissions(userId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateUserPermissionsMutationResult = NonNullable<Awaited<ReturnType<typeof updateUserPermissions>>>
+    export type UpdateUserPermissionsMutationBody = OverrideUpdate
+    export type UpdateUserPermissionsMutationError = HTTPValidationError
+
+    /**
+ * @summary Update User Permissions
+ */
+export const useUpdateUserPermissions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateUserPermissions>>, TError,{userId: string;data: OverrideUpdate}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateUserPermissions>>,
+        TError,
+        {userId: string;data: OverrideUpdate},
+        TContext
+      > => {
+      return useMutation(getUpdateUserPermissionsMutationOptions(options), queryClient);
+    }
+
+/**
+ * What the signed-in person may do. The frontend gates on this rather
+ * than on a table compiled into the bundle, so an edit takes effect on the
+ * next page load instead of the next deploy.
+ * @summary My Permissions
+ */
+export const myPermissions = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<string[]>(
+      {url: `/api/v1/permissions/me`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getMyPermissionsQueryKey = () => {
+    return [
+    `/api/v1/permissions/me`
+    ] as const;
+    }
+
+
+export const getMyPermissionsQueryOptions = <TData = Awaited<ReturnType<typeof myPermissions>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myPermissions>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMyPermissionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof myPermissions>>> = ({ signal }) => myPermissions(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof myPermissions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MyPermissionsQueryResult = NonNullable<Awaited<ReturnType<typeof myPermissions>>>
+export type MyPermissionsQueryError = unknown
+
+
+export function useMyPermissions<TData = Awaited<ReturnType<typeof myPermissions>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof myPermissions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myPermissions>>,
+          TError,
+          Awaited<ReturnType<typeof myPermissions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyPermissions<TData = Awaited<ReturnType<typeof myPermissions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myPermissions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myPermissions>>,
+          TError,
+          Awaited<ReturnType<typeof myPermissions>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyPermissions<TData = Awaited<ReturnType<typeof myPermissions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myPermissions>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary My Permissions
+ */
+
+export function useMyPermissions<TData = Awaited<ReturnType<typeof myPermissions>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myPermissions>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMyPermissionsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 /**
  * @summary Portal Summary

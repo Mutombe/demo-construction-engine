@@ -18,8 +18,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/features/auth/hooks";
-import { ROLE_PERMISSIONS, type Permission } from "@/features/auth/permissions";
 import { useAiStatus } from "@/features/ai/useAiStatus";
+import { PermissionMatrix } from "@/features/settings/PermissionMatrix";
 import { useTheme, type ThemePreference } from "@/features/settings/theme";
 import { errDetail } from "@/lib/api/errors";
 import {
@@ -328,87 +328,27 @@ function IntegrationsSection() {
   );
 }
 
-const PERMISSION_GROUPS: { title: string; match: string }[] = [
-  { title: "Projects", match: "project" },
-  { title: "Tasks and programme", match: "task" },
-  { title: "BOQ and cost", match: "boq" },
-  { title: "Procurement", match: "procurement" },
-  { title: "Requests", match: "requisition" },
-  { title: "Inventory", match: "inventory" },
-  { title: "Site", match: "site" },
-  { title: "Expenses", match: "expense" },
-  { title: "Valuations", match: "valuation" },
-  { title: "Payroll", match: "payroll" },
-  { title: "Documents", match: "media" },
-  { title: "AI", match: "ingestion" },
-  { title: "Administration", match: "users" },
-];
-
-const ROLES = Object.keys(ROLE_PERMISSIONS) as (keyof typeof ROLE_PERMISSIONS)[];
-
-/** Shows exactly what each role can do, read from the same table the app
- *  enforces, so it cannot drift from reality. */
+/** The matrix the app enforces, editable in place. It reads from the stored
+ *  matrix rather than a table compiled into the bundle, so what is shown and
+ *  what is enforced are the same thing by construction. */
 function PermissionsSection() {
-  const allPermissions = Array.from(
-    new Set(Object.values(ROLE_PERMISSIONS).flat()),
-  ).sort() as Permission[];
-
+  const { user } = useAuth();
+  if (user?.role !== "admin") {
+    return (
+      <Card>
+        <CardContent className="py-10 text-center text-sm text-muted-foreground">
+          Only an administrator can change what each role may do.
+        </CardContent>
+      </Card>
+    );
+  }
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base">What each role can do</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
-              <tr>
-                <th className="px-4 py-2 text-left font-medium">Permission</th>
-                {ROLES.map((role) => (
-                  <th key={role} className="px-3 py-2 text-center font-medium">
-                    {ROLE_LABELS[role]}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {PERMISSION_GROUPS.map((group) => {
-                const rows = allPermissions.filter((p) => p.startsWith(group.match));
-                if (rows.length === 0) return null;
-                return (
-                  <>
-                    <tr key={group.title} className="border-t bg-muted/20">
-                      <td
-                        colSpan={ROLES.length + 1}
-                        className="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide"
-                      >
-                        {group.title}
-                      </td>
-                    </tr>
-                    {rows.map((permission) => (
-                      <tr key={permission} className="border-t">
-                        <td className="px-4 py-1.5 font-mono text-xs">{permission}</td>
-                        {ROLES.map((role) => (
-                          <td key={role} className="px-3 py-1.5 text-center">
-                            {ROLE_PERMISSIONS[role].includes(permission) ? (
-                              <Check className="mx-auto size-3.5 text-success" />
-                            ) : (
-                              <span className="text-muted-foreground/40">·</span>
-                            )}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        <p className="border-t px-4 py-2 text-xs text-muted-foreground">
-          Roles are fixed in this version. Changing someone's access means changing their role
-          in Administration.
-        </p>
+        <PermissionMatrix />
       </CardContent>
     </Card>
   );

@@ -107,7 +107,21 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   viewer: [...READ_ALL],
 };
 
+/** What the server says this session may do.
+ *
+ *  Set once at sign-in from /permissions/me. The compiled ROLE_PERMISSIONS
+ *  table below is only the fallback for the moment before that arrives — the
+ *  matrix is editable now, so a table baked into the bundle would be a
+ *  snapshot of whatever it was on the day of the last deploy.
+ */
+let live: Set<string> | null = null;
+
+export function setLivePermissions(permissions: string[] | null): void {
+  live = permissions ? new Set(permissions) : null;
+}
+
 export function can(role: Role | undefined, permission: Permission): boolean {
+  if (live) return live.has(permission);
   if (!role) return false;
   return ROLE_PERMISSIONS[role]?.includes(permission) ?? false;
 }

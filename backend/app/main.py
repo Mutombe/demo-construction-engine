@@ -21,6 +21,7 @@ from app.modules.inventory.router import router as inventory_router
 from app.modules.media.router import router as media_router
 from app.modules.notifications.router import router as notifications_router
 from app.modules.payroll.router import router as payroll_router
+from app.modules.permissions.router import router as permissions_router
 from app.modules.portal.router import links_router as portal_links_router
 from app.modules.portal.router import portal_router
 from app.modules.procurement.router import router as procurement_router
@@ -91,6 +92,7 @@ def create_app() -> FastAPI:
     protected.include_router(company_router)
     protected.include_router(comments_router)
     protected.include_router(accounting_router)
+    protected.include_router(permissions_router)
     api.include_router(protected)
 
     # Client portal: separate auth surface (X-Portal-Token), deliberately NOT

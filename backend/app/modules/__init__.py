@@ -12,6 +12,7 @@ from app.modules.inventory import models as inventory_models  # noqa: F401
 from app.modules.media import models as media_models  # noqa: F401
 from app.modules.notifications import models as notifications_models  # noqa: F401
 from app.modules.payroll import models as payroll_models  # noqa: F401
+from app.modules.permissions import models as permissions_models  # noqa: F401
 from app.modules.portal import models as portal_models  # noqa: F401
 from app.modules.procurement import models as procurement_models  # noqa: F401
 from app.modules.requisitions import models as requisitions_models  # noqa: F401

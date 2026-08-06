@@ -27,6 +27,7 @@ from app.common.enums import (
     JournalStatus,
 )
 from app.core.exceptions import ConflictError, NotFoundError, ValidationFailedError
+from app.modules.accounting import hierarchy
 from app.modules.accounting.models import Account, GeneralLedger, Journal, JournalLine
 
 logger = logging.getLogger(__name__)
@@ -106,12 +107,87 @@ def ensure_chart(db: Session) -> list[Account]:
             account_type=kind,
             description=description or None,
             is_system=True,
+            currency=_base_currency(db),
         )
+        classify(db, account)
         db.add(account)
         created.append(account)
     if created:
         db.flush()
     return created
+
+
+def classify(db: Session, account: Account) -> None:
+    """Fills and checks the taxonomy for one account.
+
+    Report and class are derived from the account type so they can never
+    disagree with it, the subclass has to own the code's range, and a heading
+    cannot be posted to. All three are enforced here rather than described in
+    a comment, because a chart that only follows its own rules by convention
+    stops following them the first busy afternoon.
+    """
+    # Column defaults only apply on insert, so an account that has not been
+    # flushed yet still has None here. Settle it now, or every sub-account
+    # would be rejected for a currency mismatch against its parent.
+    if not account.currency:
+        parent = db.get(Account, account.parent_id) if account.parent_id else None
+        account.currency = parent.currency if parent else _base_currency(db)
+
+    account.account_class = _CLASS_BY_TYPE[account.account_type]
+    account.report_type = hierarchy.report_for(account.account_class)
+
+    owner = hierarchy.subclass_for_code(account.code)
+    if owner is None:
+        raise ValidationFailedError(
+            f"{account.code} falls outside every range in the chart"
+        )
+    if account.account_subclass and account.account_subclass != owner:
+        low, high = hierarchy.range_of(account.account_subclass)
+        raise ValidationFailedError(
+            f"{hierarchy.SUBCLASS_RANGES[account.account_subclass][0]} owns "
+            f"{low:04d} to {high:04d}, so {account.code} cannot belong to it"
+        )
+    account.account_subclass = owner
+
+    allowed = hierarchy.TAXONOMY.get(account.report_type, {}).get(account.account_class, [])
+    if owner not in allowed:
+        label = hierarchy.CLASSES[account.account_class].lower()
+        article = "An" if label[0] in "aeiou" else "A"
+        raise ValidationFailedError(
+            f"{article} {label} account cannot sit in {hierarchy.SUBCLASS_RANGES[owner][0]}"
+        )
+
+    if account.parent_id:
+        parent = db.get(Account, account.parent_id)
+        if parent is None:
+            raise NotFoundError("Parent account not found")
+        if parent.id == account.id:
+            raise ValidationFailedError("An account cannot be its own parent")
+        if parent.account_subclass != owner:
+            raise ValidationFailedError(
+                f"{parent.code} is in a different part of the chart"
+            )
+        if parent.currency != account.currency:
+            raise ValidationFailedError(
+                "A sub-account holds the same currency as the account above it"
+            )
+
+
+_CLASS_BY_TYPE = {
+    AccountType.asset: "asset",
+    AccountType.liability: "liability",
+    AccountType.equity: "equity",
+    AccountType.revenue: "income",
+    AccountType.expense: "expense",
+}
+
+
+def _base_currency(db: Session) -> str:
+    """The currency the company keeps its books in."""
+    from app.modules.company.models import CompanySettings
+
+    company = db.scalar(select(CompanySettings).limit(1))
+    return (company.currency if company and company.currency else "USD")[:3].upper()
 
 
 def account_by_code(db: Session, code: str) -> Account:
@@ -230,6 +306,19 @@ def post(db: Session, journal_id: uuid.UUID, user=None) -> Journal:
     for account in accounts.values():
         if not account.is_active:
             raise ValidationFailedError(f"Account {account.code} is not active")
+        if not account.is_postable:
+            raise ValidationFailedError(
+                f"{account.code} {account.name} is a heading, not an account to post to"
+            )
+    _require_open_period(db, journal.journal_date)
+    currencies = {account.currency for account in accounts.values()}
+    if len(currencies) > 1:
+        # Two currencies in one journal cannot balance in either of them. The
+        # conversion has to be an explicit pair of journals with the gain or
+        # loss recognised, not a silent mixing.
+        raise ValidationFailedError(
+            "A journal moves one currency: " + ", ".join(sorted(currencies))
+        )
 
     for line in lines:
         account = accounts[line.account_id]
@@ -643,3 +732,46 @@ def account_ledger(
     if end:
         stmt = stmt.where(GeneralLedger.entry_date <= end)
     return list(db.scalars(stmt.order_by(GeneralLedger.entry_date, GeneralLedger.created_at)))
+
+
+def _require_open_period(db: Session, when: date) -> None:
+    """A closed month does not move. Reporting a number and then letting it
+    change afterwards is worse than not reporting it."""
+    from app.modules.accounting.models import FiscalPeriod
+
+    period = db.scalar(
+        select(FiscalPeriod).where(
+            FiscalPeriod.year == when.year, FiscalPeriod.month == when.month
+        )
+    )
+    if period is not None and period.is_closed:
+        raise ConflictError(
+            f"{when.strftime('%B %Y')} is closed; post to an open period or reopen it"
+        )
+
+
+def rate_on(db: Session, from_currency: str, to_currency: str, when: date) -> Decimal:
+    """The rate that applied on a date, not the one that applies now.
+
+    Falls back to the most recent earlier rate, because a rate stands until it
+    is replaced. Same currency is always one, and a missing rate raises rather
+    than quietly assuming parity — a wrong number here is worse than no number.
+    """
+    from app.modules.accounting.models import ExchangeRate
+
+    if from_currency == to_currency:
+        return Decimal("1")
+    row = db.scalar(
+        select(ExchangeRate)
+        .where(
+            ExchangeRate.from_currency == from_currency,
+            ExchangeRate.to_currency == to_currency,
+            ExchangeRate.effective_date <= when,
+        )
+        .order_by(ExchangeRate.effective_date.desc())
+    )
+    if row is None:
+        raise NotFoundError(
+            f"No {from_currency}/{to_currency} rate on or before {when.isoformat()}"
+        )
+    return Decimal(row.rate)

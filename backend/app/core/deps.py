@@ -41,3 +41,22 @@ def require_roles(*roles: UserRole):
         return user
 
     return checker
+
+
+def require_perm(permission: str):
+    """Gate on a permission the matrix can actually change.
+
+    `require_roles` hard-codes who may act, so editing the matrix would have
+    had no effect on the backend and the setting would have been a lie. This
+    reads the stored matrix instead, which is what makes the Settings screen
+    real rather than decorative.
+    """
+
+    def checker(user: CurrentUser, db: DbDep) -> User:
+        from app.modules.permissions import service as permissions
+
+        if not permissions.can(db, user, permission):
+            raise ForbiddenError()
+        return user
+
+    return checker
