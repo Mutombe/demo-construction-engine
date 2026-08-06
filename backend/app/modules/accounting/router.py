@@ -3,10 +3,14 @@ from datetime import date, timedelta
 
 from fastapi import APIRouter, Depends
 
+from decimal import Decimal
+
+from pydantic import BaseModel, Field
+
 from app.common.enums import UserRole
 from app.core.deps import CurrentUser, DbDep, require_roles
 from app.core.exceptions import ConflictError, NotFoundError, ValidationFailedError
-from app.modules.accounting import payables, service, subsidiary
+from app.modules.accounting import banking, cvr, payables, service, subsidiary
 from app.modules.accounting.models import Account, Journal
 from app.modules.accounting.schemas import (
     AccountCreate,
@@ -358,3 +362,143 @@ def get_subsidiary_reconciliation(db: DbDep) -> list[dict]:
     """Proves the pockets still add up to their control account. A difference
     means every ageing built on them is wrong until it is explained."""
     return subsidiary.reconcile(db)
+
+
+# --- Cash at bank ------------------------------------------------------------
+
+
+class StatementLineIn(BaseModel):
+    transaction_date: date
+    description: str
+    reference: str | None = None
+    amount: Decimal
+
+
+class StatementImport(BaseModel):
+    lines: list[StatementLineIn] = Field(min_length=1)
+
+
+class MatchRequest(BaseModel):
+    journal_id: uuid.UUID
+
+
+class CompleteRequest(BaseModel):
+    statement_date: date
+    statement_balance: Decimal
+    notes: str | None = None
+
+
+@router.get("/bank-accounts", response_model=list[dict], dependencies=[books_read])
+def list_bank_accounts(db: DbDep) -> list[dict]:
+    from app.modules.accounting.models import BankAccount
+
+    out = []
+    for account in db.scalars(select(BankAccount).order_by(BankAccount.name)):
+        out.append(
+            {
+                "id": account.id,
+                "name": account.name,
+                "bank_name": account.bank_name,
+                "account_number": account.account_number,
+                "currency": account.currency,
+                "kind": account.kind,
+                "is_active": account.is_active,
+                "book_balance": banking.book_balance(db, account, date.today()),
+            }
+        )
+    return out
+
+
+@router.get("/bank-accounts/{bank_account_id}/reconciliation", response_model=dict)
+def get_reconciliation(
+    bank_account_id: uuid.UUID,
+    db: DbDep,
+    _=books_read,
+    as_at: date | None = None,
+    statement_balance: Decimal | None = None,
+) -> dict:
+    """The reconciliation laid out the way it is written on paper."""
+    result = banking.summary(db, bank_account_id, as_at or date.today(), statement_balance)
+    result["unmatched_statement_lines"] = [
+        {
+            "id": line.id,
+            "transaction_date": line.transaction_date,
+            "description": line.description,
+            "reference": line.reference,
+            "amount": line.amount,
+        }
+        for line in result["unmatched_statement_lines"]
+    ]
+    result["unmatched_book_entries"] = [
+        {
+            "journal_id": row.journal_id,
+            "entry_date": row.entry_date,
+            "doc_number": row.doc_number,
+            "description": row.description,
+            "debit": row.debit,
+            "credit": row.credit,
+        }
+        for row in result["unmatched_book_entries"]
+    ]
+    return result
+
+
+@router.get("/bank-accounts/{bank_account_id}/suggested-matches", response_model=list[dict])
+def get_suggested_matches(bank_account_id: uuid.UUID, db: DbDep, _=books_read) -> list[dict]:
+    """Suggests rather than decides: matching on amount and a few days is right
+    often enough to save the work and wrong often enough that it must not post
+    itself."""
+    return banking.suggest_matches(db, bank_account_id)
+
+
+@router.post("/bank-accounts/{bank_account_id}/statement", response_model=dict)
+def import_statement(
+    bank_account_id: uuid.UUID, body: StatementImport, db: DbDep, _=books_write
+) -> dict:
+    return {"imported": banking.import_lines(db, bank_account_id, body.lines)}
+
+
+@router.post("/bank-transactions/{transaction_id}/match", response_model=dict)
+def match_transaction(
+    transaction_id: uuid.UUID, body: MatchRequest, db: DbDep, _=books_write
+) -> dict:
+    line = banking.match(db, transaction_id, body.journal_id)
+    return {"id": line.id, "matched_journal_id": line.matched_journal_id}
+
+
+@router.post("/bank-transactions/{transaction_id}/unmatch", response_model=dict)
+def unmatch_transaction(transaction_id: uuid.UUID, db: DbDep, _=books_write) -> dict:
+    line = banking.unmatch(db, transaction_id)
+    return {"id": line.id, "matched_journal_id": None}
+
+
+@router.post("/bank-accounts/{bank_account_id}/reconcile", response_model=dict)
+def complete_reconciliation(
+    bank_account_id: uuid.UUID, body: CompleteRequest, db: DbDep, user: CurrentUser, _=books_write
+) -> dict:
+    """Refuses while anything is unexplained: a reconciliation you can finish
+    while it is still out is a box-ticking exercise."""
+    record = banking.complete(
+        db, bank_account_id, body.statement_date, body.statement_balance, user, body.notes
+    )
+    return {
+        "id": record.id,
+        "statement_date": record.statement_date,
+        "statement_balance": record.statement_balance,
+        "book_balance": record.book_balance,
+        "is_complete": record.is_complete,
+    }
+
+
+# --- Cost value reconciliation ----------------------------------------------
+
+
+@router.get("/cvr/{project_id}", response_model=dict, dependencies=[books_read])
+def get_cvr(project_id: uuid.UUID, db: DbDep) -> dict:
+    """Whether the job is making money, as opposed to whether it has billed."""
+    return cvr.cost_value_reconciliation(db, project_id)
+
+
+@router.get("/cvr", response_model=list[dict], dependencies=[books_read])
+def get_portfolio_cvr(db: DbDep) -> list[dict]:
+    return cvr.portfolio(db)

@@ -386,3 +386,30 @@ class SubsidiaryEntry(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     credit: Mapped[Decimal] = mapped_column(Numeric(16, 2), default=ZERO)
     balance_after: Mapped[Decimal] = mapped_column(Numeric(16, 2))
     project_id: Mapped[uuid.UUID | None] = mapped_column(PG_UUID(as_uuid=True), index=True)
+
+
+class BankReconciliation(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
+    """One statement, reconciled to the books.
+
+    Kept as a record rather than recomputed on demand: a reconciliation is a
+    statement that somebody checked and signed off on a date, and it has to
+    still say the same thing when it is looked at again next year.
+    """
+
+    __tablename__ = "bank_reconciliations"
+    __table_args__ = (UniqueConstraint("bank_account_id", "statement_date"),)
+
+    bank_account_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("bank_accounts.id", ondelete="CASCADE"), index=True
+    )
+    statement_date: Mapped[date] = mapped_column(Date, index=True)
+    statement_balance: Mapped[Decimal] = mapped_column(Numeric(16, 2))
+    book_balance: Mapped[Decimal] = mapped_column(Numeric(16, 2), default=ZERO)
+    # What is in the books but not yet on the statement, split by direction so
+    # the reconciliation reads the way a bank reconciliation is written.
+    deposits_in_transit: Mapped[Decimal] = mapped_column(Numeric(16, 2), default=ZERO)
+    unpresented_payments: Mapped[Decimal] = mapped_column(Numeric(16, 2), default=ZERO)
+    difference: Mapped[Decimal] = mapped_column(Numeric(16, 2), default=ZERO)
+    is_complete: Mapped[bool] = mapped_column(Boolean, default=False)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    notes: Mapped[str | None] = mapped_column(Text)
