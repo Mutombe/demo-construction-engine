@@ -252,6 +252,7 @@ def create_journal(
                 credit=credit,
                 description=raw.get("description"),
                 sort_order=index,
+                subsidiary_id=raw.get("subsidiary_id"),
             )
         )
     db.flush()
@@ -346,6 +347,12 @@ def post(db: Session, journal_id: uuid.UUID, user=None) -> Journal:
             )
         )
 
+    # In the same transaction as the control movement above: that is the whole
+    # reason a pocket and its control cannot drift apart.
+    from app.modules.accounting import subsidiary
+
+    subsidiary.mirror(db, journal, lines, accounts)
+
     journal.status = JournalStatus.posted
     journal.posted_at = datetime.now(timezone.utc)
     journal.posted_by = getattr(user, "id", None)
@@ -415,6 +422,21 @@ def _category_of(db: Session, entry) -> CostCategory | None:
     return item.cost_category if item else None
 
 
+def _supplier_pocket_for_reference(db: Session, entry) -> uuid.UUID | None:
+    """A cost that came from a purchase order is owed to that order's supplier,
+    so the payable line carries their pocket rather than sitting anonymously in
+    the control account."""
+    if entry.source is not CostSource.purchase_order or not entry.reference:
+        return None
+    from app.modules.accounting import subsidiary as subs
+    from app.modules.procurement.models import PurchaseOrder
+
+    po = db.scalar(select(PurchaseOrder).where(PurchaseOrder.doc_number == entry.reference))
+    if po is None:
+        return None
+    return subs.pocket_for(db, "supplier", po.supplier_id).id
+
+
 def post_cost_entry(db: Session, entry, user=None) -> Journal | None:
     """One cost, one journal: debit the works account, credit whatever the
     cost came from.
@@ -440,7 +462,12 @@ def post_cost_entry(db: Session, entry, user=None) -> Journal | None:
             created_by=getattr(user, "id", None),
             lines=[
                 {"account_code": debit_code, "debit": amount, "description": entry.description},
-                {"account_code": credit_code, "credit": amount, "description": entry.description},
+                {
+                    "account_code": credit_code,
+                    "credit": amount,
+                    "description": entry.description,
+                    "subsidiary_id": _supplier_pocket_for_reference(db, entry),
+                },
             ],
         )
         return post(db, journal.id, user)
@@ -475,7 +502,22 @@ def post_valuation(db: Session, valuation, user=None) -> Journal | None:
         if revenue == 0:
             return None
 
-        lines = [{"account_code": ACCOUNTS_RECEIVABLE, "debit": receivable}]
+        from app.modules.accounting import subsidiary as subs
+        from app.modules.projects.models import Project
+
+        project = db.get(Project, valuation.project_id)
+        pocket = (
+            subs.pocket_for(db, "client", project.client_id).id
+            if project and project.client_id
+            else None
+        )
+        lines = [
+            {
+                "account_code": ACCOUNTS_RECEIVABLE,
+                "debit": receivable,
+                "subsidiary_id": pocket,
+            }
+        ]
         if retention_delta > 0:
             lines.append({"account_code": RETENTION_RECEIVABLE, "debit": retention_delta})
         lines.append({"account_code": CONTRACT_REVENUE, "credit": revenue})

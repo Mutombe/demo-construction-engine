@@ -146,6 +146,11 @@ class JournalLine(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     credit: Mapped[Decimal] = mapped_column(Numeric(16, 2), default=ZERO)
     description: Mapped[str | None] = mapped_column(Text)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    # Set when this line moves a control account on behalf of one party, so
+    # posting can mirror it into that party's own ledger.
+    subsidiary_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("subsidiary_accounts.id", ondelete="RESTRICT"), index=True
+    )
 
     journal: Mapped[Journal] = relationship(back_populates="lines")
     account: Mapped[Account] = relationship()
@@ -321,3 +326,63 @@ class BankTransaction(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         PG_UUID(as_uuid=True), ForeignKey("journals.id", ondelete="SET NULL"), index=True
     )
     matched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class SubsidiaryAccount(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """One party's own ledger, sitting under a GL control account.
+
+    The general ledger says "you are owed 558,000". This says which client
+    owes which part of it. Without the split, chasing a debt means reading
+    every certificate ever issued.
+
+    The invariant that makes it trustworthy: the sum of every pocket under a
+    control equals that control's balance, because a pocket only ever moves
+    as a mirror of a journal line that moved the control in the same journal.
+    """
+
+    __tablename__ = "subsidiary_accounts"
+    __table_args__ = (
+        UniqueConstraint("entity_type", "entity_id", "currency", name="uq_subsidiary_party"),
+    )
+
+    code: Mapped[str] = mapped_column(String(20), unique=True, index=True)
+    name: Mapped[str] = mapped_column(String(200))
+    # client | supplier — who the pocket belongs to
+    entity_type: Mapped[str] = mapped_column(String(20), index=True)
+    entity_id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), index=True)
+    currency: Mapped[str] = mapped_column(String(3), default="USD")
+    control_account_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("accounts.id", ondelete="RESTRICT"), index=True
+    )
+    balance: Mapped[Decimal] = mapped_column(Numeric(16, 2), default=ZERO)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    control_account = relationship("Account")
+
+
+class SubsidiaryEntry(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """A movement on one party's ledger, mirrored from the journal line that
+    caused it. Append-only, like the general ledger it shadows."""
+
+    __tablename__ = "subsidiary_entries"
+    __table_args__ = (
+        UniqueConstraint("journal_line_id", name="uq_subsidiary_entry_line"),
+        Index("ix_subsidiary_entries_account_date", "subsidiary_id", "entry_date"),
+    )
+
+    subsidiary_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("subsidiary_accounts.id", ondelete="CASCADE"), index=True
+    )
+    journal_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("journals.id", ondelete="CASCADE"), index=True
+    )
+    journal_line_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("journal_lines.id", ondelete="CASCADE")
+    )
+    entry_date: Mapped[date] = mapped_column(Date, index=True)
+    doc_number: Mapped[str] = mapped_column(String(30))
+    description: Mapped[str | None] = mapped_column(Text)
+    debit: Mapped[Decimal] = mapped_column(Numeric(16, 2), default=ZERO)
+    credit: Mapped[Decimal] = mapped_column(Numeric(16, 2), default=ZERO)
+    balance_after: Mapped[Decimal] = mapped_column(Numeric(16, 2))
+    project_id: Mapped[uuid.UUID | None] = mapped_column(PG_UUID(as_uuid=True), index=True)

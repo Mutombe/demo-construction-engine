@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from app.common.enums import UserRole
 from app.core.deps import CurrentUser, DbDep, require_roles
 from app.core.exceptions import ConflictError, NotFoundError, ValidationFailedError
-from app.modules.accounting import payables, service
+from app.modules.accounting import payables, service, subsidiary
 from app.modules.accounting.models import Account, Journal
 from app.modules.accounting.schemas import (
     AccountCreate,
@@ -306,3 +306,55 @@ def _payment_read(payment) -> SupplierPaymentRead:
     out = SupplierPaymentRead.model_validate(payment)
     out.supplier_name = payment.supplier.name if payment.supplier else None
     return out
+
+
+# --- Per-party ledgers -------------------------------------------------------
+
+
+@router.get("/subsidiary", response_model=list[dict], dependencies=[books_read])
+def list_subsidiary_accounts(db: DbDep, entity_type: str | None = None) -> list[dict]:
+    return [
+        {
+            "id": p.id,
+            "code": p.code,
+            "name": p.name,
+            "entity_type": p.entity_type,
+            "entity_id": p.entity_id,
+            "currency": p.currency,
+            "balance": p.balance,
+        }
+        for p in subsidiary.list_pockets(db, entity_type)
+    ]
+
+
+@router.get("/subsidiary/{subsidiary_id}/statement", response_model=dict)
+def get_statement(
+    subsidiary_id: uuid.UUID,
+    db: DbDep,
+    _=books_read,
+    start: date | None = None,
+    end: date | None = None,
+) -> dict:
+    """One party's account, as you would send it to them."""
+    result = subsidiary.statement(db, subsidiary_id, start, end)
+    result["entries"] = [
+        {
+            "id": e.id,
+            "entry_date": e.entry_date,
+            "doc_number": e.doc_number,
+            "description": e.description,
+            "debit": e.debit,
+            "credit": e.credit,
+            "balance_after": e.balance_after,
+            "journal_id": e.journal_id,
+        }
+        for e in result["entries"]
+    ]
+    return result
+
+
+@router.get("/subsidiary-reconciliation", response_model=list[dict], dependencies=[books_read])
+def get_subsidiary_reconciliation(db: DbDep) -> list[dict]:
+    """Proves the pockets still add up to their control account. A difference
+    means every ageing built on them is wrong until it is explained."""
+    return subsidiary.reconcile(db)

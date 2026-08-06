@@ -18,6 +18,7 @@ from app.common.doc_numbers import next_doc_number
 from app.common.enums import JournalSource, PoStatus, ValuationStatus
 from app.core.exceptions import ConflictError, NotFoundError, ValidationFailedError
 from app.modules.accounting import service as ledger
+from app.modules.accounting import subsidiary
 from app.modules.accounting.models import PaymentAllocation, SupplierPayment
 
 CENT = Decimal("0.01")
@@ -126,7 +127,11 @@ def create_payment(db: Session, data, user=None) -> SupplierPayment:
         source_id=payment.id,
         created_by=getattr(user, "id", None),
         lines=[
-            {"account_code": ledger.ACCOUNTS_PAYABLE, "debit": amount},
+            {
+                "account_code": ledger.ACCOUNTS_PAYABLE,
+                "debit": amount,
+                "subsidiary_id": subsidiary.pocket_for(db, "supplier", data.supplier_id).id,
+            },
             {"account_code": ledger.BANK, "credit": amount},
         ],
     )
@@ -291,7 +296,11 @@ def post_valuation_receipt(db: Session, valuation, user=None):
             created_by=getattr(user, "id", None),
             lines=[
                 {"account_code": ledger.BANK, "debit": amount},
-                {"account_code": ledger.ACCOUNTS_RECEIVABLE, "credit": amount},
+                {
+                    "account_code": ledger.ACCOUNTS_RECEIVABLE,
+                    "credit": amount,
+                    "subsidiary_id": _client_pocket(db, valuation),
+                },
             ],
         )
         return ledger.post(db, journal.id, user)
@@ -300,3 +309,14 @@ def post_valuation_receipt(db: Session, valuation, user=None):
             "Could not post the receipt for valuation %s", valuation.id
         )
         return None
+
+
+def _client_pocket(db: Session, valuation):
+    """The pocket for whoever the certificate was issued to."""
+    from app.modules.accounting import subsidiary
+    from app.modules.projects.models import Project
+
+    project = db.get(Project, valuation.project_id)
+    if project is None or project.client_id is None:
+        return None
+    return subsidiary.pocket_for(db, "client", project.client_id).id
