@@ -11,4 +11,5 @@ export type ExportMaterialReconciliationFormat = typeof ExportMaterialReconcilia
 export const ExportMaterialReconciliationFormat = {
   csv: 'csv',
   xlsx: 'xlsx',
+  pdf: 'pdf',
 } as const;

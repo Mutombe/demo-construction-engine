@@ -4908,6 +4908,53 @@
         }
       }
     },
+    "/api/v1/rfqs/{rfq_id}/pdf": {
+      "get": {
+        "tags": [
+          "procurement"
+        ],
+        "summary": "Download Rfq Pdf",
+        "description": "The request as a supplier receives it: scope and quantities, no rates.",
+        "operationId": "download_rfq_pdf",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rfq_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rfq Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/requisitions": {
       "get": {
         "tags": [
@@ -10673,7 +10720,8 @@
             "schema": {
               "enum": [
                 "csv",
-                "xlsx"
+                "xlsx",
+                "pdf"
               ],
               "type": "string",
               "default": "csv",
@@ -10733,7 +10781,8 @@
             "schema": {
               "enum": [
                 "csv",
-                "xlsx"
+                "xlsx",
+                "pdf"
               ],
               "type": "string",
               "default": "csv",
@@ -10800,7 +10849,8 @@
             "schema": {
               "enum": [
                 "csv",
-                "xlsx"
+                "xlsx",
+                "pdf"
               ],
               "type": "string",
               "default": "csv",
@@ -10883,7 +10933,8 @@
             "schema": {
               "enum": [
                 "csv",
-                "xlsx"
+                "xlsx",
+                "pdf"
               ],
               "type": "string",
               "default": "csv",
@@ -10943,7 +10994,8 @@
             "schema": {
               "enum": [
                 "csv",
-                "xlsx"
+                "xlsx",
+                "pdf"
               ],
               "type": "string",
               "default": "csv",
@@ -11003,7 +11055,8 @@
             "schema": {
               "enum": [
                 "csv",
-                "xlsx"
+                "xlsx",
+                "pdf"
               ],
               "type": "string",
               "default": "csv",
@@ -11113,7 +11166,8 @@
             "schema": {
               "enum": [
                 "csv",
-                "xlsx"
+                "xlsx",
+                "pdf"
               ],
               "type": "string",
               "default": "csv",
@@ -11935,6 +11989,51 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ai/site/weekly-report/pdf": {
+      "post": {
+        "tags": [
+          "ai"
+        ],
+        "summary": "Download Weekly Report",
+        "description": "The same report as the screen, as something you can hand to a client.\n\nRegenerated rather than taking the text from the browser: a PDF that says\nit covers a week has to be built from that week's data, not from whatever\nhappens to be on the page.",
+        "operationId": "download_weekly_report",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeeklyReportRequest"
               }
             }
           },
@@ -13540,6 +13639,275 @@
         ]
       }
     },
+    "/api/v1/accounting/receivables": {
+      "get": {
+        "tags": [
+          "accounting"
+        ],
+        "summary": "Get Receivables",
+        "description": "Aged from the issue date. Retention is excluded: it is withheld by\nagreement, not overdue.",
+        "operationId": "get_receivables",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "as_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As At"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ageing"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounting/payables": {
+      "get": {
+        "tags": [
+          "accounting"
+        ],
+        "summary": "Get Payables",
+        "description": "Aged from the date goods were received, which is when the debt became\nreal \u2014 the order date would age something not yet delivered.",
+        "operationId": "get_payables",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "as_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As At"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ageing"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounting/suppliers/{supplier_id}/open-orders": {
+      "get": {
+        "tags": [
+          "accounting"
+        ],
+        "summary": "List Open Orders",
+        "description": "What could be paid right now, with what is left on each.",
+        "operationId": "list_open_orders",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "supplier_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Supplier Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OpenPurchaseOrder"
+                  },
+                  "title": "Response List Open Orders"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounting/payments": {
+      "get": {
+        "tags": [
+          "accounting"
+        ],
+        "summary": "List Payments",
+        "operationId": "list_payments",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "supplier_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Supplier Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplierPaymentRead"
+                  },
+                  "title": "Response List Payments"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "accounting"
+        ],
+        "summary": "Create Payment",
+        "description": "Records the payment and posts it: debit what was owed, credit the bank.",
+        "operationId": "create_payment",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplierPaymentCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierPaymentRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/portal/summary": {
       "get": {
         "tags": [
@@ -14298,6 +14666,132 @@
           "notes"
         ],
         "title": "AdjustRequest"
+      },
+      "Ageing": {
+        "properties": {
+          "as_at": {
+            "type": "string",
+            "format": "date",
+            "title": "As At"
+          },
+          "parties": {
+            "items": {
+              "$ref": "#/components/schemas/AgeingParty"
+            },
+            "type": "array",
+            "title": "Parties"
+          },
+          "buckets": {
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+            },
+            "type": "object",
+            "title": "Buckets"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "as_at",
+          "parties",
+          "buckets",
+          "total"
+        ],
+        "title": "Ageing"
+      },
+      "AgeingDocument": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "doc_number": {
+            "type": "string",
+            "title": "Doc Number"
+          },
+          "dated": {
+            "type": "string",
+            "format": "date",
+            "title": "Dated"
+          },
+          "days": {
+            "type": "integer",
+            "title": "Days"
+          },
+          "bucket": {
+            "type": "string",
+            "title": "Bucket"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount"
+          },
+          "outstanding": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Outstanding"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "doc_number",
+          "dated",
+          "days",
+          "bucket",
+          "amount",
+          "outstanding"
+        ],
+        "title": "AgeingDocument"
+      },
+      "AgeingParty": {
+        "properties": {
+          "party_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Party Id"
+          },
+          "party_name": {
+            "type": "string",
+            "title": "Party Name"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total"
+          },
+          "buckets": {
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+            },
+            "type": "object",
+            "title": "Buckets"
+          },
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/AgeingDocument"
+            },
+            "type": "array",
+            "title": "Documents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "party_id",
+          "party_name",
+          "total",
+          "buckets",
+          "documents"
+        ],
+        "title": "AgeingParty"
       },
       "AiStatus": {
         "properties": {
@@ -20104,6 +20598,56 @@
         ],
         "title": "NotificationRead"
       },
+      "OpenPurchaseOrder": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "doc_number": {
+            "type": "string",
+            "title": "Doc Number"
+          },
+          "supplier_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Supplier Id"
+          },
+          "received_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Received Date"
+          },
+          "total_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Amount"
+          },
+          "outstanding": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Outstanding"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "doc_number",
+          "supplier_id",
+          "received_date",
+          "total_amount",
+          "outstanding"
+        ],
+        "title": "OpenPurchaseOrder"
+      },
       "OverdueDelivery": {
         "properties": {
           "po_id": {
@@ -21470,6 +22014,54 @@
           "approved"
         ],
         "title": "PayRunStatus"
+      },
+      "PaymentAllocationIn": {
+        "properties": {
+          "purchase_order_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Purchase Order Id"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "purchase_order_id",
+          "amount"
+        ],
+        "title": "PaymentAllocationIn"
+      },
+      "PaymentAllocationRead": {
+        "properties": {
+          "purchase_order_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Purchase Order Id"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "purchase_order_id",
+          "amount"
+        ],
+        "title": "PaymentAllocationRead"
       },
       "PhaseCreate": {
         "properties": {
@@ -28389,6 +28981,183 @@
           "name"
         ],
         "title": "SupplierCreate"
+      },
+      "SupplierPaymentCreate": {
+        "properties": {
+          "supplier_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Supplier Id"
+          },
+          "payment_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Date"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Amount"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "allocations": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentAllocationIn"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Allocations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "supplier_id",
+          "amount",
+          "allocations"
+        ],
+        "title": "SupplierPaymentCreate"
+      },
+      "SupplierPaymentRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "doc_number": {
+            "type": "string",
+            "title": "Doc Number"
+          },
+          "supplier_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Supplier Id"
+          },
+          "supplier_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Name"
+          },
+          "payment_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Payment Date"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "journal_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Journal Id"
+          },
+          "allocations": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentAllocationRead"
+            },
+            "type": "array",
+            "title": "Allocations",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "doc_number",
+          "supplier_id",
+          "payment_date",
+          "amount",
+          "method",
+          "reference",
+          "journal_id"
+        ],
+        "title": "SupplierPaymentRead"
       },
       "SupplierQuoteActivity": {
         "properties": {

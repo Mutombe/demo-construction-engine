@@ -146,3 +146,74 @@ class UnpostedEntry(BaseModel):
     description: str | None
     amount: Decimal
     project_id: uuid.UUID
+
+
+class PaymentAllocationIn(BaseModel):
+    purchase_order_id: uuid.UUID
+    amount: Decimal = Field(gt=0)
+
+
+class SupplierPaymentCreate(BaseModel):
+    supplier_id: uuid.UUID
+    payment_date: date | None = None
+    amount: Decimal = Field(gt=0)
+    method: str | None = Field(default=None, max_length=40)
+    reference: str | None = Field(default=None, max_length=80)
+    notes: str | None = None
+    allocations: list[PaymentAllocationIn] = Field(min_length=1)
+
+
+class PaymentAllocationRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    purchase_order_id: uuid.UUID
+    amount: Decimal
+
+
+class SupplierPaymentRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    doc_number: str
+    supplier_id: uuid.UUID
+    supplier_name: str | None = None
+    payment_date: date
+    amount: Decimal
+    method: str | None
+    reference: str | None
+    journal_id: uuid.UUID | None
+    allocations: list[PaymentAllocationRead] = []
+
+
+class AgeingDocument(BaseModel):
+    id: uuid.UUID
+    doc_number: str
+    dated: date
+    days: int
+    bucket: str
+    amount: Decimal
+    outstanding: Decimal
+
+
+class AgeingParty(BaseModel):
+    party_id: uuid.UUID
+    party_name: str
+    total: Decimal
+    buckets: dict[str, Decimal]
+    documents: list[AgeingDocument]
+
+
+class Ageing(BaseModel):
+    as_at: date
+    parties: list[AgeingParty]
+    buckets: dict[str, Decimal]
+    total: Decimal
+
+
+class OpenPurchaseOrder(BaseModel):
+    id: uuid.UUID
+    doc_number: str
+    supplier_id: uuid.UUID
+    received_date: date | None
+    total_amount: Decimal
+    outstanding: Decimal

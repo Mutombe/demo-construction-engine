@@ -28,6 +28,7 @@ import type {
   AccountRead,
   AccountUpdate,
   AdjustRequest,
+  Ageing,
   AiStatus,
   BalanceSheet,
   BodyUploadIngestionItem,
@@ -95,7 +96,9 @@ import type {
   GetInventoryAnalyticsParams,
   GetItemConsumptionParams,
   GetMediaFolderCountsParams,
+  GetPayablesParams,
   GetPhotoTimelineParams,
+  GetReceivablesParams,
   GetTrialBalanceParams,
   GetWorkloadParams,
   GlobalSearchParams,
@@ -129,6 +132,7 @@ import type {
   ListMediaParams,
   ListNotificationsParams,
   ListPayRunsParams,
+  ListPaymentsParams,
   ListProjectsParams,
   ListPurchaseOrdersParams,
   ListRequisitionsParams,
@@ -155,6 +159,7 @@ import type {
   MediaUpdate,
   NavCounts,
   NotificationRead,
+  OpenPurchaseOrder,
   PageActivityLogRead,
   PageClientRead,
   PageCostEntryRead,
@@ -254,6 +259,8 @@ import type {
   StocktakeDetail,
   SupplierActivity,
   SupplierCreate,
+  SupplierPaymentCreate,
+  SupplierPaymentRead,
   SupplierQuoteReceipt,
   SupplierQuoteSubmit,
   SupplierRead,
@@ -7355,6 +7362,100 @@ export const useRevokeRfqInvite = <TError = HTTPValidationError,
       > => {
       return useMutation(getRevokeRfqInviteMutationOptions(options), queryClient);
     }
+
+/**
+ * The request as a supplier receives it: scope and quantities, no rates.
+ * @summary Download Rfq Pdf
+ */
+export const downloadRfqPdf = (
+    rfqId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<unknown>(
+      {url: `/api/v1/rfqs/${rfqId}/pdf`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getDownloadRfqPdfQueryKey = (rfqId: string,) => {
+    return [
+    `/api/v1/rfqs/${rfqId}/pdf`
+    ] as const;
+    }
+
+
+export const getDownloadRfqPdfQueryOptions = <TData = Awaited<ReturnType<typeof downloadRfqPdf>>, TError = HTTPValidationError>(rfqId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadRfqPdf>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDownloadRfqPdfQueryKey(rfqId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadRfqPdf>>> = ({ signal }) => downloadRfqPdf(rfqId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: rfqId !== null && rfqId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof downloadRfqPdf>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DownloadRfqPdfQueryResult = NonNullable<Awaited<ReturnType<typeof downloadRfqPdf>>>
+export type DownloadRfqPdfQueryError = HTTPValidationError
+
+
+export function useDownloadRfqPdf<TData = Awaited<ReturnType<typeof downloadRfqPdf>>, TError = HTTPValidationError>(
+ rfqId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadRfqPdf>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadRfqPdf>>,
+          TError,
+          Awaited<ReturnType<typeof downloadRfqPdf>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadRfqPdf<TData = Awaited<ReturnType<typeof downloadRfqPdf>>, TError = HTTPValidationError>(
+ rfqId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadRfqPdf>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadRfqPdf>>,
+          TError,
+          Awaited<ReturnType<typeof downloadRfqPdf>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadRfqPdf<TData = Awaited<ReturnType<typeof downloadRfqPdf>>, TError = HTTPValidationError>(
+ rfqId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadRfqPdf>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Download Rfq Pdf
+ */
+
+export function useDownloadRfqPdf<TData = Awaited<ReturnType<typeof downloadRfqPdf>>, TError = HTTPValidationError>(
+ rfqId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadRfqPdf>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getDownloadRfqPdfQueryOptions(rfqId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 /**
  * @summary List Requisitions
@@ -17136,6 +17237,76 @@ export const useChat = <TError = HTTPValidationError,
     }
 
 /**
+ * The same report as the screen, as something you can hand to a client.
+ *
+ * Regenerated rather than taking the text from the browser: a PDF that says
+ * it covers a week has to be built from that week's data, not from whatever
+ * happens to be on the page.
+ * @summary Download Weekly Report
+ */
+export const downloadWeeklyReport = (
+    weeklyReportRequest: WeeklyReportRequest,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<unknown>(
+      {url: `/api/v1/ai/site/weekly-report/pdf`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: weeklyReportRequest, signal
+    },
+      );
+    }
+
+
+
+
+export const getDownloadWeeklyReportMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof downloadWeeklyReport>>, TError,{data: WeeklyReportRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof downloadWeeklyReport>>, TError,{data: WeeklyReportRequest}, TContext> => {
+
+const mutationKey = ['downloadWeeklyReport'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof downloadWeeklyReport>>, {data: WeeklyReportRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  downloadWeeklyReport(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DownloadWeeklyReportMutationResult = NonNullable<Awaited<ReturnType<typeof downloadWeeklyReport>>>
+    export type DownloadWeeklyReportMutationBody = WeeklyReportRequest
+    export type DownloadWeeklyReportMutationError = HTTPValidationError
+
+    /**
+ * @summary Download Weekly Report
+ */
+export const useDownloadWeeklyReport = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof downloadWeeklyReport>>, TError,{data: WeeklyReportRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof downloadWeeklyReport>>,
+        TError,
+        {data: WeeklyReportRequest},
+        TContext
+      > => {
+      return useMutation(getDownloadWeeklyReportMutationOptions(options), queryClient);
+    }
+
+/**
  * @summary List Activity
  */
 export const listActivity = (
@@ -19544,6 +19715,452 @@ export function usePeriodSummary<TData = Awaited<ReturnType<typeof periodSummary
 
 
 
+
+/**
+ * Aged from the issue date. Retention is excluded: it is withheld by
+ * agreement, not overdue.
+ * @summary Get Receivables
+ */
+export const getReceivables = (
+    params?: GetReceivablesParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<Ageing>(
+      {url: `/api/v1/accounting/receivables`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getGetReceivablesQueryKey = (params?: GetReceivablesParams,) => {
+    return [
+    `/api/v1/accounting/receivables`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetReceivablesQueryOptions = <TData = Awaited<ReturnType<typeof getReceivables>>, TError = HTTPValidationError>(params?: GetReceivablesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getReceivables>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetReceivablesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getReceivables>>> = ({ signal }) => getReceivables(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getReceivables>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetReceivablesQueryResult = NonNullable<Awaited<ReturnType<typeof getReceivables>>>
+export type GetReceivablesQueryError = HTTPValidationError
+
+
+export function useGetReceivables<TData = Awaited<ReturnType<typeof getReceivables>>, TError = HTTPValidationError>(
+ params: undefined |  GetReceivablesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getReceivables>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getReceivables>>,
+          TError,
+          Awaited<ReturnType<typeof getReceivables>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetReceivables<TData = Awaited<ReturnType<typeof getReceivables>>, TError = HTTPValidationError>(
+ params?: GetReceivablesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getReceivables>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getReceivables>>,
+          TError,
+          Awaited<ReturnType<typeof getReceivables>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetReceivables<TData = Awaited<ReturnType<typeof getReceivables>>, TError = HTTPValidationError>(
+ params?: GetReceivablesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getReceivables>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Receivables
+ */
+
+export function useGetReceivables<TData = Awaited<ReturnType<typeof getReceivables>>, TError = HTTPValidationError>(
+ params?: GetReceivablesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getReceivables>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetReceivablesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Aged from the date goods were received, which is when the debt became
+ * real — the order date would age something not yet delivered.
+ * @summary Get Payables
+ */
+export const getPayables = (
+    params?: GetPayablesParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<Ageing>(
+      {url: `/api/v1/accounting/payables`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getGetPayablesQueryKey = (params?: GetPayablesParams,) => {
+    return [
+    `/api/v1/accounting/payables`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetPayablesQueryOptions = <TData = Awaited<ReturnType<typeof getPayables>>, TError = HTTPValidationError>(params?: GetPayablesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPayables>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPayablesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPayables>>> = ({ signal }) => getPayables(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPayables>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetPayablesQueryResult = NonNullable<Awaited<ReturnType<typeof getPayables>>>
+export type GetPayablesQueryError = HTTPValidationError
+
+
+export function useGetPayables<TData = Awaited<ReturnType<typeof getPayables>>, TError = HTTPValidationError>(
+ params: undefined |  GetPayablesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPayables>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPayables>>,
+          TError,
+          Awaited<ReturnType<typeof getPayables>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPayables<TData = Awaited<ReturnType<typeof getPayables>>, TError = HTTPValidationError>(
+ params?: GetPayablesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPayables>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPayables>>,
+          TError,
+          Awaited<ReturnType<typeof getPayables>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPayables<TData = Awaited<ReturnType<typeof getPayables>>, TError = HTTPValidationError>(
+ params?: GetPayablesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPayables>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Payables
+ */
+
+export function useGetPayables<TData = Awaited<ReturnType<typeof getPayables>>, TError = HTTPValidationError>(
+ params?: GetPayablesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPayables>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetPayablesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * What could be paid right now, with what is left on each.
+ * @summary List Open Orders
+ */
+export const listOpenOrders = (
+    supplierId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<OpenPurchaseOrder[]>(
+      {url: `/api/v1/accounting/suppliers/${supplierId}/open-orders`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getListOpenOrdersQueryKey = (supplierId: string,) => {
+    return [
+    `/api/v1/accounting/suppliers/${supplierId}/open-orders`
+    ] as const;
+    }
+
+
+export const getListOpenOrdersQueryOptions = <TData = Awaited<ReturnType<typeof listOpenOrders>>, TError = HTTPValidationError>(supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOpenOrders>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListOpenOrdersQueryKey(supplierId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listOpenOrders>>> = ({ signal }) => listOpenOrders(supplierId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: supplierId !== null && supplierId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listOpenOrders>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListOpenOrdersQueryResult = NonNullable<Awaited<ReturnType<typeof listOpenOrders>>>
+export type ListOpenOrdersQueryError = HTTPValidationError
+
+
+export function useListOpenOrders<TData = Awaited<ReturnType<typeof listOpenOrders>>, TError = HTTPValidationError>(
+ supplierId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOpenOrders>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOpenOrders>>,
+          TError,
+          Awaited<ReturnType<typeof listOpenOrders>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListOpenOrders<TData = Awaited<ReturnType<typeof listOpenOrders>>, TError = HTTPValidationError>(
+ supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOpenOrders>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOpenOrders>>,
+          TError,
+          Awaited<ReturnType<typeof listOpenOrders>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListOpenOrders<TData = Awaited<ReturnType<typeof listOpenOrders>>, TError = HTTPValidationError>(
+ supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOpenOrders>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Open Orders
+ */
+
+export function useListOpenOrders<TData = Awaited<ReturnType<typeof listOpenOrders>>, TError = HTTPValidationError>(
+ supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOpenOrders>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListOpenOrdersQueryOptions(supplierId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary List Payments
+ */
+export const listPayments = (
+    params?: ListPaymentsParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<SupplierPaymentRead[]>(
+      {url: `/api/v1/accounting/payments`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getListPaymentsQueryKey = (params?: ListPaymentsParams,) => {
+    return [
+    `/api/v1/accounting/payments`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListPaymentsQueryOptions = <TData = Awaited<ReturnType<typeof listPayments>>, TError = HTTPValidationError>(params?: ListPaymentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPayments>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPaymentsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPayments>>> = ({ signal }) => listPayments(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPayments>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListPaymentsQueryResult = NonNullable<Awaited<ReturnType<typeof listPayments>>>
+export type ListPaymentsQueryError = HTTPValidationError
+
+
+export function useListPayments<TData = Awaited<ReturnType<typeof listPayments>>, TError = HTTPValidationError>(
+ params: undefined |  ListPaymentsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPayments>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPayments>>,
+          TError,
+          Awaited<ReturnType<typeof listPayments>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPayments<TData = Awaited<ReturnType<typeof listPayments>>, TError = HTTPValidationError>(
+ params?: ListPaymentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPayments>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPayments>>,
+          TError,
+          Awaited<ReturnType<typeof listPayments>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPayments<TData = Awaited<ReturnType<typeof listPayments>>, TError = HTTPValidationError>(
+ params?: ListPaymentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPayments>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Payments
+ */
+
+export function useListPayments<TData = Awaited<ReturnType<typeof listPayments>>, TError = HTTPValidationError>(
+ params?: ListPaymentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPayments>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListPaymentsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Records the payment and posts it: debit what was owed, credit the bank.
+ * @summary Create Payment
+ */
+export const createPayment = (
+    supplierPaymentCreate: SupplierPaymentCreate,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<SupplierPaymentRead>(
+      {url: `/api/v1/accounting/payments`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: supplierPaymentCreate, signal
+    },
+      );
+    }
+
+
+
+
+export const getCreatePaymentMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPayment>>, TError,{data: SupplierPaymentCreate}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof createPayment>>, TError,{data: SupplierPaymentCreate}, TContext> => {
+
+const mutationKey = ['createPayment'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPayment>>, {data: SupplierPaymentCreate}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createPayment(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePaymentMutationResult = NonNullable<Awaited<ReturnType<typeof createPayment>>>
+    export type CreatePaymentMutationBody = SupplierPaymentCreate
+    export type CreatePaymentMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Payment
+ */
+export const useCreatePayment = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPayment>>, TError,{data: SupplierPaymentCreate}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createPayment>>,
+        TError,
+        {data: SupplierPaymentCreate},
+        TContext
+      > => {
+      return useMutation(getCreatePaymentMutationOptions(options), queryClient);
+    }
 
 /**
  * @summary Portal Summary

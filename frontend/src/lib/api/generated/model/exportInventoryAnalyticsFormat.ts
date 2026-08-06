@@ -11,4 +11,5 @@ export type ExportInventoryAnalyticsFormat = typeof ExportInventoryAnalyticsForm
 export const ExportInventoryAnalyticsFormat = {
   csv: 'csv',
   xlsx: 'xlsx',
+  pdf: 'pdf',
 } as const;

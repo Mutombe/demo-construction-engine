@@ -11,4 +11,5 @@ export type ExportStockValuationFormat = typeof ExportStockValuationFormat[keyof
 export const ExportStockValuationFormat = {
   csv: 'csv',
   xlsx: 'xlsx',
+  pdf: 'pdf',
 } as const;

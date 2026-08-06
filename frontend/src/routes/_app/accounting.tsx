@@ -15,10 +15,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tooltip } from "@/components/ui/tooltip";
+import { useState } from "react";
+import { Ageing } from "@/features/accounting/Ageing";
+import { PaySupplierDialog } from "@/features/accounting/PaySupplierDialog";
 import { useAuthStore } from "@/features/auth/store";
 import { errDetail } from "@/lib/api/errors";
 import {
   useGetBalanceSheet,
+  useGetPayables,
+  useGetReceivables,
   useGetIncomeStatement,
   useGetTrialBalance,
   useListAccounts,
@@ -32,7 +37,16 @@ import { cn } from "@/lib/utils";
 
 const searchSchema = z.object({
   tab: z
-    .enum(["summary", "trial-balance", "income", "balance-sheet", "journals", "accounts"])
+    .enum([
+      "summary",
+      "receivables",
+      "payables",
+      "trial-balance",
+      "income",
+      "balance-sheet",
+      "journals",
+      "accounts",
+    ])
     .optional()
     .default("summary"),
 });
@@ -50,6 +64,8 @@ export const Route = createFileRoute("/_app/accounting")({
 
 const TABS = [
   { key: "summary", label: "Summary" },
+  { key: "receivables", label: "Owed to Us" },
+  { key: "payables", label: "We Owe" },
   { key: "trial-balance", label: "Trial Balance" },
   { key: "income", label: "Income Statement" },
   { key: "balance-sheet", label: "Balance Sheet" },
@@ -89,6 +105,8 @@ function AccountingPage() {
       </div>
 
       {tab === "summary" && <Summary />}
+      {tab === "receivables" && <Receivables />}
+      {tab === "payables" && <Payables />}
       {tab === "trial-balance" && <TrialBalance />}
       {tab === "income" && <Income />}
       {tab === "balance-sheet" && <Sheet />}
@@ -181,6 +199,36 @@ function findAmount(
   code: string,
 ): string {
   return rows?.find((row) => row.code === code)?.amount ?? "0";
+}
+
+function Receivables() {
+  const { data } = useGetReceivables({});
+  return (
+    <Ageing
+      data={data}
+      emptyHint="Certificates appear here from the day they are issued until they are paid."
+    />
+  );
+}
+
+function Payables() {
+  const { data } = useGetPayables({});
+  const [paying, setPaying] = useState<{ id: string; name: string } | null>(null);
+  return (
+    <>
+      <Ageing
+        data={data}
+        emptyHint="Orders appear here once they are received, until they are paid."
+        onPay={(id, name) => setPaying({ id, name })}
+      />
+      <PaySupplierDialog
+        supplierId={paying?.id ?? null}
+        supplierName={paying?.name ?? ""}
+        open={!!paying}
+        onOpenChange={(open) => !open && setPaying(null)}
+      />
+    </>
+  );
 }
 
 function TrialBalance() {

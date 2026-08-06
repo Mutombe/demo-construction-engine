@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from app.common.enums import UserRole
 from app.core.deps import CurrentUser, DbDep, require_roles
 from app.core.exceptions import ConflictError, NotFoundError, ValidationFailedError
-from app.modules.accounting import service
+from app.modules.accounting import payables, service
 from app.modules.accounting.models import Account, Journal
 from app.modules.accounting.schemas import (
     AccountCreate,
@@ -18,6 +18,10 @@ from app.modules.accounting.schemas import (
     JournalDetail,
     JournalRead,
     LedgerRow,
+    Ageing,
+    OpenPurchaseOrder,
+    SupplierPaymentCreate,
+    SupplierPaymentRead,
     TrialBalance,
     UnpostedEntry,
 )
@@ -231,3 +235,74 @@ def period_summary(db: DbDep) -> dict:
         ),
         "balanced": sheet["balanced"],
     }
+
+
+# --- Who owes what ----------------------------------------------------------
+
+
+@router.get("/receivables", response_model=Ageing, dependencies=[books_read])
+def get_receivables(db: DbDep, as_at: date | None = None) -> Ageing:
+    """Aged from the issue date. Retention is excluded: it is withheld by
+    agreement, not overdue."""
+    return Ageing.model_validate(payables.receivables_ageing(db, as_at))
+
+
+@router.get("/payables", response_model=Ageing, dependencies=[books_read])
+def get_payables(db: DbDep, as_at: date | None = None) -> Ageing:
+    """Aged from the date goods were received, which is when the debt became
+    real — the order date would age something not yet delivered."""
+    return Ageing.model_validate(payables.payables_ageing(db, as_at))
+
+
+@router.get("/suppliers/{supplier_id}/open-orders", response_model=list[OpenPurchaseOrder])
+def list_open_orders(supplier_id: uuid.UUID, db: DbDep, _=books_read) -> list[OpenPurchaseOrder]:
+    """What could be paid right now, with what is left on each."""
+    from app.common.enums import PoStatus
+    from app.modules.procurement.models import PurchaseOrder
+
+    orders = list(
+        db.scalars(
+            select(PurchaseOrder)
+            .where(
+                PurchaseOrder.supplier_id == supplier_id,
+                PurchaseOrder.status == PoStatus.received,
+            )
+            .order_by(PurchaseOrder.received_date)
+        )
+    )
+    paid = payables.po_outstanding(db, [po.id for po in orders])
+    out = []
+    for po in orders:
+        outstanding = po.total_amount - paid.get(po.id, 0)
+        if outstanding <= 0:
+            continue
+        out.append(
+            OpenPurchaseOrder(
+                id=po.id,
+                doc_number=po.doc_number,
+                supplier_id=po.supplier_id,
+                received_date=po.received_date,
+                total_amount=po.total_amount,
+                outstanding=outstanding,
+            )
+        )
+    return out
+
+
+@router.get("/payments", response_model=list[SupplierPaymentRead], dependencies=[books_read])
+def list_payments(db: DbDep, supplier_id: uuid.UUID | None = None) -> list[SupplierPaymentRead]:
+    return [_payment_read(p) for p in payables.list_payments(db, supplier_id)]
+
+
+@router.post("/payments", response_model=SupplierPaymentRead, status_code=201)
+def create_payment(
+    body: SupplierPaymentCreate, db: DbDep, user: CurrentUser, _=books_write
+) -> SupplierPaymentRead:
+    """Records the payment and posts it: debit what was owed, credit the bank."""
+    return _payment_read(payables.create_payment(db, body, user))
+
+
+def _payment_read(payment) -> SupplierPaymentRead:
+    out = SupplierPaymentRead.model_validate(payment)
+    out.supplier_name = payment.supplier.name if payment.supplier else None
+    return out

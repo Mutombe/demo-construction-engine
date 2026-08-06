@@ -11,4 +11,5 @@ export type ExportExpenseRegisterFormat = typeof ExportExpenseRegisterFormat[key
 export const ExportExpenseRegisterFormat = {
   csv: 'csv',
   xlsx: 'xlsx',
+  pdf: 'pdf',
 } as const;

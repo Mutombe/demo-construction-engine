@@ -11,4 +11,5 @@ export type ExportCostLedgerFormat = typeof ExportCostLedgerFormat[keyof typeof 
 export const ExportCostLedgerFormat = {
   csv: 'csv',
   xlsx: 'xlsx',
+  pdf: 'pdf',
 } as const;

@@ -11,4 +11,5 @@ export type ExportProjectCostFormat = typeof ExportProjectCostFormat[keyof typeo
 export const ExportProjectCostFormat = {
   csv: 'csv',
   xlsx: 'xlsx',
+  pdf: 'pdf',
 } as const;

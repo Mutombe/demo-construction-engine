@@ -11,4 +11,5 @@ export type ExportProcurementRegisterFormat = typeof ExportProcurementRegisterFo
 export const ExportProcurementRegisterFormat = {
   csv: 'csv',
   xlsx: 'xlsx',
+  pdf: 'pdf',
 } as const;

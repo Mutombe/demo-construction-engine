@@ -283,6 +283,10 @@ def pay_valuation(
     _require_status(valuation, ValuationStatus.issued, "marked paid")
     valuation.status = ValuationStatus.paid
     valuation.paid_date = paid_date or date.today()
+    db.flush()
+    from app.modules.accounting import payables
+
+    payables.post_valuation_receipt(db, valuation)
     _notify_valuation(db, valuation, "paid", actor_id)
     return valuation
 
