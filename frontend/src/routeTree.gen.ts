@@ -38,6 +38,7 @@ import { Route as AppProjectsIndexRouteImport } from './routes/_app/projects/ind
 import { Route as AppProjectsProjectIdRouteImport } from './routes/_app/projects/$projectId'
 import { Route as AppReportsIndexRouteImport } from './routes/_app/reports/index'
 import { Route as AppSettingsIndexRouteImport } from './routes/_app/settings/index'
+import { Route as AppTasksTaskIdRouteImport } from './routes/_app/tasks.$taskId'
 import { Route as AppValuationsValuationIdRouteImport } from './routes/_app/valuations/$valuationId'
 import { Route as AppInventoryStocktakeStocktakeIdRouteImport } from './routes/_app/inventory/stocktake.$stocktakeId'
 import { Route as AppPayrollRunsRunIdRouteImport } from './routes/_app/payroll/runs.$runId'
@@ -200,6 +201,11 @@ const AppSettingsIndexRoute = AppSettingsIndexRouteImport.update({
   path: '/settings/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTasksTaskIdRoute = AppTasksTaskIdRouteImport.update({
+  id: '/tasks/$taskId',
+  path: '/tasks/$taskId',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppValuationsValuationIdRoute =
   AppValuationsValuationIdRouteImport.update({
     id: '/valuations/$valuationId',
@@ -312,6 +318,7 @@ export interface FileRoutesByFullPath {
   '/procurement/requisitions': typeof AppProcurementRequisitionsRouteWithChildren
   '/procurement/suppliers': typeof AppProcurementSuppliersRouteWithChildren
   '/projects/$projectId': typeof AppProjectsProjectIdRouteWithChildren
+  '/tasks/$taskId': typeof AppTasksTaskIdRoute
   '/valuations/$valuationId': typeof AppValuationsValuationIdRoute
   '/admin/': typeof AppAdminIndexRoute
   '/clients/': typeof AppClientsIndexRoute
@@ -357,6 +364,7 @@ export interface FileRoutesByTo {
   '/inventory/stocktake': typeof AppInventoryStocktakeRouteWithChildren
   '/procurement/requisitions': typeof AppProcurementRequisitionsRouteWithChildren
   '/procurement/suppliers': typeof AppProcurementSuppliersRouteWithChildren
+  '/tasks/$taskId': typeof AppTasksTaskIdRoute
   '/valuations/$valuationId': typeof AppValuationsValuationIdRoute
   '/admin': typeof AppAdminIndexRoute
   '/clients': typeof AppClientsIndexRoute
@@ -405,6 +413,7 @@ export interface FileRoutesById {
   '/_app/procurement/requisitions': typeof AppProcurementRequisitionsRouteWithChildren
   '/_app/procurement/suppliers': typeof AppProcurementSuppliersRouteWithChildren
   '/_app/projects/$projectId': typeof AppProjectsProjectIdRouteWithChildren
+  '/_app/tasks/$taskId': typeof AppTasksTaskIdRoute
   '/_app/valuations/$valuationId': typeof AppValuationsValuationIdRoute
   '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/clients/': typeof AppClientsIndexRoute
@@ -453,6 +462,7 @@ export interface FileRouteTypes {
     | '/procurement/requisitions'
     | '/procurement/suppliers'
     | '/projects/$projectId'
+    | '/tasks/$taskId'
     | '/valuations/$valuationId'
     | '/admin/'
     | '/clients/'
@@ -498,6 +508,7 @@ export interface FileRouteTypes {
     | '/inventory/stocktake'
     | '/procurement/requisitions'
     | '/procurement/suppliers'
+    | '/tasks/$taskId'
     | '/valuations/$valuationId'
     | '/admin'
     | '/clients'
@@ -545,6 +556,7 @@ export interface FileRouteTypes {
     | '/_app/procurement/requisitions'
     | '/_app/procurement/suppliers'
     | '/_app/projects/$projectId'
+    | '/_app/tasks/$taskId'
     | '/_app/valuations/$valuationId'
     | '/_app/admin/'
     | '/_app/clients/'
@@ -786,6 +798,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/tasks/$taskId': {
+      id: '/_app/tasks/$taskId'
+      path: '/tasks/$taskId'
+      fullPath: '/tasks/$taskId'
+      preLoaderRoute: typeof AppTasksTaskIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/valuations/$valuationId': {
       id: '/_app/valuations/$valuationId'
       path: '/valuations/$valuationId'
@@ -984,6 +1003,7 @@ interface AppRouteChildren {
   AppProcurementRequisitionsRoute: typeof AppProcurementRequisitionsRouteWithChildren
   AppProcurementSuppliersRoute: typeof AppProcurementSuppliersRouteWithChildren
   AppProjectsProjectIdRoute: typeof AppProjectsProjectIdRouteWithChildren
+  AppTasksTaskIdRoute: typeof AppTasksTaskIdRoute
   AppValuationsValuationIdRoute: typeof AppValuationsValuationIdRoute
   AppAdminIndexRoute: typeof AppAdminIndexRoute
   AppClientsIndexRoute: typeof AppClientsIndexRoute
@@ -1016,6 +1036,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppProcurementRequisitionsRoute: AppProcurementRequisitionsRouteWithChildren,
   AppProcurementSuppliersRoute: AppProcurementSuppliersRouteWithChildren,
   AppProjectsProjectIdRoute: AppProjectsProjectIdRouteWithChildren,
+  AppTasksTaskIdRoute: AppTasksTaskIdRoute,
   AppValuationsValuationIdRoute: AppValuationsValuationIdRoute,
   AppAdminIndexRoute: AppAdminIndexRoute,
   AppClientsIndexRoute: AppClientsIndexRoute,

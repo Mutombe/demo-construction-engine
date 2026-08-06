@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { Diamond, PencilSimple, Plus, Trash } from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "@/lib/toast";
@@ -178,7 +178,13 @@ function TasksTab() {
                   <TableCell>
                     <span className="flex items-center gap-1.5 font-medium">
                       {task.is_milestone && <Diamond className="h-3 w-3 text-primary" />}
-                      {task.name}
+                      <Link
+                        to="/tasks/$taskId"
+                        params={{ taskId: task.id }}
+                        className="underline-offset-2 hover:text-primary hover:underline"
+                      >
+                        {task.name}
+                      </Link>
                     </span>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
