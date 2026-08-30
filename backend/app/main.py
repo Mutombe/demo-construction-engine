@@ -32,6 +32,7 @@ from app.modules.projects.router import router as projects_router
 from app.modules.reports.router import router as reports_router
 from app.modules.search.router import router as search_router
 from app.modules.site.router import router as site_router
+from app.modules.subcontracts.router import router as subcontracts_router
 from app.modules.tasks.router import router as tasks_router
 from app.modules.users.router import router as users_router
 from app.modules.valuations.router import router as valuations_router
@@ -78,6 +79,7 @@ def create_app() -> FastAPI:
     protected.include_router(procurement_router)
     protected.include_router(requisitions_router)
     protected.include_router(site_router)
+    protected.include_router(subcontracts_router)
     protected.include_router(expenses_router)
     protected.include_router(fleet_router)
     protected.include_router(inventory_router)

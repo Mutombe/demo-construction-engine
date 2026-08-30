@@ -48,6 +48,7 @@ INVENTORY = "1300"
 ACCOUNTS_PAYABLE = "2000"
 ACCRUED_COSTS = "2100"
 PAYROLL_PAYABLE = "2200"
+RETENTION_PAYABLE = "2300"
 RETAINED_EARNINGS = "3000"
 CONTRACT_REVENUE = "4000"
 
@@ -64,6 +65,12 @@ DEFAULT_CHART: list[tuple[str, str, AccountType, str]] = [
     (ACCOUNTS_PAYABLE, "Accounts Payable", AccountType.liability, "Owed to suppliers"),
     (ACCRUED_COSTS, "Accrued Costs", AccountType.liability, "Incurred, not yet invoiced"),
     (PAYROLL_PAYABLE, "Payroll Payable", AccountType.liability, "Approved pay runs not yet paid"),
+    (
+        RETENTION_PAYABLE,
+        "Retention Payable",
+        AccountType.liability,
+        "Held back from subcontractors until their defects period ends",
+    ),
     (RETAINED_EARNINGS, "Retained Earnings", AccountType.equity, "Accumulated result"),
     (CONTRACT_REVENUE, "Contract Revenue", AccountType.revenue, "Certified work"),
     ("5000", "Cost of Works — Materials", AccountType.expense, ""),

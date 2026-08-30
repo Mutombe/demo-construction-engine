@@ -18,7 +18,13 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.common.enums import PoDestination, PoStatus, QuoteStatus, RfqStatus
+from app.common.enums import (
+    PoDestination,
+    PoStatus,
+    QuoteStatus,
+    RfqStatus,
+    VendorStatus,
+)
 from app.common.models import AuditMixin, TimestampMixin, UUIDPrimaryKeyMixin
 from app.core.database import Base
 
@@ -33,6 +39,19 @@ class Supplier(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
     address: Mapped[str | None] = mapped_column(Text)
     tax_id: Mapped[str | None] = mapped_column(String(60))
     categories: Mapped[str | None] = mapped_column(String(255))  # free-text tags
+    # Where the vendor stands with us, separately from whether their papers are
+    # in date: an approved vendor can still have lapsed insurance, and the two
+    # need different answers.
+    vendor_status: Mapped[VendorStatus] = mapped_column(
+        Enum(VendorStatus, name="vendor_status", native_enum=True),
+        default=VendorStatus.pending,
+        server_default=VendorStatus.pending.value,
+        index=True,
+    )
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    approved_by: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL", use_alter=True)
+    )
     notes: Mapped[str | None] = mapped_column(Text)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 

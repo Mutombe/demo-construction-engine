@@ -294,3 +294,39 @@ class MeterType(StrEnum):
 class MeterSource(StrEnum):
     manual = "manual"
     telematics = "telematics"
+
+
+class VendorStatus(StrEnum):
+    """Where a supplier stands with us, separately from whether their papers
+    are in date: an approved vendor can still have lapsed insurance."""
+
+    pending = "pending"
+    approved = "approved"
+    suspended = "suspended"
+    blacklisted = "blacklisted"
+
+
+class ComplianceDocType(StrEnum):
+    tax_clearance = "tax_clearance"
+    vat_registration = "vat_registration"
+    company_registration = "company_registration"
+    public_liability = "public_liability"
+    workmans_compensation = "workmans_compensation"
+    safety_certificate = "safety_certificate"
+    bank_confirmation = "bank_confirmation"
+    trade_licence = "trade_licence"
+    other = "other"
+
+
+class SubcontractStatus(StrEnum):
+    draft = "draft"
+    awarded = "awarded"
+    completed = "completed"
+    terminated = "terminated"
+
+
+class MilestoneStatus(StrEnum):
+    pending = "pending"
+    submitted = "submitted"
+    certified = "certified"
+    rejected = "rejected"
