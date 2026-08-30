@@ -7,6 +7,7 @@ from app.modules.comments import models as comments_models  # noqa: F401
 from app.modules.company import models as company_models  # noqa: F401
 from app.modules.costs import models as costs_models  # noqa: F401
 from app.modules.expenses import models as expenses_models  # noqa: F401
+from app.modules.fleet import models as fleet_models  # noqa: F401
 from app.modules.ingestion import models as ingestion_models  # noqa: F401
 from app.modules.inventory import models as inventory_models  # noqa: F401
 from app.modules.media import models as media_models  # noqa: F401

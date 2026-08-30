@@ -16,6 +16,7 @@ from app.modules.company.router import router as company_router
 from app.modules.costs.router import router as costs_router
 from app.modules.dashboard.router import router as dashboard_router
 from app.modules.expenses.router import router as expenses_router
+from app.modules.fleet.router import router as fleet_router
 from app.modules.ingestion.router import router as ingestion_router
 from app.modules.inventory.router import router as inventory_router
 from app.modules.media.router import router as media_router
@@ -78,6 +79,7 @@ def create_app() -> FastAPI:
     protected.include_router(requisitions_router)
     protected.include_router(site_router)
     protected.include_router(expenses_router)
+    protected.include_router(fleet_router)
     protected.include_router(inventory_router)
     protected.include_router(valuations_router)
     protected.include_router(payroll_router)

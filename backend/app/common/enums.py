@@ -252,3 +252,45 @@ class JournalSource(StrEnum):
     valuation = "valuation"
     goods_in = "goods_in"
     reversal = "reversal"
+
+
+class EquipmentCategory(StrEnum):
+    excavator = "excavator"
+    loader = "loader"
+    grader = "grader"
+    roller = "roller"
+    tipper = "tipper"
+    truck = "truck"
+    crane = "crane"
+    generator = "generator"
+    pump = "pump"
+    compressor = "compressor"
+    light_vehicle = "light_vehicle"
+    other = "other"
+
+
+class EquipmentStatus(StrEnum):
+    available = "available"
+    on_site = "on_site"
+    workshop = "workshop"
+    standing = "standing"
+    off_hired = "off_hired"
+    disposed = "disposed"
+
+
+class Ownership(StrEnum):
+    owned = "owned"
+    hired = "hired"
+
+
+class MeterType(StrEnum):
+    """Yellow plant runs on hours; vehicles run on distance. Mixing the two on
+    one scale is how utilisation figures stop meaning anything."""
+
+    hours = "hours"
+    kilometres = "kilometres"
+
+
+class MeterSource(StrEnum):
+    manual = "manual"
+    telematics = "telematics"
