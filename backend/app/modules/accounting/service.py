@@ -49,6 +49,12 @@ ACCOUNTS_PAYABLE = "2000"
 ACCRUED_COSTS = "2100"
 PAYROLL_PAYABLE = "2200"
 RETENTION_PAYABLE = "2300"
+PLANT_OPERATING = "6400"
+PLANT_RECOVERED = "6450"
+DEPRECIATION = "6500"
+# Contra-asset. Sits in the non-current asset range, which the hierarchy owns
+# as codes below 1000.
+ACCUMULATED_DEPRECIATION = "0900"
 RETAINED_EARNINGS = "3000"
 CONTRACT_REVENUE = "4000"
 
@@ -79,6 +85,26 @@ DEFAULT_CHART: list[tuple[str, str, AccountType, str]] = [
     ("5300", "Cost of Works — Subcontract", AccountType.expense, ""),
     ("5400", "Cost of Works — Preliminaries", AccountType.expense, ""),
     ("5900", "Cost of Works — Other", AccountType.expense, ""),
+    (
+        PLANT_OPERATING,
+        "Plant Operating Costs",
+        AccountType.expense,
+        "Fuel, workshop and depreciation pooled against the yard rather than a job",
+    ),
+    (
+        PLANT_RECOVERED,
+        "Plant Cost Recovered",
+        AccountType.expense,
+        "What jobs were charged for plant. Nets against the pool; the difference "
+        "is the yard's over- or under-recovery",
+    ),
+    ("6500", "Depreciation", AccountType.expense, "Plant wearing out"),
+    (
+        ACCUMULATED_DEPRECIATION,
+        "Accumulated Depreciation",
+        AccountType.asset,
+        "Written off plant to date. A contra-asset: it carries a credit balance",
+    ),
 ]
 
 COST_ACCOUNT_BY_CATEGORY = {

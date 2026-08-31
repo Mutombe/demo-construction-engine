@@ -180,6 +180,7 @@ def seed_equipment(db) -> None:
 def fleet_create(db, data: EquipmentCreate, user) -> Equipment:
     """The router builds the row itself, so this mirrors it."""
     machine = Equipment(**data.model_dump(), created_by=getattr(user, "id", None))
+    machine.opening_meter = machine.current_meter
     db.add(machine)
     db.flush()
     return machine

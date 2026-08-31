@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.common.enums import (
     EquipmentCategory,
+    EquipmentCertType,
     EquipmentStatus,
     MeterSource,
     MeterType,
@@ -50,6 +51,8 @@ class EquipmentUpdate(BaseModel):
     status: EquipmentStatus | None = None
     expected_burn_rate: Decimal | None = Field(default=None, ge=0)
     purchase_cost: Decimal | None = Field(default=None, ge=0)
+    residual_value: Decimal | None = Field(default=None, ge=0)
+    useful_life_months: int | None = Field(default=None, gt=0, le=600)
     notes: str | None = None
     is_active: bool | None = None
 
@@ -78,6 +81,8 @@ class EquipmentRead(BaseModel):
     expected_burn_rate: Decimal | None
     purchase_date: date | None
     purchase_cost: Decimal | None
+    residual_value: Decimal | None = None
+    useful_life_months: int | None = None
     is_active: bool
 
 
@@ -238,3 +243,126 @@ class TelematicsImportResult(BaseModel):
     applied: int
     rejected: int
     results: list[ImportRowResult]
+
+
+class CertificateCreate(BaseModel):
+    cert_type: EquipmentCertType
+    reference: str | None = Field(default=None, max_length=80)
+    issued_on: date | None = None
+    expires_on: date | None = None
+    media_id: uuid.UUID | None = None
+    notes: str | None = None
+
+
+class CertificateRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    equipment_id: uuid.UUID
+    cert_type: EquipmentCertType
+    reference: str | None
+    issued_on: date | None
+    expires_on: date | None
+    media_id: uuid.UUID | None
+    notes: str | None
+
+
+class ComplianceItem(BaseModel):
+    cert_type: EquipmentCertType
+    is_mandatory: bool
+    state: str
+    certificate_id: uuid.UUID | None = None
+    reference: str | None = None
+    expires_on: date | None = None
+    days_to_expiry: int | None = None
+
+
+class EquipmentCompliance(BaseModel):
+    equipment_id: uuid.UUID
+    code: str
+    name: str
+    is_compliant: bool
+    # Expired: stops the machine going out.
+    blocking: list[str] = []
+    # Never supplied: shown, but does not stop it except on lifting gear.
+    incomplete: list[str] = []
+    certificates: list[ComplianceItem] = []
+
+
+class ExpiringCertificate(BaseModel):
+    equipment_id: uuid.UUID
+    code: str
+    name: str
+    cert_type: EquipmentCertType
+    reference: str | None = None
+    expires_on: date
+    days_to_expiry: int
+    state: str
+
+
+class RunRequest(BaseModel):
+    """Any day in the month is accepted; it is snapped to the first."""
+
+    period_start: date
+
+
+class RechargeLine(BaseModel):
+    equipment_id: uuid.UUID
+    code: str
+    project_id: uuid.UUID
+    units: Decimal
+    rate: Decimal
+    amount: Decimal
+
+
+class RechargeResult(BaseModel):
+    period_start: date
+    period_end: date
+    recharged: int
+    already_done: int
+    total: Decimal
+    lines: list[RechargeLine] = []
+
+
+class RecoveryReport(BaseModel):
+    start: date
+    end: date
+    mode: str
+    pooled: Decimal
+    recovered: Decimal
+    under_recovered: Decimal
+
+
+class DepreciationResult(BaseModel):
+    period_start: date
+    posted: int
+    already_done: int
+    total: Decimal
+    not_depreciated: list[str] = []
+
+
+class AssetRow(BaseModel):
+    equipment_id: uuid.UUID
+    code: str
+    name: str
+    ownership: str
+    purchase_date: date | None = None
+    purchase_cost: Decimal | None = None
+    residual_value: Decimal | None = None
+    useful_life_months: int | None = None
+    accumulated_depreciation: Decimal
+    net_book_value: Decimal | None = None
+    monthly_charge: Decimal | None = None
+
+
+class AvailabilityRow(BaseModel):
+    equipment_id: uuid.UUID
+    code: str
+    name: str
+    assigned_days: int
+    scheduled_hours: Decimal | None = None
+    downtime_hours: Decimal
+    breakdowns: int
+    availability_pct: float | None = None
+    mean_hours_between_failures: Decimal | None = None
+    metered: Decimal | None = None

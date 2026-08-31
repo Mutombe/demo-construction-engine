@@ -1,6 +1,7 @@
 import uuid
 from decimal import Decimal
 
+from app.common.enums import PlantCostingMode
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -13,6 +14,7 @@ class CompanySettingsRead(BaseModel):
     vat_rate_pct: Decimal
     fiscal_year_start_month: int
     default_retention_pct: Decimal
+    plant_costing_mode: PlantCostingMode
 
 
 class CompanySettingsUpdate(BaseModel):
@@ -21,3 +23,6 @@ class CompanySettingsUpdate(BaseModel):
     vat_rate_pct: Decimal | None = Field(default=None, ge=0, le=100)
     fiscal_year_start_month: int | None = Field(default=None, ge=1, le=12)
     default_retention_pct: Decimal | None = Field(default=None, ge=0, le=100)
+    # Changing this moves where plant costs land. It is a decision about
+    # the accounts, so it is set deliberately rather than defaulted into.
+    plant_costing_mode: PlantCostingMode | None = None

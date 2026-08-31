@@ -22,7 +22,14 @@ from decimal import Decimal
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.common.enums import CostSource, EquipmentStatus, MeterSource, MeterType
+from app.common.enums import (
+    CostSource,
+    EquipmentStatus,
+    JournalSource,
+    MeterSource,
+    MeterType,
+    PlantCostingMode,
+)
 from app.core.exceptions import (
     AppError,
     ConflictError,
@@ -147,7 +154,10 @@ def record_fuel(db: Session, equipment_id: uuid.UUID, data, user=None) -> FuelLo
         machine.current_meter = Decimal(data.meter)
     db.flush()
 
-    if log.project_id and total:
+    from app.modules.fleet import plant as _plant
+
+    pooling = _plant.costing_mode(db) is PlantCostingMode.internal_hire
+    if total and (log.project_id or pooling):
         _post_plant_cost(
             db,
             project_id=log.project_id,
@@ -161,10 +171,35 @@ def record_fuel(db: Session, equipment_id: uuid.UUID, data, user=None) -> FuelLo
 
 
 def _post_plant_cost(db, *, project_id, when, amount, description, reference, user):
-    """One route into the ledger for every plant cost, so fuel and repairs land
-    where the rest of the job's cost already is."""
+    """One route into the ledger for every plant cost, so fuel and repairs are
+    treated the same way whichever of them it is.
+
+    Where they land depends on how the company costs its plant. Under direct
+    costing they go to the job the machine was on. Under internal hire they
+    pool against the yard instead and the job is charged a rate for the hours
+    it used — sending them to both would charge the job twice for the same
+    litre of diesel.
+    """
     from app.modules.accounting import service as accounting
     from app.modules.costs.models import CostEntry
+    from app.modules.fleet import plant
+
+    if plant.costing_mode(db) is PlantCostingMode.internal_hire:
+        accounting.ensure_chart(db)
+        journal = accounting.create_journal(
+            db,
+            journal_date=when,
+            memo=description,
+            source=JournalSource.manual,
+            created_by=getattr(user, "id", None),
+            lines=[
+                {"account_code": accounting.PLANT_OPERATING, "debit": amount,
+                 "description": description},
+                {"account_code": accounting.ACCRUED_COSTS, "credit": amount},
+            ],
+        )
+        accounting.post(db, journal.id, user)
+        return None
 
     entry = CostEntry(
         project_id=project_id,
@@ -417,7 +452,10 @@ def record_maintenance(db: Session, equipment_id: uuid.UUID, data, user=None):
         schedule.last_done_date = record.service_date
     db.flush()
 
-    if machine.current_project_id and data.cost:
+    from app.modules.fleet import plant as _plant
+
+    pooling = _plant.costing_mode(db) is PlantCostingMode.internal_hire
+    if data.cost and (machine.current_project_id or pooling):
         _post_plant_cost(
             db,
             project_id=machine.current_project_id,
@@ -440,6 +478,9 @@ def assign(db: Session, equipment_id: uuid.UUID, data, user=None) -> EquipmentAs
     rather than left running: two open assignments would double-count the
     plant cost of every hour it ran.
     """
+    from app.modules.fleet import plant
+
+    plant.require_roadworthy(db, equipment_id)
     from app.modules.projects.service import get_project
 
     machine = get_equipment(db, equipment_id)

@@ -330,3 +330,37 @@ class MilestoneStatus(StrEnum):
     submitted = "submitted"
     certified = "certified"
     rejected = "rejected"
+
+
+class PlantCostingMode(StrEnum):
+    """How a job comes to bear the cost of the plant it used.
+
+    `direct` sends fuel and repairs straight to whichever job the machine was
+    on. Simple, and what most small contractors do, but the job never bears
+    the cost of *owning* the machine — depreciation, insurance, the standing
+    time between jobs — so plant always looks cheaper than it is.
+
+    `internal_hire` pools every running and ownership cost against the plant
+    department and charges jobs an hourly rate instead. The difference between
+    the two is the department's over- or under-recovery, which is the only
+    number that says whether the yard is worth having.
+
+    The modes are mutually exclusive. Running a recharge while in `direct`
+    would charge a job for fuel it has already been charged for.
+    """
+
+    direct = "direct"
+    internal_hire = "internal_hire"
+
+
+class EquipmentCertType(StrEnum):
+    """Paperwork that has to be in date for a machine to work legally."""
+
+    insurance = "insurance"
+    roadworthiness = "roadworthiness"
+    # Lifting gear has to be examined by a competent person at a set interval.
+    thorough_examination = "thorough_examination"
+    fitness = "fitness"
+    calibration = "calibration"
+    operator_licence = "operator_licence"
+    other = "other"

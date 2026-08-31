@@ -9,9 +9,11 @@ from app.common.pagination import PageParamsDep
 from app.common.schemas import Page
 from app.core.deps import CurrentUser, DbDep, require_roles
 from app.core.exceptions import ConflictError, NotFoundError
-from app.modules.fleet import service
+from app.modules.fleet import plant, service
 from app.modules.fleet.models import (
     Equipment,
+    EquipmentCertificate,
+    PlantRecharge,
     EquipmentAssignment,
     FuelLog,
     MaintenanceRecord,
@@ -19,18 +21,29 @@ from app.modules.fleet.models import (
     MeterReading,
 )
 from app.modules.fleet.schemas import (
+    AssetRow,
     AssignmentCreate,
     AssignmentRead,
+    AvailabilityRow,
+    CertificateCreate,
+    CertificateRead,
+    DepreciationResult,
+    EquipmentCompliance,
     EquipmentCosts,
     EquipmentCreate,
     EquipmentRead,
     EquipmentUpdate,
+    ExpiringCertificate,
     FuelLogCreate,
     FuelLogRead,
     MaintenanceCreate,
     MaintenanceRead,
     MeterReadingCreate,
     MeterReadingRead,
+    RechargeLine,
+    RechargeResult,
+    RecoveryReport,
+    RunRequest,
     ScheduleCreate,
     ScheduleRead,
     TelematicsImport,
@@ -100,6 +113,9 @@ def create_equipment(body: EquipmentCreate, db: DbDep, user: CurrentUser, _=flee
     if db.scalar(select(Equipment).where(Equipment.code == body.code)):
         raise ConflictError(f"{body.code} is already on the fleet")
     machine = Equipment(**body.model_dump(), created_by=user.id)
+    # The meter it arrives on is also its first reading, so work done in
+    # its first period has something to be measured from.
+    machine.opening_meter = machine.current_meter
     db.add(machine)
     db.flush()
     return _read(machine)
@@ -294,3 +310,122 @@ def import_telematics(
     number and its reason.
     """
     return service.import_telematics(db, body.rows, user)
+
+
+# --- Statutory compliance ----------------------------------------------------
+
+
+@router.get("/equipment/{equipment_id}/compliance", response_model=EquipmentCompliance)
+def get_equipment_compliance(equipment_id: uuid.UUID, db: DbDep) -> EquipmentCompliance:
+    """Whether this machine is legally able to work, document by document."""
+    return plant.equipment_compliance(db, equipment_id)
+
+
+@router.post(
+    "/equipment/{equipment_id}/certificates",
+    response_model=CertificateRead,
+    status_code=201,
+)
+def add_certificate(
+    equipment_id: uuid.UUID,
+    body: CertificateCreate,
+    db: DbDep,
+    user: CurrentUser,
+    _=fleet_write,
+) -> CertificateRead:
+    service.get_equipment(db, equipment_id)
+    cert = EquipmentCertificate(
+        equipment_id=equipment_id, **body.model_dump(), created_by=user.id
+    )
+    db.add(cert)
+    db.flush()
+    return cert
+
+
+@router.get("/equipment/{equipment_id}/certificates", response_model=list[CertificateRead])
+def list_certificates(equipment_id: uuid.UUID, db: DbDep) -> list[CertificateRead]:
+    service.get_equipment(db, equipment_id)
+    return list(
+        db.scalars(
+            select(EquipmentCertificate)
+            .where(EquipmentCertificate.equipment_id == equipment_id)
+            .order_by(EquipmentCertificate.cert_type, EquipmentCertificate.expires_on.desc())
+        )
+    )
+
+
+@router.delete("/equipment/certificates/{certificate_id}", status_code=204)
+def remove_certificate(certificate_id: uuid.UUID, db: DbDep, _=fleet_write) -> None:
+    cert = db.get(EquipmentCertificate, certificate_id)
+    if cert is None:
+        raise NotFoundError("Certificate not found")
+    db.delete(cert)
+
+
+@router.get("/fleet/certificates/expiring", response_model=list[ExpiringCertificate])
+def get_expiring_certificates(db: DbDep, days: int = 30) -> list[ExpiringCertificate]:
+    """Chased before it grounds a machine rather than after."""
+    return plant.expiring_certificates(db, days)
+
+
+# --- Plant hire recharge -----------------------------------------------------
+
+
+@router.post("/fleet/recharge", response_model=RechargeResult)
+def run_recharge(
+    body: RunRequest, db: DbDep, user: CurrentUser, _=fleet_write
+) -> RechargeResult:
+    """Charge every job for the plant it used that month.
+
+    Refuses while the books are on direct plant costing, where fuel and
+    repairs already reach the job — recharging as well would charge it twice.
+    Safe to run again: what was already charged is left alone.
+    """
+    return plant.run_recharge(db, body.period_start, user)
+
+
+@router.get("/fleet/recharges", response_model=list[RechargeLine])
+def list_recharges(db: DbDep, project_id: uuid.UUID | None = None) -> list[RechargeLine]:
+    stmt = select(PlantRecharge, Equipment).join(Equipment, Equipment.id == PlantRecharge.equipment_id)
+    if project_id:
+        stmt = stmt.where(PlantRecharge.project_id == project_id)
+    return [
+        RechargeLine(
+            equipment_id=row.equipment_id,
+            code=machine.code,
+            project_id=row.project_id,
+            units=row.units,
+            rate=row.rate,
+            amount=row.amount,
+        )
+        for row, machine in db.execute(stmt.order_by(PlantRecharge.period_start.desc())).all()
+    ]
+
+
+@router.get("/fleet/recovery", response_model=RecoveryReport)
+def get_recovery(db: DbDep, start: date, end: date) -> RecoveryReport:
+    """What the yard cost against what it charged out."""
+    return plant.recovery(db, start, end)
+
+
+# --- Depreciation and the asset register -------------------------------------
+
+
+@router.post("/fleet/depreciation", response_model=DepreciationResult)
+def run_depreciation(
+    body: RunRequest, db: DbDep, user: CurrentUser, _=fleet_write
+) -> DepreciationResult:
+    """A month of wear, posted. Repeating a month changes nothing."""
+    return plant.run_depreciation(db, body.period_start, user)
+
+
+@router.get("/fleet/assets", response_model=list[AssetRow])
+def get_asset_register(db: DbDep) -> list[AssetRow]:
+    """What the plant is carried at, machine by machine."""
+    return plant.asset_register(db)
+
+
+@router.get("/fleet/availability", response_model=list[AvailabilityRow])
+def get_availability(db: DbDep, start: date, end: date) -> list[AvailabilityRow]:
+    """Time on a job against time able to work, and what broke."""
+    return plant.availability(db, start, end)

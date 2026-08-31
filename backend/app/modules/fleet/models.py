@@ -12,12 +12,14 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.common.enums import (
     EquipmentCategory,
+    EquipmentCertType,
     EquipmentStatus,
     MeterSource,
     MeterType,
@@ -79,6 +81,15 @@ class Equipment(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
 
     purchase_date: Mapped[date | None] = mapped_column(Date)
     purchase_cost: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
+    # What it is expected to be worth when it comes off the register, and how
+    # long it is expected to last. Both null means nothing is depreciated —
+    # a made-up life is a made-up number in the accounts.
+    # Where the meter stood when it joined the register. Fixed for the life
+    # of the machine: current_meter moves, so it cannot serve as the
+    # baseline for the first period's work.
+    opening_meter: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=Decimal("0"))
+    residual_value: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
+    useful_life_months: Mapped[int | None] = mapped_column(Integer)
     notes: Mapped[str | None] = mapped_column(Text)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
@@ -209,3 +220,92 @@ class EquipmentAssignment(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin)
     started_on: Mapped[date] = mapped_column(Date)
     ended_on: Mapped[date | None] = mapped_column(Date)
     notes: Mapped[str | None] = mapped_column(Text)
+
+
+class EquipmentCertificate(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
+    """Paperwork a machine needs to be allowed to work.
+
+    The same idea as vendor compliance, applied to plant. A crane whose
+    thorough examination has lapsed is not a crane you can put on a site, and
+    the only reliable moment to catch that is when somebody tries to send it.
+    """
+
+    __tablename__ = "equipment_certificates"
+    __table_args__ = (
+        Index("ix_equipment_certificates_equipment_type", "equipment_id", "cert_type"),
+    )
+
+    equipment_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("equipment.id", ondelete="CASCADE"), index=True
+    )
+    cert_type: Mapped[EquipmentCertType] = mapped_column(
+        Enum(EquipmentCertType, name="equipment_cert_type", native_enum=True)
+    )
+    reference: Mapped[str | None] = mapped_column(String(80))
+    issued_on: Mapped[date | None] = mapped_column(Date)
+    # Null means it does not expire. Rare on plant, but calibration
+    # certificates for some gear genuinely do not.
+    expires_on: Mapped[date | None] = mapped_column(Date)
+    media_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("media_files.id", ondelete="SET NULL")
+    )
+    notes: Mapped[str | None] = mapped_column(Text)
+
+
+class PlantRecharge(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
+    """A period's worth of a machine's hours, charged to the job that used it.
+
+    One row per machine, per job, per period, enforced by the database. A
+    recharge run that is started twice for the same month cannot charge the
+    job twice — the second attempt finds the row and leaves it alone.
+    """
+
+    __tablename__ = "plant_recharges"
+    __table_args__ = (
+        UniqueConstraint(
+            "equipment_id", "project_id", "period_start", name="uq_plant_recharge_period"
+        ),
+    )
+
+    equipment_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("equipment.id", ondelete="CASCADE"), index=True
+    )
+    project_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), index=True
+    )
+    period_start: Mapped[date] = mapped_column(Date)
+    period_end: Mapped[date] = mapped_column(Date)
+    # Metered movement in the period: hours for yellow plant, km for vehicles.
+    units: Mapped[Decimal] = mapped_column(Numeric(14, 2))
+    rate: Mapped[Decimal] = mapped_column(Numeric(14, 2))
+    amount: Mapped[Decimal] = mapped_column(Numeric(16, 2))
+    cost_entry_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("cost_entries.id", ondelete="SET NULL")
+    )
+    journal_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("journals.id", ondelete="SET NULL")
+    )
+
+
+class DepreciationCharge(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
+    """One month of a machine wearing out, written into the books.
+
+    Unique on the machine and the period, so a run repeated for the same month
+    is a no-op rather than a second charge. Depreciation that can be posted
+    twice is worse than depreciation nobody posts: the second is a gap, the
+    first is a wrong number nobody questions.
+    """
+
+    __tablename__ = "depreciation_charges"
+    __table_args__ = (
+        UniqueConstraint("equipment_id", "period_start", name="uq_depreciation_period"),
+    )
+
+    equipment_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("equipment.id", ondelete="CASCADE"), index=True
+    )
+    period_start: Mapped[date] = mapped_column(Date)
+    amount: Mapped[Decimal] = mapped_column(Numeric(16, 2))
+    journal_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("journals.id", ondelete="SET NULL")
+    )
