@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/table";
 import { Tooltip } from "@/components/ui/tooltip";
 import { RegisterDialog, TelematicsDialog } from "@/features/fleet/FleetDialogs";
+import { Assets, Availability, Certificates, Costing } from "@/features/fleet/PlantTabs";
 import {
   useGetFleetSummary,
   useGetFuelExceptions,
@@ -34,7 +35,19 @@ import { fmtDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const searchSchema = z.object({
-  tab: z.enum(["register", "utilisation", "fuel", "maintenance"]).optional().default("register"),
+  tab: z
+    .enum([
+      "register",
+      "utilisation",
+      "fuel",
+      "maintenance",
+      "availability",
+      "certificates",
+      "assets",
+      "costing",
+    ])
+    .optional()
+    .default("register"),
   page: z.number().int().min(1).optional().default(1),
   status: z.string().optional(),
 });
@@ -73,6 +86,10 @@ function FleetPage() {
       label: "Maintenance",
       badge: summary?.maintenance_due ? Number(summary.maintenance_due) : 0,
     },
+    { key: "availability", label: "Availability" },
+    { key: "certificates", label: "Certificates" },
+    { key: "assets", label: "Asset Register" },
+    { key: "costing", label: "Costing" },
   ] as const;
 
   return (
@@ -148,6 +165,10 @@ function FleetPage() {
       {tab === "utilisation" && <Utilisation />}
       {tab === "fuel" && <Fuel />}
       {tab === "maintenance" && <Maintenance />}
+      {tab === "availability" && <Availability />}
+      {tab === "certificates" && <Certificates />}
+      {tab === "assets" && <Assets />}
+      {tab === "costing" && <Costing />}
     </div>
   );
 }

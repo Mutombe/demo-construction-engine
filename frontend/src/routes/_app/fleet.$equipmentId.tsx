@@ -1,9 +1,20 @@
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Drop, Gauge, PencilSimple, Plus, Truck, Wrench } from "@phosphor-icons/react";
+import {
+  Drop,
+  Gauge,
+  PencilSimple,
+  Plus,
+  ShieldCheck,
+  Trash,
+  Truck,
+  WarningCircle,
+  Wrench,
+} from "@phosphor-icons/react";
 import { useState } from "react";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Badge } from "@/components/ui/badge";
+import { confirmDialog } from "@/components/ui/confirm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -44,6 +55,9 @@ import {
   useListSchedules,
   useReleaseEquipment,
   useUpdateEquipment,
+  useGetEquipmentCompliance,
+  useAddCertificate,
+  useRemoveCertificate,
 } from "@/lib/api/generated/endpoints";
 import { fmtDate, moneyExact } from "@/lib/format";
 import { toast } from "@/lib/toast";
@@ -82,6 +96,7 @@ function EquipmentDetail() {
   );
   const { data: schedules } = useListSchedules(equipmentId);
   const { data: costs } = useGetEquipmentCosts(equipmentId, {});
+  const { data: compliance } = useGetEquipmentCompliance(equipmentId);
   const release = useReleaseEquipment();
 
   const [readingOpen, setReadingOpen] = useState(false);
@@ -89,6 +104,7 @@ function EquipmentDetail() {
   const [assignOpen, setAssignOpen] = useState(false);
   const [serviceOpen, setServiceOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [certOpen, setCertOpen] = useState(false);
 
   if (!machine) return <PageSkeleton rows={4} />;
 
@@ -150,6 +166,27 @@ function EquipmentDetail() {
           )}
         </div>
       </div>
+
+      {compliance && !compliance.is_compliant && (
+        <div
+          className={
+            (compliance.blocking ?? []).length
+              ? "mb-4 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+              : "mb-4 flex items-start gap-2 rounded-md border border-warning/30 bg-warning/5 px-3 py-2 text-sm text-warning"
+          }
+        >
+          <WarningCircle weight="fill" className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>
+            {(compliance.blocking ?? []).length
+              ? `Cannot go to site: ${(compliance.blocking ?? [])
+                  .map((c) => c.replace(/_/g, " "))
+                  .join(", ")} has lapsed.`
+              : `Paperwork not on file: ${(compliance.incomplete ?? [])
+                  .map((c) => c.replace(/_/g, " "))
+                  .join(", ")}. It can still be sent out, but somebody should chase this.`}
+          </span>
+        </div>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
@@ -411,6 +448,42 @@ function EquipmentDetail() {
           )}
 
           <Card>
+            <CardHeader className="flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-base">Paperwork</CardTitle>
+              <Button variant="outline" size="sm" onClick={() => setCertOpen(true)}>
+                <Plus /> Add
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              {compliance?.certificates?.length ? (
+                (compliance.certificates ?? []).map((cert) => (
+                  <div key={cert.cert_type} className="flex items-center justify-between gap-2">
+                    <span className="truncate">
+                      {certLabel(cert.cert_type)}
+                      {!cert.is_mandatory && (
+                        <span className="ml-1.5 text-xs text-muted-foreground">optional</span>
+                      )}
+                    </span>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <CertBadge state={cert.state} days={cert.days_to_expiry} />
+                      {cert.certificate_id && (
+                        <RemoveCert certificateId={cert.certificate_id} />
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-muted-foreground">Nothing on file.</p>
+              )}
+              {compliance?.is_compliant && (
+                <p className="flex items-center gap-1.5 border-t pt-2 text-xs text-success">
+                  <ShieldCheck weight="fill" className="h-3.5 w-3.5" /> Clear to work.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
             <CardHeader>
               <CardTitle className="text-base">Been on</CardTitle>
             </CardHeader>
@@ -448,6 +521,11 @@ function EquipmentDetail() {
         onOpenChange={setServiceOpen}
       />
       <EditDialog machine={machine} open={editOpen} onOpenChange={setEditOpen} />
+      <CertificateDialog
+        equipmentId={equipmentId}
+        open={certOpen}
+        onOpenChange={setCertOpen}
+      />
       <AssignDialog equipmentId={equipmentId} open={assignOpen} onOpenChange={setAssignOpen} />
     </div>
   );
@@ -974,6 +1052,168 @@ function EditDialog({
             Cancel
           </Button>
           <Button disabled={!form.name.trim() || update.isPending} onClick={() => void submit()}>
+            Save
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+const CERT_LABELS: Record<string, string> = {
+  insurance: "Insurance",
+  roadworthiness: "Roadworthiness",
+  thorough_examination: "Thorough Examination",
+  fitness: "Fitness",
+  calibration: "Calibration",
+  operator_licence: "Operator Licence",
+  other: "Other",
+};
+
+function certLabel(certType: string) {
+  return CERT_LABELS[certType] ?? certType.replace(/_/g, " ");
+}
+
+function CertBadge({ state, days }: { state: string; days?: number | null }) {
+  switch (state) {
+    case "valid":
+      return <Badge variant="success">In date</Badge>;
+    case "expiring":
+      return <Badge variant="warning">{days === 0 ? "Today" : `${days}d left`}</Badge>;
+    case "expired":
+      return <Badge variant="destructive">Expired</Badge>;
+    default:
+      return <Badge variant="outline">Not on file</Badge>;
+  }
+}
+
+function RemoveCert({ certificateId }: { certificateId: string }) {
+  const queryClient = useQueryClient();
+  const remove = useRemoveCertificate();
+
+  const drop = async () => {
+    const ok = await confirmDialog({
+      title: "Remove this certificate?",
+      message: "The machine goes back to having none on file for it.",
+      confirmLabel: "Remove",
+      tone: "danger",
+    });
+    if (!ok) return;
+    try {
+      await remove.mutateAsync({ certificateId });
+      await queryClient.invalidateQueries();
+      toast.success("Removed");
+    } catch (err) {
+      toast.error(errDetail(err));
+    }
+  };
+
+  return (
+    <Button variant="ghost" size="icon" aria-label="Remove certificate" onClick={() => void drop()}>
+      <Trash />
+    </Button>
+  );
+}
+
+/** Certificates are dated, not ticked.
+ *
+ *  There is no "is it insured?" checkbox anywhere here on purpose: a box
+ *  somebody ticked two years ago tells you nothing, and an expiry date tells
+ *  you everything. */
+function CertificateDialog({
+  equipmentId,
+  open,
+  onOpenChange,
+}: {
+  equipmentId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const queryClient = useQueryClient();
+  const add = useAddCertificate();
+  const [form, setForm] = useState({
+    cert_type: "insurance",
+    reference: "",
+    issued_on: "",
+    expires_on: "",
+  });
+
+  const submit = async () => {
+    try {
+      await add.mutateAsync({
+        equipmentId,
+        data: {
+          cert_type: form.cert_type as never,
+          reference: form.reference || null,
+          issued_on: form.issued_on || null,
+          expires_on: form.expires_on || null,
+        },
+      });
+      await queryClient.invalidateQueries();
+      setForm({ cert_type: "insurance", reference: "", issued_on: "", expires_on: "" });
+      onOpenChange(false);
+      toast.success("Certificate recorded");
+    } catch (err) {
+      toast.error(errDetail(err));
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Record a certificate</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label htmlFor="c-type">Document</Label>
+            <Select
+              id="c-type"
+              value={form.cert_type}
+              onChange={(e) => setForm({ ...form, cert_type: e.target.value })}
+            >
+              {Object.entries(CERT_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label htmlFor="c-ref">Reference</Label>
+            <Input
+              id="c-ref"
+              value={form.reference}
+              onChange={(e) => setForm({ ...form, reference: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="c-issued">Issued</Label>
+            <Input
+              id="c-issued"
+              type="date"
+              value={form.issued_on}
+              onChange={(e) => setForm({ ...form, issued_on: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="c-expires">Expires</Label>
+            <Input
+              id="c-expires"
+              type="date"
+              value={form.expires_on}
+              onChange={(e) => setForm({ ...form, expires_on: e.target.value })}
+            />
+            <p className="text-xs text-muted-foreground">
+              An expired certificate stops the machine going to site.
+            </p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button disabled={add.isPending} onClick={() => void submit()}>
             Save
           </Button>
         </DialogFooter>
