@@ -49,6 +49,9 @@ ACCOUNTS_PAYABLE = "2000"
 ACCRUED_COSTS = "2100"
 PAYROLL_PAYABLE = "2200"
 RETENTION_PAYABLE = "2300"
+# Deducted from subcontractors and owed to the revenue authority until it
+# is remitted. A liability, never a saving.
+WITHHOLDING_TAX_PAYABLE = "2350"
 PLANT_OPERATING = "6400"
 PLANT_RECOVERED = "6450"
 DEPRECIATION = "6500"
@@ -97,6 +100,12 @@ DEFAULT_CHART: list[tuple[str, str, AccountType, str]] = [
         AccountType.expense,
         "What jobs were charged for plant. Nets against the pool; the difference "
         "is the yard's over- or under-recovery",
+    ),
+    (
+        WITHHOLDING_TAX_PAYABLE,
+        "Withholding Tax Payable",
+        AccountType.liability,
+        "Withheld from subcontractors, owed to the revenue authority",
     ),
     ("6500", "Depreciation", AccountType.expense, "Plant wearing out"),
     (

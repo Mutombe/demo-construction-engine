@@ -9,19 +9,22 @@ from app.common.pagination import PageParamsDep, page_of, paginate
 from app.common.schemas import Page
 from app.core.deps import CurrentUser, DbDep, require_roles
 from app.core.exceptions import NotFoundError
-from app.modules.subcontracts import service
+from app.modules.subcontracts import commercial, service
 from app.modules.subcontracts.models import (
     ComplianceDocument,
     ComplianceRequirement,
     Subcontract,
 )
 from app.modules.subcontracts.schemas import (
+    BackChargeCreate,
+    BackChargeRead,
     CertifyRequest,
     ComplianceDocumentCreate,
     ComplianceDocumentRead,
     ComplianceStatus,
     ExpiringItem,
     MilestoneRead,
+    PaymentCertificate,
     RejectRequest,
     RequirementRead,
     RequirementUpdate,
@@ -31,8 +34,12 @@ from app.modules.subcontracts.schemas import (
     SubcontractCreate,
     SubcontractDetail,
     SubcontractRead,
+    VariationCreate,
+    VariationRead,
     VendorStatusResult,
     VendorStatusUpdate,
+    WithholdingRequest,
+    WithholdingResult,
 )
 
 router = APIRouter(tags=["subcontracts"])
@@ -287,3 +294,88 @@ def release_retention(
 )
 def list_releases(subcontract_id: uuid.UUID, db: DbDep) -> list[RetentionReleaseRead]:
     return service.list_retention_releases(db, subcontract_id)
+
+
+# --- Variations, back-charges and withholding --------------------------------
+
+
+@router.get("/subcontracts/{subcontract_id}/variations", response_model=list[VariationRead])
+def list_variations(subcontract_id: uuid.UUID, db: DbDep) -> list[VariationRead]:
+    return commercial.list_variations(db, subcontract_id)
+
+
+@router.post(
+    "/subcontracts/{subcontract_id}/variations",
+    response_model=VariationRead,
+    status_code=201,
+)
+def create_variation(
+    subcontract_id: uuid.UUID,
+    body: VariationCreate,
+    db: DbDep,
+    user: CurrentUser,
+    _=vendor_admin,
+) -> VariationRead:
+    """Priced, instructed, and not yet in the package value."""
+    return commercial.create_variation(db, subcontract_id, body, user)
+
+
+@router.post("/variations/{variation_id}/approve", response_model=VariationRead)
+def approve_variation(
+    variation_id: uuid.UUID, db: DbDep, user: CurrentUser, _=certifier
+) -> VariationRead:
+    """Approving is what moves the contract value, and it sits with whoever
+    carries the job's cost."""
+    return commercial.approve_variation(db, variation_id, user)
+
+
+@router.post("/variations/{variation_id}/reject", response_model=VariationRead)
+def reject_variation(
+    variation_id: uuid.UUID, db: DbDep, user: CurrentUser, _=certifier
+) -> VariationRead:
+    return commercial.reject_variation(db, variation_id, user)
+
+
+@router.get("/subcontracts/{subcontract_id}/back-charges", response_model=list[BackChargeRead])
+def list_back_charges(subcontract_id: uuid.UUID, db: DbDep) -> list[BackChargeRead]:
+    return commercial.list_back_charges(db, subcontract_id)
+
+
+@router.post(
+    "/subcontracts/{subcontract_id}/back-charges",
+    response_model=BackChargeRead,
+    status_code=201,
+)
+def raise_back_charge(
+    subcontract_id: uuid.UUID,
+    body: BackChargeCreate,
+    db: DbDep,
+    user: CurrentUser,
+    _=certifier,
+) -> BackChargeRead:
+    """Charges the cost of remedial work back, reducing what they are owed and
+    giving the job back what it spent."""
+    return commercial.raise_back_charge(db, subcontract_id, body, user)
+
+
+@router.post(
+    "/subcontracts/{subcontract_id}/withholding", response_model=WithholdingResult
+)
+def apply_withholding(
+    subcontract_id: uuid.UUID,
+    body: WithholdingRequest,
+    db: DbDep,
+    user: CurrentUser,
+    _=certifier,
+) -> WithholdingResult:
+    """Moves tax out of what the subcontractor is owed and into what is owed
+    to the revenue authority."""
+    return commercial.apply_withholding(db, subcontract_id, body, user)
+
+
+@router.get(
+    "/subcontracts/{subcontract_id}/certificate", response_model=PaymentCertificate
+)
+def get_payment_certificate(subcontract_id: uuid.UUID, db: DbDep) -> PaymentCertificate:
+    """What they will be paid, with every deduction named."""
+    return commercial.payment_certificate(db, subcontract_id)

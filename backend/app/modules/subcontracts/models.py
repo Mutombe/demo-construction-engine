@@ -104,6 +104,9 @@ class Subcontract(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
     # Held back from every certificate until the defects period ends. The
     # mirror of the retention our own client holds from us.
     retention_pct: Mapped[Decimal] = mapped_column(Numeric(5, 2), default=ZERO)
+    # Deducted from payments and owed to the revenue authority, not to the
+    # subcontractor. Zero where they hold a valid tax clearance.
+    withholding_pct: Mapped[Decimal] = mapped_column(Numeric(5, 2), default=ZERO)
     status: Mapped[SubcontractStatus] = mapped_column(
         Enum(SubcontractStatus, name="subcontract_status", native_enum=True),
         default=SubcontractStatus.draft,
@@ -187,3 +190,58 @@ class RetentionRelease(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
     )
 
     subcontract: Mapped[Subcontract] = relationship()
+
+
+class SubcontractVariation(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
+    """Extra or omitted work, changing what the package is worth.
+
+    Kept as its own document rather than by editing the contract value,
+    because the question a subcontractor asks at the end is never "what is the
+    value" — it is "what was I instructed to do beyond the original scope, and
+    who told me to". Editing a number answers neither.
+    """
+
+    __tablename__ = "subcontract_variations"
+
+    subcontract_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("subcontracts.id", ondelete="CASCADE"), index=True
+    )
+    doc_number: Mapped[str] = mapped_column(String(30), unique=True, index=True)
+    title: Mapped[str] = mapped_column(String(200))
+    description: Mapped[str | None] = mapped_column(Text)
+    # Negative for an omission. A variation that takes work away is still a
+    # variation and still needs instructing.
+    amount: Mapped[Decimal] = mapped_column(Numeric(16, 2))
+    instructed_on: Mapped[date] = mapped_column(Date, default=date.today)
+    instructed_by: Mapped[str | None] = mapped_column(String(120))
+    status: Mapped[str] = mapped_column(String(20), default="pending")
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    approved_by: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL", use_alter=True)
+    )
+
+
+class BackCharge(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
+    """Work of theirs somebody else had to put right, charged back to them.
+
+    Raised against the subcontract and recovered from what they are owed. The
+    cost of the remedial work is already sitting on the job, so recovering it
+    credits the job back rather than creating income — the money was never
+    earned, it was spent and then got back.
+    """
+
+    __tablename__ = "back_charges"
+
+    subcontract_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("subcontracts.id", ondelete="CASCADE"), index=True
+    )
+    doc_number: Mapped[str] = mapped_column(String(30), unique=True, index=True)
+    reason: Mapped[str] = mapped_column(Text)
+    amount: Mapped[Decimal] = mapped_column(Numeric(16, 2))
+    raised_on: Mapped[date] = mapped_column(Date, default=date.today)
+    # Set once it has actually been taken off a payment, so the same charge
+    # cannot be recovered twice.
+    recovered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    journal_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("journals.id", ondelete="SET NULL")
+    )

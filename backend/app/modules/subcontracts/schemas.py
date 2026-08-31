@@ -105,6 +105,7 @@ class SubcontractCreate(BaseModel):
     scope: str | None = None
     value: Decimal = Field(default=Decimal("0"), ge=0)
     retention_pct: Decimal = Field(default=Decimal("0"), ge=0, le=100)
+    withholding_pct: Decimal = Field(default=Decimal("0"), ge=0, le=100)
     starts_on: date | None = None
     ends_on: date | None = None
     notes: str | None = None
@@ -140,6 +141,7 @@ class SubcontractRead(BaseModel):
     scope: str | None
     value: Decimal
     retention_pct: Decimal
+    withholding_pct: Decimal = Decimal("0")
     status: SubcontractStatus
     starts_on: date | None
     ends_on: date | None
@@ -199,3 +201,79 @@ class CertifyRequest(BaseModel):
 
 class RejectRequest(BaseModel):
     reason: str = Field(min_length=1)
+
+
+class VariationCreate(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+    description: str | None = None
+    # Negative for an omission: taking work away is still an instruction.
+    amount: Decimal
+    instructed_on: date | None = None
+    instructed_by: str | None = Field(default=None, max_length=120)
+
+
+class VariationRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    subcontract_id: uuid.UUID
+    doc_number: str
+    title: str
+    description: str | None
+    amount: Decimal
+    instructed_on: date
+    instructed_by: str | None
+    status: str
+    approved_at: datetime | None
+
+
+class BackChargeCreate(BaseModel):
+    reason: str = Field(min_length=1)
+    amount: Decimal = Field(gt=0)
+    raised_on: date | None = None
+
+
+class BackChargeRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    subcontract_id: uuid.UUID
+    doc_number: str
+    reason: str
+    amount: Decimal
+    raised_on: date
+    recovered_at: datetime | None
+
+
+class WithholdingRequest(BaseModel):
+    # Omit to withhold on everything currently payable.
+    amount: Decimal | None = Field(default=None, gt=0)
+    withheld_on: date | None = None
+
+
+class WithholdingResult(BaseModel):
+    subcontract_id: uuid.UUID
+    doc_number: str
+    rate_pct: Decimal
+    base: Decimal
+    withheld: Decimal
+    journal_id: uuid.UUID | None = None
+
+
+class PaymentCertificate(BaseModel):
+    """Every line that reduces what they claimed to what they are paid."""
+
+    subcontract_id: uuid.UUID
+    doc_number: str
+    title: str
+    supplier_name: str | None = None
+    project_id: uuid.UUID
+    original_value: Decimal
+    variations: Decimal
+    contract_value: Decimal
+    certified: Decimal
+    retention_held: Decimal
+    back_charges: Decimal
+    withholding_pct: Decimal
+    withholding_tax: Decimal
+    net_payable: Decimal

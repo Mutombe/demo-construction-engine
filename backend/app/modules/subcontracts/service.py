@@ -228,6 +228,7 @@ def create_subcontract(db: Session, project_id: uuid.UUID, data, user=None) -> S
         scope=data.scope,
         value=data.value or ZERO,
         retention_pct=data.retention_pct or ZERO,
+        withholding_pct=getattr(data, "withholding_pct", None) or ZERO,
         starts_on=data.starts_on,
         ends_on=data.ends_on,
         notes=data.notes,
