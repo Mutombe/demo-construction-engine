@@ -1,12 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { HardHat } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "@/lib/toast";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { login } from "@/features/auth/api";
@@ -53,11 +52,9 @@ function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-secondary/60 p-4">
       <Card className="w-full max-w-sm">
-        <CardHeader className="items-center pb-2 pt-6 text-center">
-          <div className="mb-1 flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <HardHat className="h-6 w-6" />
-          </div>
-          <CardTitle className="text-lg">Datum</CardTitle>
+        <CardHeader className="items-center pb-2 pt-7 text-center">
+          {/* The card is light, so the wordmark is used as drawn. */}
+          <img src="/company-logo.png" alt="" className="mb-3 h-9 w-auto dark:brightness-0 dark:invert" />
           <p className="text-sm text-muted-foreground">Sign in to your workspace</p>
         </CardHeader>
         <CardContent className="pt-4">

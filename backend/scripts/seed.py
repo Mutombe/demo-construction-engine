@@ -835,7 +835,7 @@ def seed_procurement(db, users) -> None:
             "created_by": users["procurement_officer"].id,
             "body": (
                 "## Introduction\n"
-                "Demo Construction Co. invites your quotation for the supply of readymix "
+                "Exodus & Co invites your quotation for the supply of readymix "
                 "concrete and reinforcement steel for the Riverside Apartments — Block A "
                 "project in Harare.\n\n"
                 "## Scope of Supply\n"
@@ -1742,7 +1742,7 @@ def main() -> None:
 
     db = SessionLocal()
     try:
-        get_or_create(db, CompanySettings, name="Demo Construction Co.")
+        get_or_create(db, CompanySettings, name="Exodus & Co")
         users = seed_users(db)
         clients = seed_clients(db)
         seed_riverside(db, users, clients)
