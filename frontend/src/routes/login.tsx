@@ -57,7 +57,7 @@ function LoginPage() {
           <div className="mb-1 flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <HardHat className="h-6 w-6" />
           </div>
-          <CardTitle className="text-lg">Construction ERP</CardTitle>
+          <CardTitle className="text-lg">Datum</CardTitle>
           <p className="text-sm text-muted-foreground">Sign in to your workspace</p>
         </CardHeader>
         <CardContent className="pt-4">

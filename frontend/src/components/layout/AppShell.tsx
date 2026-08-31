@@ -15,7 +15,7 @@ import {
   type PaletteDestination,
 } from "@/features/search/CommandPalette";
 import { can, type Permission } from "@/features/auth/permissions";
-import { useNavCounts } from "@/lib/api/generated/endpoints";
+import { useGetSettings, useNavCounts } from "@/lib/api/generated/endpoints";
 import { ROLE_LABELS } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -203,6 +203,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const countFor = (item: NavItem) =>
     item.to ? countByPath.get(item.to) : undefined;
 
+  // The company's own name, not a hardcoded one. It is set in Settings, and
+  // a customer who changes it should see it here rather than the seed's.
+  const { data: company } = useGetSettings();
+
   const openPalette = usePalette((s) => s.setOpen);
   const paletteDestinations: PaletteDestination[] = visibleGroups.flatMap((group) =>
     group.items
@@ -252,8 +256,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
           {!iconsOnly && (
             <div className="min-w-0">
-              <div className="truncate text-sm font-semibold">Construction ERP</div>
-              <div className="truncate text-[11px] text-sidebar-muted">Demo Construction Co.</div>
+              <div className="truncate text-sm font-semibold">Datum</div>
+              {company?.name && (
+                <div className="truncate text-[11px] text-sidebar-muted">{company.name}</div>
+              )}
             </div>
           )}
         </div>

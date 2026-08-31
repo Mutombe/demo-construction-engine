@@ -103,7 +103,7 @@ def summary(db: Session, client: Client) -> PortalSummary:
     )
     return PortalSummary(
         client_name=client.name,
-        company_name=company.name if company else "Construction ERP",
+        company_name=company.name if company else "Company Name Not Set",
         projects=[_project_summary(db, p) for p in projects],
     )
 

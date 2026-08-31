@@ -61,7 +61,7 @@ def _payslip_page(doc: DocumentPdf, run: PayRun, line: PayRunLine) -> None:
 def payslip_pdf(db: Session, run: PayRun, line: PayRunLine) -> bytes:
     company = db.scalar(select(CompanySettings).limit(1))
     doc = DocumentPdf(
-        company_name=company.name if company else "Construction ERP",
+        company_name=company.name if company else "Company Name Not Set",
         doc_title="Payslip",
         doc_number=run.doc_number,
     )
@@ -73,7 +73,7 @@ def payslips_pdf(db: Session, run: PayRun) -> bytes:
     """All payslips for a run, one page per worker."""
     company = db.scalar(select(CompanySettings).limit(1))
     doc = DocumentPdf(
-        company_name=company.name if company else "Construction ERP",
+        company_name=company.name if company else "Company Name Not Set",
         doc_title="Payslips",
         doc_number=run.doc_number,
     )

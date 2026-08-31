@@ -41,7 +41,7 @@ from app.modules.valuations.router import router as valuations_router
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="Construction ERP API",
+        title="Datum API",
         version="0.1.0",
         docs_url="/docs",
         openapi_url="/openapi.json",

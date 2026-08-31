@@ -87,7 +87,7 @@ def to_xlsx(table: ReportTable) -> bytes:
     return buffer.getvalue()
 
 
-def to_pdf(table: ReportTable, company_name: str = "Construction ERP") -> bytes:
+def to_pdf(table: ReportTable, company_name: str = "Company Name Not Set") -> bytes:
     """The same table, for someone who is going to print it or send it on.
 
     Landscape, because a report built for a spreadsheet has more columns than

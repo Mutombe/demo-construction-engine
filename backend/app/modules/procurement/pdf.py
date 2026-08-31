@@ -12,7 +12,7 @@ def po_pdf(db: Session, po: PurchaseOrder) -> bytes:
     project = po.project
 
     doc = DocumentPdf(
-        company_name=company.name if company else "Construction ERP",
+        company_name=company.name if company else "Company Name Not Set",
         doc_title="Purchase order",
         doc_number=po.doc_number,
     )
@@ -69,7 +69,7 @@ def rfq_pdf(db: Session, rfq) -> bytes:
     project = rfq.project
 
     doc = DocumentPdf(
-        company_name=company.name if company else "Construction ERP",
+        company_name=company.name if company else "Company Name Not Set",
         doc_title="Request for quotation",
         doc_number=rfq.doc_number,
     )
@@ -112,7 +112,7 @@ def weekly_report_pdf(db: Session, project, week_start, week_end, body: str) -> 
     """The AI weekly report as something a client or director can be handed."""
     company = db.scalar(select(CompanySettings).limit(1))
     doc = DocumentPdf(
-        company_name=company.name if company else "Construction ERP",
+        company_name=company.name if company else "Company Name Not Set",
         doc_title="Weekly site report",
         doc_number=f"{week_start.isoformat()} to {week_end.isoformat()}",
     )

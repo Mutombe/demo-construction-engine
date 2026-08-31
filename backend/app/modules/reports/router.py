@@ -16,13 +16,13 @@ def _company_name(db) -> str:
     """The letterhead. Reports are the documents most likely to leave the
     building, so they carry the company's own name rather than the default."""
     if db is None:
-        return "Construction ERP"
+        return "Company Name Not Set"
     from sqlalchemy import select as _select
 
     from app.modules.company.models import CompanySettings
 
     company = db.scalar(_select(CompanySettings).limit(1))
-    return company.name if company else "Construction ERP"
+    return company.name if company else "Company Name Not Set"
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 

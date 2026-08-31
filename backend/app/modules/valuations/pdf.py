@@ -12,7 +12,7 @@ def certificate_pdf(db: Session, valuation: Valuation) -> bytes:
     company = db.scalar(select(CompanySettings).limit(1))
 
     doc = DocumentPdf(
-        company_name=company.name if company else "Construction ERP",
+        company_name=company.name if company else "Company Name Not Set",
         doc_title="Payment certificate",
         doc_number=valuation.doc_number,
     )

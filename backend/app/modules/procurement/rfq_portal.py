@@ -201,7 +201,7 @@ def _company_name(db: Session) -> str:
     from app.modules.company.models import CompanySettings
 
     company = db.scalar(select(CompanySettings))
-    return company.name if company else "Construction ERP"
+    return company.name if company else "Company Name Not Set"
 
 
 def submit_quote(db: Session, invite: RfqInvite, data) -> Quote:
