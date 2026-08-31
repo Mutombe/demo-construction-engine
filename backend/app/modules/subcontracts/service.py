@@ -111,6 +111,7 @@ def compliance_status(db: Session, supplier_id: uuid.UUID, as_at: date | None = 
                 "doc_type": requirement.doc_type.value,
                 "is_mandatory": requirement.is_mandatory,
                 "state": state,
+                "document_id": doc.id if doc else None,
                 "reference": doc.reference if doc else None,
                 "expires_on": doc.expires_on if doc else None,
                 "days_to_expiry": days,

@@ -18,6 +18,7 @@ def _entity_registry() -> dict[str, type]:
     """
     from app.modules.clients.models import Client
     from app.modules.expenses.models import ExpenseClaim
+    from app.modules.fleet.models import Equipment
     from app.modules.inventory.models import StockItem
     from app.modules.procurement.models import PurchaseOrder, Rfq, Supplier
     from app.modules.projects.models import Project
@@ -39,6 +40,7 @@ def _entity_registry() -> dict[str, type]:
         "diary_entry": SiteDiaryEntry,
         "valuation": Valuation,
         "stock_item": StockItem,
+        "equipment": Equipment,
     }
 
 
@@ -146,6 +148,7 @@ def _link_for(entity_type: str, record) -> str | None:
         "expense_claim": "/expenses",
         "valuation": "/valuations",
         "stock_item": "/inventory",
+        "equipment": "/fleet",
     }
     base = paths.get(entity_type)
     return f"{base}/{record.id}" if base else None

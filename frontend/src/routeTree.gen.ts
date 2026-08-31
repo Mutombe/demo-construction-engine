@@ -15,6 +15,7 @@ import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAccountingRouteImport } from './routes/_app/accounting'
 import { Route as AppAssistantRouteImport } from './routes/_app/assistant'
 import { Route as AppCalendarRouteImport } from './routes/_app/calendar'
+import { Route as AppFleetRouteImport } from './routes/_app/fleet'
 import { Route as AppMapRouteImport } from './routes/_app/map'
 import { Route as AppWorkloadRouteImport } from './routes/_app/workload'
 import { Route as AcceptInviteTokenRouteImport } from './routes/accept-invite.$token'
@@ -25,6 +26,7 @@ import { Route as AppClientsIndexRouteImport } from './routes/_app/clients/index
 import { Route as AppClientsClientIdRouteImport } from './routes/_app/clients/$clientId'
 import { Route as AppExpensesIndexRouteImport } from './routes/_app/expenses/index'
 import { Route as AppExpensesClaimIdRouteImport } from './routes/_app/expenses/$claimId'
+import { Route as AppFleetEquipmentIdRouteImport } from './routes/_app/fleet.$equipmentId'
 import { Route as AppInboxIndexRouteImport } from './routes/_app/inbox/index'
 import { Route as AppInventoryIndexRouteImport } from './routes/_app/inventory/index'
 import { Route as AppInventoryItemIdRouteImport } from './routes/_app/inventory/$itemId'
@@ -53,6 +55,7 @@ import { Route as AppProjectsProjectIdDocumentsRouteImport } from './routes/_app
 import { Route as AppProjectsProjectIdProcurementRouteImport } from './routes/_app/projects/$projectId/procurement'
 import { Route as AppProjectsProjectIdProgramRouteImport } from './routes/_app/projects/$projectId/program'
 import { Route as AppProjectsProjectIdSiteRouteImport } from './routes/_app/projects/$projectId/site'
+import { Route as AppProjectsProjectIdSubcontractsRouteImport } from './routes/_app/projects/$projectId/subcontracts'
 import { Route as AppProjectsProjectIdTasksRouteImport } from './routes/_app/projects/$projectId/tasks'
 import { Route as AppProjectsProjectIdValuationsRouteImport } from './routes/_app/projects/$projectId/valuations'
 
@@ -83,6 +86,11 @@ const AppAssistantRoute = AppAssistantRouteImport.update({
 const AppCalendarRoute = AppCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFleetRoute = AppFleetRouteImport.update({
+  id: '/fleet',
+  path: '/fleet',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMapRoute = AppMapRouteImport.update({
@@ -134,6 +142,11 @@ const AppExpensesClaimIdRoute = AppExpensesClaimIdRouteImport.update({
   id: '/expenses/$claimId',
   path: '/expenses/$claimId',
   getParentRoute: () => AppRoute,
+} as any)
+const AppFleetEquipmentIdRoute = AppFleetEquipmentIdRouteImport.update({
+  id: '/$equipmentId',
+  path: '/$equipmentId',
+  getParentRoute: () => AppFleetRoute,
 } as any)
 const AppInboxIndexRoute = AppInboxIndexRouteImport.update({
   id: '/inbox/',
@@ -286,6 +299,12 @@ const AppProjectsProjectIdSiteRoute =
     path: '/site',
     getParentRoute: () => AppProjectsProjectIdRoute,
   } as any)
+const AppProjectsProjectIdSubcontractsRoute =
+  AppProjectsProjectIdSubcontractsRouteImport.update({
+    id: '/subcontracts',
+    path: '/subcontracts',
+    getParentRoute: () => AppProjectsProjectIdRoute,
+  } as any)
 const AppProjectsProjectIdTasksRoute =
   AppProjectsProjectIdTasksRouteImport.update({
     id: '/tasks',
@@ -305,6 +324,7 @@ export interface FileRoutesByFullPath {
   '/accounting': typeof AppAccountingRoute
   '/assistant': typeof AppAssistantRoute
   '/calendar': typeof AppCalendarRoute
+  '/fleet': typeof AppFleetRouteWithChildren
   '/map': typeof AppMapRoute
   '/workload': typeof AppWorkloadRoute
   '/accept-invite/$token': typeof AcceptInviteTokenRoute
@@ -312,6 +332,7 @@ export interface FileRoutesByFullPath {
   '/rfq/$token': typeof RfqTokenRoute
   '/clients/$clientId': typeof AppClientsClientIdRoute
   '/expenses/$claimId': typeof AppExpensesClaimIdRoute
+  '/fleet/$equipmentId': typeof AppFleetEquipmentIdRoute
   '/inventory/$itemId': typeof AppInventoryItemIdRoute
   '/inventory/insights': typeof AppInventoryInsightsRoute
   '/inventory/stocktake': typeof AppInventoryStocktakeRouteWithChildren
@@ -342,6 +363,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/procurement': typeof AppProjectsProjectIdProcurementRoute
   '/projects/$projectId/program': typeof AppProjectsProjectIdProgramRoute
   '/projects/$projectId/site': typeof AppProjectsProjectIdSiteRoute
+  '/projects/$projectId/subcontracts': typeof AppProjectsProjectIdSubcontractsRoute
   '/projects/$projectId/tasks': typeof AppProjectsProjectIdTasksRoute
   '/projects/$projectId/valuations': typeof AppProjectsProjectIdValuationsRoute
   '/projects/$projectId/': typeof AppProjectsProjectIdIndexRoute
@@ -351,6 +373,7 @@ export interface FileRoutesByTo {
   '/accounting': typeof AppAccountingRoute
   '/assistant': typeof AppAssistantRoute
   '/calendar': typeof AppCalendarRoute
+  '/fleet': typeof AppFleetRouteWithChildren
   '/map': typeof AppMapRoute
   '/workload': typeof AppWorkloadRoute
   '/accept-invite/$token': typeof AcceptInviteTokenRoute
@@ -359,6 +382,7 @@ export interface FileRoutesByTo {
   '/': typeof AppIndexRoute
   '/clients/$clientId': typeof AppClientsClientIdRoute
   '/expenses/$claimId': typeof AppExpensesClaimIdRoute
+  '/fleet/$equipmentId': typeof AppFleetEquipmentIdRoute
   '/inventory/$itemId': typeof AppInventoryItemIdRoute
   '/inventory/insights': typeof AppInventoryInsightsRoute
   '/inventory/stocktake': typeof AppInventoryStocktakeRouteWithChildren
@@ -388,6 +412,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/procurement': typeof AppProjectsProjectIdProcurementRoute
   '/projects/$projectId/program': typeof AppProjectsProjectIdProgramRoute
   '/projects/$projectId/site': typeof AppProjectsProjectIdSiteRoute
+  '/projects/$projectId/subcontracts': typeof AppProjectsProjectIdSubcontractsRoute
   '/projects/$projectId/tasks': typeof AppProjectsProjectIdTasksRoute
   '/projects/$projectId/valuations': typeof AppProjectsProjectIdValuationsRoute
   '/projects/$projectId': typeof AppProjectsProjectIdIndexRoute
@@ -399,6 +424,7 @@ export interface FileRoutesById {
   '/_app/accounting': typeof AppAccountingRoute
   '/_app/assistant': typeof AppAssistantRoute
   '/_app/calendar': typeof AppCalendarRoute
+  '/_app/fleet': typeof AppFleetRouteWithChildren
   '/_app/map': typeof AppMapRoute
   '/_app/workload': typeof AppWorkloadRoute
   '/accept-invite/$token': typeof AcceptInviteTokenRoute
@@ -407,6 +433,7 @@ export interface FileRoutesById {
   '/_app/': typeof AppIndexRoute
   '/_app/clients/$clientId': typeof AppClientsClientIdRoute
   '/_app/expenses/$claimId': typeof AppExpensesClaimIdRoute
+  '/_app/fleet/$equipmentId': typeof AppFleetEquipmentIdRoute
   '/_app/inventory/$itemId': typeof AppInventoryItemIdRoute
   '/_app/inventory/insights': typeof AppInventoryInsightsRoute
   '/_app/inventory/stocktake': typeof AppInventoryStocktakeRouteWithChildren
@@ -437,6 +464,7 @@ export interface FileRoutesById {
   '/_app/projects/$projectId/procurement': typeof AppProjectsProjectIdProcurementRoute
   '/_app/projects/$projectId/program': typeof AppProjectsProjectIdProgramRoute
   '/_app/projects/$projectId/site': typeof AppProjectsProjectIdSiteRoute
+  '/_app/projects/$projectId/subcontracts': typeof AppProjectsProjectIdSubcontractsRoute
   '/_app/projects/$projectId/tasks': typeof AppProjectsProjectIdTasksRoute
   '/_app/projects/$projectId/valuations': typeof AppProjectsProjectIdValuationsRoute
   '/_app/projects/$projectId/': typeof AppProjectsProjectIdIndexRoute
@@ -449,6 +477,7 @@ export interface FileRouteTypes {
     | '/accounting'
     | '/assistant'
     | '/calendar'
+    | '/fleet'
     | '/map'
     | '/workload'
     | '/accept-invite/$token'
@@ -456,6 +485,7 @@ export interface FileRouteTypes {
     | '/rfq/$token'
     | '/clients/$clientId'
     | '/expenses/$claimId'
+    | '/fleet/$equipmentId'
     | '/inventory/$itemId'
     | '/inventory/insights'
     | '/inventory/stocktake'
@@ -486,6 +516,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/procurement'
     | '/projects/$projectId/program'
     | '/projects/$projectId/site'
+    | '/projects/$projectId/subcontracts'
     | '/projects/$projectId/tasks'
     | '/projects/$projectId/valuations'
     | '/projects/$projectId/'
@@ -495,6 +526,7 @@ export interface FileRouteTypes {
     | '/accounting'
     | '/assistant'
     | '/calendar'
+    | '/fleet'
     | '/map'
     | '/workload'
     | '/accept-invite/$token'
@@ -503,6 +535,7 @@ export interface FileRouteTypes {
     | '/'
     | '/clients/$clientId'
     | '/expenses/$claimId'
+    | '/fleet/$equipmentId'
     | '/inventory/$itemId'
     | '/inventory/insights'
     | '/inventory/stocktake'
@@ -532,6 +565,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/procurement'
     | '/projects/$projectId/program'
     | '/projects/$projectId/site'
+    | '/projects/$projectId/subcontracts'
     | '/projects/$projectId/tasks'
     | '/projects/$projectId/valuations'
     | '/projects/$projectId'
@@ -542,6 +576,7 @@ export interface FileRouteTypes {
     | '/_app/accounting'
     | '/_app/assistant'
     | '/_app/calendar'
+    | '/_app/fleet'
     | '/_app/map'
     | '/_app/workload'
     | '/accept-invite/$token'
@@ -550,6 +585,7 @@ export interface FileRouteTypes {
     | '/_app/'
     | '/_app/clients/$clientId'
     | '/_app/expenses/$claimId'
+    | '/_app/fleet/$equipmentId'
     | '/_app/inventory/$itemId'
     | '/_app/inventory/insights'
     | '/_app/inventory/stocktake'
@@ -580,6 +616,7 @@ export interface FileRouteTypes {
     | '/_app/projects/$projectId/procurement'
     | '/_app/projects/$projectId/program'
     | '/_app/projects/$projectId/site'
+    | '/_app/projects/$projectId/subcontracts'
     | '/_app/projects/$projectId/tasks'
     | '/_app/projects/$projectId/valuations'
     | '/_app/projects/$projectId/'
@@ -635,6 +672,13 @@ declare module '@tanstack/react-router' {
       path: '/calendar'
       fullPath: '/calendar'
       preLoaderRoute: typeof AppCalendarRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/fleet': {
+      id: '/_app/fleet'
+      path: '/fleet'
+      fullPath: '/fleet'
+      preLoaderRoute: typeof AppFleetRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/map': {
@@ -706,6 +750,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/expenses/$claimId'
       preLoaderRoute: typeof AppExpensesClaimIdRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/_app/fleet/$equipmentId': {
+      id: '/_app/fleet/$equipmentId'
+      path: '/$equipmentId'
+      fullPath: '/fleet/$equipmentId'
+      preLoaderRoute: typeof AppFleetEquipmentIdRouteImport
+      parentRoute: typeof AppFleetRoute
     }
     '/_app/inbox/': {
       id: '/_app/inbox/'
@@ -903,6 +954,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProjectsProjectIdSiteRouteImport
       parentRoute: typeof AppProjectsProjectIdRoute
     }
+    '/_app/projects/$projectId/subcontracts': {
+      id: '/_app/projects/$projectId/subcontracts'
+      path: '/subcontracts'
+      fullPath: '/projects/$projectId/subcontracts'
+      preLoaderRoute: typeof AppProjectsProjectIdSubcontractsRouteImport
+      parentRoute: typeof AppProjectsProjectIdRoute
+    }
     '/_app/projects/$projectId/tasks': {
       id: '/_app/projects/$projectId/tasks'
       path: '/tasks'
@@ -919,6 +977,18 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AppFleetRouteChildren {
+  AppFleetEquipmentIdRoute: typeof AppFleetEquipmentIdRoute
+}
+
+const AppFleetRouteChildren: AppFleetRouteChildren = {
+  AppFleetEquipmentIdRoute: AppFleetEquipmentIdRoute,
+}
+
+const AppFleetRouteWithChildren = AppFleetRoute._addFileChildren(
+  AppFleetRouteChildren,
+)
 
 interface AppInventoryStocktakeRouteChildren {
   AppInventoryStocktakeStocktakeIdRoute: typeof AppInventoryStocktakeStocktakeIdRoute
@@ -969,6 +1039,7 @@ interface AppProjectsProjectIdRouteChildren {
   AppProjectsProjectIdProcurementRoute: typeof AppProjectsProjectIdProcurementRoute
   AppProjectsProjectIdProgramRoute: typeof AppProjectsProjectIdProgramRoute
   AppProjectsProjectIdSiteRoute: typeof AppProjectsProjectIdSiteRoute
+  AppProjectsProjectIdSubcontractsRoute: typeof AppProjectsProjectIdSubcontractsRoute
   AppProjectsProjectIdTasksRoute: typeof AppProjectsProjectIdTasksRoute
   AppProjectsProjectIdValuationsRoute: typeof AppProjectsProjectIdValuationsRoute
   AppProjectsProjectIdIndexRoute: typeof AppProjectsProjectIdIndexRoute
@@ -980,6 +1051,7 @@ const AppProjectsProjectIdRouteChildren: AppProjectsProjectIdRouteChildren = {
   AppProjectsProjectIdProcurementRoute: AppProjectsProjectIdProcurementRoute,
   AppProjectsProjectIdProgramRoute: AppProjectsProjectIdProgramRoute,
   AppProjectsProjectIdSiteRoute: AppProjectsProjectIdSiteRoute,
+  AppProjectsProjectIdSubcontractsRoute: AppProjectsProjectIdSubcontractsRoute,
   AppProjectsProjectIdTasksRoute: AppProjectsProjectIdTasksRoute,
   AppProjectsProjectIdValuationsRoute: AppProjectsProjectIdValuationsRoute,
   AppProjectsProjectIdIndexRoute: AppProjectsProjectIdIndexRoute,
@@ -992,6 +1064,7 @@ interface AppRouteChildren {
   AppAccountingRoute: typeof AppAccountingRoute
   AppAssistantRoute: typeof AppAssistantRoute
   AppCalendarRoute: typeof AppCalendarRoute
+  AppFleetRoute: typeof AppFleetRouteWithChildren
   AppMapRoute: typeof AppMapRoute
   AppWorkloadRoute: typeof AppWorkloadRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -1025,6 +1098,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAccountingRoute: AppAccountingRoute,
   AppAssistantRoute: AppAssistantRoute,
   AppCalendarRoute: AppCalendarRoute,
+  AppFleetRoute: AppFleetRouteWithChildren,
   AppMapRoute: AppMapRoute,
   AppWorkloadRoute: AppWorkloadRoute,
   AppIndexRoute: AppIndexRoute,

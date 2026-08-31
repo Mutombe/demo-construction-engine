@@ -29,6 +29,7 @@ const TABS = [
   { to: "/projects/$projectId/tasks", label: "Tasks", exact: false },
   { to: "/projects/$projectId/procurement", label: "Procurement", exact: false },
   { to: "/projects/$projectId/site", label: "Site", exact: false },
+  { to: "/projects/$projectId/subcontracts", label: "Subcontracts", exact: false },
   { to: "/projects/$projectId/valuations", label: "Valuations", exact: false },
   { to: "/projects/$projectId/documents", label: "Documents", exact: false },
 ] as const;

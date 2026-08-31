@@ -17,12 +17,16 @@ from app.modules.subcontracts.schemas import (
     CertifyRequest,
     ComplianceDocumentCreate,
     ComplianceDocumentRead,
+    ComplianceStatus,
+    ExpiringItem,
     MilestoneRead,
     RejectRequest,
+    RequirementRead,
     RequirementUpdate,
     SubcontractCreate,
     SubcontractDetail,
     SubcontractRead,
+    VendorStatusResult,
     VendorStatusUpdate,
 )
 
@@ -37,7 +41,7 @@ certifier = Depends(require_roles(UserRole.project_manager))
 # --- Vendor compliance -------------------------------------------------------
 
 
-@router.get("/suppliers/{supplier_id}/compliance", response_model=dict)
+@router.get("/suppliers/{supplier_id}/compliance", response_model=ComplianceStatus)
 def get_compliance(supplier_id: uuid.UUID, db: DbDep) -> dict:
     """Where a supplier stands on paperwork, document by document."""
     return service.compliance_status(db, supplier_id)
@@ -86,7 +90,7 @@ def remove_document(document_id: uuid.UUID, db: DbDep, _=vendor_admin) -> None:
     db.delete(doc)
 
 
-@router.post("/suppliers/{supplier_id}/vendor-status", response_model=dict)
+@router.post("/suppliers/{supplier_id}/vendor-status", response_model=VendorStatusResult)
 def set_status(
     supplier_id: uuid.UUID,
     body: VendorStatusUpdate,
@@ -100,13 +104,13 @@ def set_status(
     return {"supplier_id": supplier.id, "vendor_status": supplier.vendor_status.value}
 
 
-@router.get("/compliance/expiring", response_model=list[dict])
+@router.get("/compliance/expiring", response_model=list[ExpiringItem])
 def get_expiring(db: DbDep, days: int = 30) -> list[dict]:
     """Chased before it stops a job rather than after."""
     return service.expiring_soon(db, days)
 
 
-@router.get("/compliance/requirements", response_model=list[dict])
+@router.get("/compliance/requirements", response_model=list[RequirementRead])
 def list_requirements(db: DbDep) -> list[dict]:
     service.ensure_requirements(db)
     return [
@@ -119,7 +123,7 @@ def list_requirements(db: DbDep) -> list[dict]:
     ]
 
 
-@router.put("/compliance/requirements", response_model=list[dict])
+@router.put("/compliance/requirements", response_model=list[RequirementRead])
 def update_requirement(body: RequirementUpdate, db: DbDep, _=vendor_admin) -> list[dict]:
     service.ensure_requirements(db)
     row = db.scalar(

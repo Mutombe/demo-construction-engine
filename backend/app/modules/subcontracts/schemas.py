@@ -35,6 +35,53 @@ class ComplianceDocumentRead(BaseModel):
     notes: str | None
 
 
+class ComplianceItem(BaseModel):
+    """One requirement, and whether this vendor has it in date.
+
+    `missing` and `expired` are kept apart on purpose: one is a vendor who
+    never sent the certificate, the other is a vendor who let it lapse.
+    """
+
+    doc_type: ComplianceDocType
+    is_mandatory: bool
+    state: str
+    document_id: uuid.UUID | None = None
+    reference: str | None = None
+    expires_on: date | None = None
+    days_to_expiry: int | None = None
+    media_id: uuid.UUID | None = None
+
+
+class ComplianceStatus(BaseModel):
+    supplier_id: uuid.UUID
+    supplier_name: str
+    vendor_status: VendorStatus
+    is_compliant: bool
+    blocking: list[str] = []
+    documents: list[ComplianceItem] = []
+
+
+class ExpiringItem(BaseModel):
+    supplier_id: uuid.UUID
+    supplier_name: str
+    doc_type: ComplianceDocType
+    reference: str | None = None
+    expires_on: date
+    days_to_expiry: int
+    state: str
+
+
+class RequirementRead(BaseModel):
+    doc_type: ComplianceDocType
+    is_mandatory: bool
+    warn_days: int
+
+
+class VendorStatusResult(BaseModel):
+    supplier_id: uuid.UUID
+    vendor_status: VendorStatus
+
+
 class RequirementUpdate(BaseModel):
     doc_type: ComplianceDocType
     is_mandatory: bool

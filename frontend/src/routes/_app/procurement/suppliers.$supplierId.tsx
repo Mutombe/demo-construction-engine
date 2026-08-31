@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PoStatusBadge, QuoteStatusBadge } from "@/features/procurement/StatusBadges";
+import { VendorCompliance } from "@/features/subcontracts/VendorCompliance";
 import { SupplierFormDialog } from "@/features/procurement/SupplierFormDialog";
 import {
   getGetPurchaseOrderQueryOptions,
@@ -210,6 +211,10 @@ function SupplierDetailPage() {
       </div>
 
       <Scorecard scorecard={activity.scorecard} />
+
+      <div className="mb-4">
+        <VendorCompliance supplierId={supplierId} />
+      </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>
