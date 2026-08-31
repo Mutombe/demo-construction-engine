@@ -186,17 +186,29 @@ def fleet_create(db, data: EquipmentCreate, user) -> Equipment:
 
 
 def seed_readings_and_fuel(db) -> None:
-    if db.scalar(select(func.count()).select_from(MeterReading)):
-        print("plant history: already recorded")
-        return
+    """Twelve weeks of readings and fills for every machine.
 
+    Committed one machine at a time and skipped per machine rather than for
+    the block as a whole. Against a database on the other side of an ocean
+    this is several hundred round trips, and an all-or-nothing block means an
+    interrupted run throws away everything it had already done.
+    """
     admin = db.scalar(select(User).where(User.role == UserRole.admin))
     machines = list(db.scalars(select(Equipment).order_by(Equipment.code)))
     readings = 0
     fills = 0
+    skipped = 0
 
     for machine in machines:
         if machine.code in NEVER_READ:
+            continue
+        already = db.scalar(
+            select(func.count())
+            .select_from(MeterReading)
+            .where(MeterReading.equipment_id == machine.id)
+        )
+        if already:
+            skipped += 1
             continue
 
         hours_plant = machine.meter_type is MeterType.hours
@@ -257,7 +269,12 @@ def seed_readings_and_fuel(db) -> None:
             )
             fills += 1
 
-    print(f"plant history: {readings} readings, {fills} fills")
+        db.commit()
+
+    print(
+        f"plant history: {readings} readings, {fills} fills"
+        + (f", {skipped} machines already done" if skipped else "")
+    )
 
 
 def seed_maintenance(db) -> None:
@@ -562,13 +579,19 @@ def main() -> None:
 
     db = SessionLocal()
     try:
-        seed_equipment(db)
-        seed_readings_and_fuel(db)
-        seed_maintenance(db)
-        seed_compliance(db)
-        seed_subcontracts(db)
-        seed_sync_history(db)
-        db.commit()
+        # Committed one block at a time. Against a database on the other side
+        # of an ocean this takes minutes, and a single transaction at the end
+        # means an interrupted run leaves nothing behind and has to start over.
+        for step in (
+            seed_equipment,
+            seed_readings_and_fuel,
+            seed_maintenance,
+            seed_compliance,
+            seed_subcontracts,
+            seed_sync_history,
+        ):
+            step(db)
+            db.commit()
 
         summary = fleet.fleet_summary(db)
         exceptions = fleet.fuel_exceptions(db)
