@@ -73,10 +73,17 @@ def record_reading(db: Session, equipment_id: uuid.UUID, data, user=None) -> Met
         .where(MeterReading.equipment_id == equipment_id)
         .order_by(MeterReading.reading_date.desc(), MeterReading.created_at.desc())
     )
-    if previous is not None and meter < Decimal(previous.meter):
+    # The meter it was registered at counts as a reading. Without that, the
+    # first reading after registration can be anything at all, and the second
+    # one then invents the whole gap between them as work done.
+    floor = Decimal(machine.current_meter)
+    since = "it was registered"
+    if previous is not None and Decimal(previous.meter) >= floor:
+        floor = Decimal(previous.meter)
+        since = f"it was read on {previous.reading_date.isoformat()}"
+    if meter < floor:
         raise ValidationFailedError(
-            f"{machine.code} last read {previous.meter} on "
-            f"{previous.reading_date.isoformat()}; a meter cannot go backwards"
+            f"{machine.code} was on {floor} when {since}; a meter cannot go backwards"
         )
 
     reading = MeterReading(

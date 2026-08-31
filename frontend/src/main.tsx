@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 import { ConfirmHost } from "@/components/ui/confirm";
 import { restoreSession } from "@/features/auth/api";
 import { initTheme } from "@/features/settings/theme";
+import { startSyncLoop } from "@/lib/offline/sync";
 import { Toaster } from "@/lib/toast";
 import { routeTree } from "./routeTree.gen";
 import "./index.css";
@@ -47,3 +48,14 @@ async function boot() {
 }
 
 void boot();
+
+// Drains whatever was captured with no signal, whenever there is signal.
+startSyncLoop();
+
+// Keeps the app loadable offline so the site forms can be reached at all.
+// Dev is left alone: a service worker and HMR fight over the same requests.
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    void navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+  });
+}

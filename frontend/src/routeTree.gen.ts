@@ -15,6 +15,7 @@ import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAccountingRouteImport } from './routes/_app/accounting'
 import { Route as AppAssistantRouteImport } from './routes/_app/assistant'
 import { Route as AppCalendarRouteImport } from './routes/_app/calendar'
+import { Route as AppFieldRouteImport } from './routes/_app/field'
 import { Route as AppFleetRouteImport } from './routes/_app/fleet'
 import { Route as AppMapRouteImport } from './routes/_app/map'
 import { Route as AppWorkloadRouteImport } from './routes/_app/workload'
@@ -86,6 +87,11 @@ const AppAssistantRoute = AppAssistantRouteImport.update({
 const AppCalendarRoute = AppCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFieldRoute = AppFieldRouteImport.update({
+  id: '/field',
+  path: '/field',
   getParentRoute: () => AppRoute,
 } as any)
 const AppFleetRoute = AppFleetRouteImport.update({
@@ -324,6 +330,7 @@ export interface FileRoutesByFullPath {
   '/accounting': typeof AppAccountingRoute
   '/assistant': typeof AppAssistantRoute
   '/calendar': typeof AppCalendarRoute
+  '/field': typeof AppFieldRoute
   '/fleet': typeof AppFleetRouteWithChildren
   '/map': typeof AppMapRoute
   '/workload': typeof AppWorkloadRoute
@@ -373,6 +380,7 @@ export interface FileRoutesByTo {
   '/accounting': typeof AppAccountingRoute
   '/assistant': typeof AppAssistantRoute
   '/calendar': typeof AppCalendarRoute
+  '/field': typeof AppFieldRoute
   '/fleet': typeof AppFleetRouteWithChildren
   '/map': typeof AppMapRoute
   '/workload': typeof AppWorkloadRoute
@@ -424,6 +432,7 @@ export interface FileRoutesById {
   '/_app/accounting': typeof AppAccountingRoute
   '/_app/assistant': typeof AppAssistantRoute
   '/_app/calendar': typeof AppCalendarRoute
+  '/_app/field': typeof AppFieldRoute
   '/_app/fleet': typeof AppFleetRouteWithChildren
   '/_app/map': typeof AppMapRoute
   '/_app/workload': typeof AppWorkloadRoute
@@ -477,6 +486,7 @@ export interface FileRouteTypes {
     | '/accounting'
     | '/assistant'
     | '/calendar'
+    | '/field'
     | '/fleet'
     | '/map'
     | '/workload'
@@ -526,6 +536,7 @@ export interface FileRouteTypes {
     | '/accounting'
     | '/assistant'
     | '/calendar'
+    | '/field'
     | '/fleet'
     | '/map'
     | '/workload'
@@ -576,6 +587,7 @@ export interface FileRouteTypes {
     | '/_app/accounting'
     | '/_app/assistant'
     | '/_app/calendar'
+    | '/_app/field'
     | '/_app/fleet'
     | '/_app/map'
     | '/_app/workload'
@@ -672,6 +684,13 @@ declare module '@tanstack/react-router' {
       path: '/calendar'
       fullPath: '/calendar'
       preLoaderRoute: typeof AppCalendarRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/field': {
+      id: '/_app/field'
+      path: '/field'
+      fullPath: '/field'
+      preLoaderRoute: typeof AppFieldRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/fleet': {
@@ -1064,6 +1083,7 @@ interface AppRouteChildren {
   AppAccountingRoute: typeof AppAccountingRoute
   AppAssistantRoute: typeof AppAssistantRoute
   AppCalendarRoute: typeof AppCalendarRoute
+  AppFieldRoute: typeof AppFieldRoute
   AppFleetRoute: typeof AppFleetRouteWithChildren
   AppMapRoute: typeof AppMapRoute
   AppWorkloadRoute: typeof AppWorkloadRoute
@@ -1098,6 +1118,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAccountingRoute: AppAccountingRoute,
   AppAssistantRoute: AppAssistantRoute,
   AppCalendarRoute: AppCalendarRoute,
+  AppFieldRoute: AppFieldRoute,
   AppFleetRoute: AppFleetRouteWithChildren,
   AppMapRoute: AppMapRoute,
   AppWorkloadRoute: AppWorkloadRoute,

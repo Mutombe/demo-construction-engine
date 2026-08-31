@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { AddressBook, Bank, Buildings, CalendarBlank, CaretDoubleLeft, CaretDoubleRight, ChartBar, ClipboardText, Gear, MagnifyingGlass, HardHat, MapTrifold, Money, Package, Receipt, ShieldCheck, ShoppingCart, SignOut, SquaresFour, Tray, Truck, UsersThree } from "@phosphor-icons/react";
+import { AddressBook, Bank, Buildings, CalendarBlank, CaretDoubleLeft, CaretDoubleRight, ChartBar, ClipboardText, Gear, MagnifyingGlass, HardHat, MapTrifold, Money, Package, Receipt, ShieldCheck, ShoppingCart, SignOut, SquaresFour, Tray, Truck, UsersThree, DeviceMobile } from "@phosphor-icons/react";
 import { ClaudeIcon } from "@/components/ui/claude-icon";
 import type { ReactNode } from "react";
 import { create } from "zustand";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { logout } from "@/features/auth/api";
 import { useAuth } from "@/features/auth/hooks";
 import { NotificationBell } from "@/features/notifications/NotificationBell";
+import { SyncIndicator } from "@/features/offline/SyncIndicator";
 import {
   CommandPalette,
   usePalette,
@@ -60,6 +61,7 @@ const NAV: NavGroup[] = [
       { to: "/projects", label: "Projects", icon: <Buildings /> },
       { to: "/workload", label: "Workload", icon: <UsersThree />, permission: "task:write" },
       { to: "/calendar", label: "Calendar", icon: <CalendarBlank /> },
+      { to: "/field", label: "Site Capture", icon: <DeviceMobile /> },
     ],
   },
   {
@@ -332,6 +334,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <ClaudeIcon className="size-4 text-claude" /> Assistant
             </Link>
+            <SyncIndicator />
             <NotificationBell />
             {user && (
               <div className="text-right">
