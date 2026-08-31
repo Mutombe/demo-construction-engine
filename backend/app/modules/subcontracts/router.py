@@ -23,6 +23,9 @@ from app.modules.subcontracts.schemas import (
     RejectRequest,
     RequirementRead,
     RequirementUpdate,
+    RetentionRegisterRow,
+    RetentionReleaseCreate,
+    RetentionReleaseRead,
     SubcontractCreate,
     SubcontractDetail,
     SubcontractRead,
@@ -151,10 +154,20 @@ def _detail(db: DbDep, contract: Subcontract) -> SubcontractDetail:
     summary = service.subcontract_summary(db, contract.id)
     out = SubcontractDetail.model_validate(contract)
     out.supplier_name = contract.supplier.name if contract.supplier else None
+    out.project_name = contract.project.name if contract.project else None
     out.certified = summary["certified"]
     out.retention_held = summary["retention_held"]
+    out.retention_released = summary["retention_released"]
+    out.retention_outstanding = summary["retention_outstanding"]
     out.net_payable = summary["net_payable"]
     out.remaining = summary["remaining"]
+    out.releases = [
+        RetentionReleaseRead.model_validate(row)
+        for row in service.list_retention_releases(db, contract.id)
+    ]
+    # Shown on the package rather than only on the supplier, because whether
+    # this vendor is still clear to work is a question about this job.
+    out.vendor_compliant = service.compliance_status(db, contract.supplier_id)["is_compliant"]
     return out
 
 
@@ -235,3 +248,40 @@ def list_all_subcontracts(
     if supplier_id:
         stmt = stmt.where(Subcontract.supplier_id == supplier_id)
     return [_read(row) for row in db.scalars(stmt)]
+
+
+# --- Retention ---------------------------------------------------------------
+
+
+@router.get("/retention", response_model=list[RetentionRegisterRow])
+def retention_register(db: DbDep) -> list[RetentionRegisterRow]:
+    """Everything still held across every package, soonest to fall due first.
+
+    Retention is other people's money sitting in a liability account. Nothing
+    on a project screen shows it, so without this list it is only ever found
+    when somebody rings up and asks for it.
+    """
+    return service.retention_register(db)
+
+
+@router.post(
+    "/subcontracts/{subcontract_id}/retention/release",
+    response_model=RetentionReleaseRead,
+    status_code=201,
+)
+def release_retention(
+    subcontract_id: uuid.UUID,
+    body: RetentionReleaseCreate,
+    db: DbDep,
+    user: CurrentUser,
+    _=certifier,
+) -> RetentionReleaseRead:
+    """Moves held retention into what the subcontractor is owed."""
+    return service.release_retention(db, subcontract_id, body, user)
+
+
+@router.get(
+    "/subcontracts/{subcontract_id}/retention", response_model=list[RetentionReleaseRead]
+)
+def list_releases(subcontract_id: uuid.UUID, db: DbDep) -> list[RetentionReleaseRead]:
+    return service.list_retention_releases(db, subcontract_id)

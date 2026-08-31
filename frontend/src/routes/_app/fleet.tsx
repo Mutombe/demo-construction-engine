@@ -1,8 +1,11 @@
 import { keepPreviousData } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { Drop, Gauge, Truck, Warning, Wrench } from "@phosphor-icons/react";
+import { Drop, Gauge, Plus, Truck, UploadSimple, Warning, Wrench } from "@phosphor-icons/react";
 import { z } from "zod";
+import { useState } from "react";
 import { PageHeader } from "@/components/layout/AppShell";
+import { Can } from "@/components/layout/Can";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -18,6 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tooltip } from "@/components/ui/tooltip";
+import { RegisterDialog, TelematicsDialog } from "@/features/fleet/FleetDialogs";
 import {
   useGetFleetSummary,
   useGetFuelExceptions,
@@ -52,6 +56,8 @@ function FleetPage() {
   const { tab } = Route.useSearch();
   const navigate = Route.useNavigate();
   const { data: summary } = useGetFleetSummary();
+  const [registerOpen, setRegisterOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const tabs = [
     { key: "register", label: "The Yard" },
@@ -73,7 +79,22 @@ function FleetPage() {
       <PageHeader
         title="Fleet"
         description="Where every machine is, what it burned, and what it needs"
+        actions={
+          <Can perm="inventory:write">
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+                <UploadSimple /> Import Readings
+              </Button>
+              <Button size="sm" onClick={() => setRegisterOpen(true)}>
+                <Plus /> Register Machine
+              </Button>
+            </div>
+          </Can>
+        }
       />
+
+      <RegisterDialog open={registerOpen} onOpenChange={setRegisterOpen} />
+      <TelematicsDialog open={importOpen} onOpenChange={setImportOpen} />
 
       {summary && (
         <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

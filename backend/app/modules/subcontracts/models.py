@@ -163,3 +163,27 @@ class SubcontractMilestone(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin
     )
 
     subcontract: Mapped[Subcontract] = relationship(back_populates="milestones")
+
+
+class RetentionRelease(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
+    """Money let go of after the defects period.
+
+    Recorded rather than netted off the certificates, because retention is
+    released in its own right and often in parts: half at practical
+    completion, the rest when the defects list is signed off. Netting it
+    against the certificates would destroy the only record of when and why.
+    """
+
+    __tablename__ = "retention_releases"
+
+    subcontract_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("subcontracts.id", ondelete="CASCADE"), index=True
+    )
+    amount: Mapped[Decimal] = mapped_column(Numeric(16, 2))
+    released_on: Mapped[date] = mapped_column(Date, default=date.today)
+    reason: Mapped[str | None] = mapped_column(Text)
+    journal_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("journals.id", ondelete="SET NULL")
+    )
+
+    subcontract: Mapped[Subcontract] = relationship()

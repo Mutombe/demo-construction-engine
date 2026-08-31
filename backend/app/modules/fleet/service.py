@@ -22,8 +22,13 @@ from decimal import Decimal
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.common.enums import CostSource, EquipmentStatus, MeterType
-from app.core.exceptions import ConflictError, NotFoundError, ValidationFailedError
+from app.common.enums import CostSource, EquipmentStatus, MeterSource, MeterType
+from app.core.exceptions import (
+    AppError,
+    ConflictError,
+    NotFoundError,
+    ValidationFailedError,
+)
 from app.modules.fleet.models import (
     Equipment,
     EquipmentAssignment,
@@ -506,4 +511,133 @@ def fleet_summary(db: Session) -> dict:
         "standing": counts.get(EquipmentStatus.standing, 0),
         "maintenance_due": len(maintenance_due(db)),
         "fuel_exceptions": len(fuel_exceptions(db)),
+    }
+
+
+def equipment_costs(db: Session, equipment_id: uuid.UUID, days: int = 365) -> dict:
+    """What one machine has actually cost, and what it cost per hour run.
+
+    The per-hour figure is the one that decides whether to keep a machine or
+    hire one, and it is the figure nobody has, because fuel sits in one place,
+    the workshop in another and the hire invoice in a third. It is reported as
+    `None` rather than zero when the meter never moved: a machine that did no
+    work has no cost per hour, and printing 0.00 would say the opposite.
+    """
+    machine = get_equipment(db, equipment_id)
+    since = date.today() - timedelta(days=days)
+
+    fuel_litres, fuel_cost = db.execute(
+        select(
+            func.coalesce(func.sum(FuelLog.litres), 0),
+            func.coalesce(func.sum(FuelLog.total_cost), 0),
+        ).where(FuelLog.equipment_id == equipment_id, FuelLog.log_date >= since)
+    ).one()
+
+    workshop_cost, downtime = db.execute(
+        select(
+            func.coalesce(func.sum(MaintenanceRecord.cost), 0),
+            func.coalesce(func.sum(MaintenanceRecord.downtime_hours), 0),
+        ).where(
+            MaintenanceRecord.equipment_id == equipment_id,
+            MaintenanceRecord.service_date >= since,
+        )
+    ).one()
+
+    readings = list(
+        db.scalars(
+            select(MeterReading)
+            .where(MeterReading.equipment_id == equipment_id, MeterReading.reading_date >= since)
+            .order_by(MeterReading.reading_date)
+        )
+    )
+    metered = (
+        Decimal(readings[-1].meter) - Decimal(readings[0].meter) if len(readings) > 1 else None
+    )
+
+    total = Decimal(fuel_cost) + Decimal(workshop_cost)
+    return {
+        "equipment_id": machine.id,
+        "code": machine.code,
+        "days": days,
+        "fuel_litres": Decimal(fuel_litres),
+        "fuel_cost": Decimal(fuel_cost),
+        "workshop_cost": Decimal(workshop_cost),
+        "downtime_hours": Decimal(downtime),
+        "total_cost": total,
+        "metered": metered,
+        "cost_per_unit": (total / metered).quantize(Decimal("0.01"))
+        if metered and metered > 0
+        else None,
+        "meter_type": machine.meter_type.value,
+        # What the job is charged for the machine, against what it costs to
+        # run. A rate that has drifted below cost is invisible otherwise.
+        "hourly_rate": Decimal(machine.hourly_rate) if machine.hourly_rate else None,
+    }
+
+
+def import_telematics(db: Session, rows: list, user=None) -> dict:
+    """Take a period's worth of readings and fills from a tracker export.
+
+    Written to be handed a file that is partly wrong, because every one of
+    them is. Each row is applied on its own and a row that is refused is
+    reported with its reason and its line number; the rest still land. An
+    import that stops dead on line 40 of 900 is worse than no import.
+    """
+    from app.modules.fleet.schemas import FuelLogCreate, MeterReadingCreate
+
+    applied = 0
+    results: list[dict] = []
+
+    for index, row in enumerate(rows, start=1):
+        code = (row.code or "").strip()
+        machine = db.scalar(select(Equipment).where(Equipment.code == code))
+        if machine is None:
+            results.append({"line": index, "code": code, "status": "rejected",
+                            "detail": f"No machine is registered as {code or 'blank'}"})
+            continue
+
+        savepoint = db.begin_nested()
+        try:
+            if row.meter is not None:
+                record_reading(
+                    db,
+                    machine.id,
+                    MeterReadingCreate(
+                        reading_date=row.reading_date,
+                        meter=row.meter,
+                        source=MeterSource.telematics,
+                        idle_hours=row.idle_hours,
+                    ),
+                    user,
+                )
+            if row.litres is not None and Decimal(row.litres) > 0:
+                record_fuel(
+                    db,
+                    machine.id,
+                    FuelLogCreate(
+                        log_date=row.reading_date,
+                        litres=row.litres,
+                        meter=row.meter,
+                        unit_cost=row.unit_cost,
+                        reference=row.reference,
+                    ),
+                    user,
+                )
+            savepoint.commit()
+            applied += 1
+            results.append({"line": index, "code": code, "status": "applied", "detail": None})
+        except AppError as exc:
+            savepoint.rollback()
+            results.append({"line": index, "code": code, "status": "rejected",
+                            "detail": exc.detail})
+        except Exception:
+            savepoint.rollback()
+            results.append({"line": index, "code": code, "status": "rejected",
+                            "detail": "This row could not be read"})
+
+    db.flush()
+    return {
+        "applied": applied,
+        "rejected": len(results) - applied,
+        "results": results,
     }

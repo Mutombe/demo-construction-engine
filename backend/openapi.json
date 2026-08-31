@@ -6906,6 +6906,297 @@
         }
       }
     },
+    "/api/v1/retention": {
+      "get": {
+        "tags": [
+          "subcontracts"
+        ],
+        "summary": "Retention Register",
+        "description": "Everything still held across every package, soonest to fall due first.\n\nRetention is other people's money sitting in a liability account. Nothing\non a project screen shows it, so without this list it is only ever found\nwhen somebody rings up and asks for it.",
+        "operationId": "retention_register",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RetentionRegisterRow"
+                  },
+                  "type": "array",
+                  "title": "Response Retention Register"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/subcontracts/{subcontract_id}/retention/release": {
+      "post": {
+        "tags": [
+          "subcontracts"
+        ],
+        "summary": "Release Retention",
+        "description": "Moves held retention into what the subcontractor is owed.",
+        "operationId": "release_retention",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subcontract_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Subcontract Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetentionReleaseCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetentionReleaseRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/subcontracts/{subcontract_id}/retention": {
+      "get": {
+        "tags": [
+          "subcontracts"
+        ],
+        "summary": "List Releases",
+        "operationId": "list_releases",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subcontract_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Subcontract Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RetentionReleaseRead"
+                  },
+                  "title": "Response List Releases"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sync/bootstrap/{project_id}": {
+      "get": {
+        "tags": [
+          "sync"
+        ],
+        "summary": "Get Bootstrap",
+        "description": "The small pack a device keeps so its forms still work with no signal.",
+        "operationId": "get_bootstrap",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bootstrap"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sync/push": {
+      "post": {
+        "tags": [
+          "sync"
+        ],
+        "summary": "Push",
+        "description": "Hand over everything a device captured while it was out of range.\n\nSafe to call with the same backlog twice: captures already taken come\nback marked `duplicate` rather than being written again.",
+        "operationId": "push",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncPush"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncPushResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/sync/rejected": {
+      "get": {
+        "tags": [
+          "sync"
+        ],
+        "summary": "List Rejected",
+        "description": "What this person sent up that could not be saved, and why.",
+        "operationId": "list_rejected",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SyncResult"
+                  },
+                  "title": "Response List Rejected"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/expenses": {
       "get": {
         "tags": [
@@ -8442,6 +8733,112 @@
             }
           }
         }
+      }
+    },
+    "/api/v1/equipment/{equipment_id}/costs": {
+      "get": {
+        "tags": [
+          "fleet"
+        ],
+        "summary": "Get Equipment Costs",
+        "description": "Fuel, workshop and downtime for one machine, and the cost per hour run.\n\nThe figure that decides keep-or-hire, and the one nobody has, because fuel\nsits in one system, the workshop in another and the hire invoice in a third.",
+        "operationId": "get_equipment_costs",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "equipment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Equipment Id"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 365,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EquipmentCosts"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fleet/telematics/import": {
+      "post": {
+        "tags": [
+          "fleet"
+        ],
+        "summary": "Import Telematics",
+        "description": "Take a period of readings and fills from a tracker or bowser export.\n\nEvery row is applied on its own, so a file that is partly wrong still\nlands the part that is right, and each refusal comes back with its line\nnumber and its reason.",
+        "operationId": "import_telematics",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TelematicsImport"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelematicsImportResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
       }
     },
     "/api/v1/stock-items": {
@@ -17883,6 +18280,164 @@
         ],
         "title": "Body_upload_media"
       },
+      "Bootstrap": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "project_code": {
+            "type": "string",
+            "title": "Project Code"
+          },
+          "project_name": {
+            "type": "string",
+            "title": "Project Name"
+          },
+          "server_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Server Time"
+          },
+          "workers": {
+            "items": {
+              "$ref": "#/components/schemas/BootstrapWorker"
+            },
+            "type": "array",
+            "title": "Workers"
+          },
+          "equipment": {
+            "items": {
+              "$ref": "#/components/schemas/BootstrapEquipment"
+            },
+            "type": "array",
+            "title": "Equipment"
+          },
+          "open_issues": {
+            "items": {
+              "$ref": "#/components/schemas/BootstrapIssue"
+            },
+            "type": "array",
+            "title": "Open Issues"
+          },
+          "diary_dates": {
+            "items": {
+              "type": "string",
+              "format": "date"
+            },
+            "type": "array",
+            "title": "Diary Dates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "project_code",
+          "project_name",
+          "server_time",
+          "workers",
+          "equipment",
+          "open_issues",
+          "diary_dates"
+        ],
+        "title": "Bootstrap",
+        "description": "Everything a phone needs to fill in the day's forms with no signal.\n\nDeliberately small. A pack that tries to mirror the database will not\nfinish downloading on the connection the site actually has."
+      },
+      "BootstrapEquipment": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "meter_type": {
+            "type": "string",
+            "title": "Meter Type"
+          },
+          "current_meter": {
+            "type": "number",
+            "title": "Current Meter"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "name",
+          "meter_type",
+          "current_meter"
+        ],
+        "title": "BootstrapEquipment"
+      },
+      "BootstrapIssue": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity"
+          },
+          "raised_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Raised Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "severity",
+          "raised_date"
+        ],
+        "title": "BootstrapIssue"
+      },
+      "BootstrapWorker": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "trade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trade"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "full_name"
+        ],
+        "title": "BootstrapWorker"
+      },
       "BoqItemCreate": {
         "properties": {
           "item_code": {
@@ -20953,6 +21508,101 @@
         ],
         "title": "EquipmentCategory"
       },
+      "EquipmentCosts": {
+        "properties": {
+          "equipment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Equipment Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "days": {
+            "type": "integer",
+            "title": "Days"
+          },
+          "fuel_litres": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Fuel Litres"
+          },
+          "fuel_cost": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Fuel Cost"
+          },
+          "workshop_cost": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Workshop Cost"
+          },
+          "downtime_hours": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Downtime Hours"
+          },
+          "total_cost": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Cost"
+          },
+          "metered": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metered"
+          },
+          "cost_per_unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Per Unit"
+          },
+          "meter_type": {
+            "type": "string",
+            "title": "Meter Type"
+          },
+          "hourly_rate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hourly Rate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "equipment_id",
+          "code",
+          "days",
+          "fuel_litres",
+          "fuel_cost",
+          "workshop_cost",
+          "downtime_hours",
+          "total_cost",
+          "meter_type"
+        ],
+        "title": "EquipmentCosts"
+      },
       "EquipmentCreate": {
         "properties": {
           "name": {
@@ -22915,6 +23565,40 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "ImportRowResult": {
+        "properties": {
+          "line": {
+            "type": "integer",
+            "title": "Line"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "line",
+          "code",
+          "status"
+        ],
+        "title": "ImportRowResult"
       },
       "IncomeStatement": {
         "properties": {
@@ -31261,6 +31945,184 @@
         ],
         "title": "RequisitionStatus"
       },
+      "RetentionRegisterRow": {
+        "properties": {
+          "subcontract_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Subcontract Id"
+          },
+          "doc_number": {
+            "type": "string",
+            "title": "Doc Number"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "supplier_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Supplier Id"
+          },
+          "supplier_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Name"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "ends_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends On"
+          },
+          "retention_outstanding": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Retention Outstanding"
+          },
+          "certified": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Certified"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subcontract_id",
+          "doc_number",
+          "title",
+          "project_id",
+          "supplier_id",
+          "status",
+          "retention_outstanding",
+          "certified"
+        ],
+        "title": "RetentionRegisterRow"
+      },
+      "RetentionReleaseCreate": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "released_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Released On"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "title": "RetentionReleaseCreate"
+      },
+      "RetentionReleaseRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "subcontract_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Subcontract Id"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount"
+          },
+          "released_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Released On"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "journal_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Journal Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "subcontract_id",
+          "amount",
+          "released_on",
+          "reason",
+          "journal_id"
+        ],
+        "title": "RetentionReleaseRead"
+      },
       "RevenueSummary": {
         "properties": {
           "project_id": {
@@ -34226,6 +35088,18 @@
             "title": "Retention Held",
             "default": "0"
           },
+          "retention_released": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Retention Released",
+            "default": "0"
+          },
+          "retention_outstanding": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Retention Outstanding",
+            "default": "0"
+          },
           "net_payable": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
@@ -34237,6 +35111,36 @@
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Remaining",
             "default": "0"
+          },
+          "releases": {
+            "items": {
+              "$ref": "#/components/schemas/RetentionReleaseRead"
+            },
+            "type": "array",
+            "title": "Releases",
+            "default": []
+          },
+          "project_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Name"
+          },
+          "vendor_compliant": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Compliant"
           }
         },
         "type": "object",
@@ -35327,6 +36231,163 @@
         "type": "object",
         "title": "SupplierUpdate"
       },
+      "SyncOperationIn": {
+        "properties": {
+          "client_op_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Client Op Id"
+          },
+          "op_type": {
+            "type": "string",
+            "maxLength": 40,
+            "title": "Op Type"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Payload",
+            "default": {}
+          },
+          "captured_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Captured At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "client_op_id",
+          "op_type"
+        ],
+        "title": "SyncOperationIn",
+        "description": "A capture from a device, exactly as it was written on site."
+      },
+      "SyncPush": {
+        "properties": {
+          "device_id": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Device Id"
+          },
+          "operations": {
+            "items": {
+              "$ref": "#/components/schemas/SyncOperationIn"
+            },
+            "type": "array",
+            "maxItems": 500,
+            "title": "Operations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "device_id"
+        ],
+        "title": "SyncPush"
+      },
+      "SyncPushResult": {
+        "properties": {
+          "applied": {
+            "type": "integer",
+            "title": "Applied"
+          },
+          "merged": {
+            "type": "integer",
+            "title": "Merged"
+          },
+          "duplicate": {
+            "type": "integer",
+            "title": "Duplicate"
+          },
+          "rejected": {
+            "type": "integer",
+            "title": "Rejected"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/SyncResult"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "server_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Server Time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "applied",
+          "merged",
+          "duplicate",
+          "rejected",
+          "results",
+          "server_time"
+        ],
+        "title": "SyncPushResult"
+      },
+      "SyncResult": {
+        "properties": {
+          "client_op_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Client Op Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "entity_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Type"
+          },
+          "entity_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Id"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "client_op_id",
+          "status"
+        ],
+        "title": "SyncResult"
+      },
       "TaskCreate": {
         "properties": {
           "name": {
@@ -36147,6 +37208,149 @@
         },
         "type": "object",
         "title": "TaskUpdate"
+      },
+      "TelematicsImport": {
+        "properties": {
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/TelematicsRow"
+            },
+            "type": "array",
+            "maxItems": 2000,
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "title": "TelematicsImport"
+      },
+      "TelematicsImportResult": {
+        "properties": {
+          "applied": {
+            "type": "integer",
+            "title": "Applied"
+          },
+          "rejected": {
+            "type": "integer",
+            "title": "Rejected"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/ImportRowResult"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "applied",
+          "rejected",
+          "results"
+        ],
+        "title": "TelematicsImportResult"
+      },
+      "TelematicsRow": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Code"
+          },
+          "reading_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reading Date"
+          },
+          "meter": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meter"
+          },
+          "idle_hours": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idle Hours"
+          },
+          "litres": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Litres"
+          },
+          "unit_cost": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Cost"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 60
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "TelematicsRow",
+        "description": "One line off a tracker export or a fuel bowser sheet."
       },
       "TimesheetBulkCreate": {
         "properties": {

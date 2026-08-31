@@ -192,3 +192,49 @@ class AssignmentRead(BaseModel):
     started_on: date
     ended_on: date | None
     notes: str | None
+
+
+class EquipmentCosts(BaseModel):
+    equipment_id: uuid.UUID
+    code: str
+    days: int
+    fuel_litres: Decimal
+    fuel_cost: Decimal
+    workshop_cost: Decimal
+    downtime_hours: Decimal
+    total_cost: Decimal
+    # Null when the meter never moved. A machine that did no work has no cost
+    # per hour, and a zero would read as "free".
+    metered: Decimal | None = None
+    cost_per_unit: Decimal | None = None
+    meter_type: str
+    hourly_rate: Decimal | None = None
+
+
+class TelematicsRow(BaseModel):
+    """One line off a tracker export or a fuel bowser sheet."""
+
+    code: str = Field(max_length=20)
+    reading_date: date | None = None
+    meter: Decimal | None = Field(default=None, ge=0)
+    idle_hours: Decimal | None = Field(default=None, ge=0)
+    litres: Decimal | None = Field(default=None, ge=0)
+    unit_cost: Decimal | None = Field(default=None, ge=0)
+    reference: str | None = Field(default=None, max_length=60)
+
+
+class TelematicsImport(BaseModel):
+    rows: list[TelematicsRow] = Field(default_factory=list, max_length=2000)
+
+
+class ImportRowResult(BaseModel):
+    line: int
+    code: str
+    status: str
+    detail: str | None = None
+
+
+class TelematicsImportResult(BaseModel):
+    applied: int
+    rejected: int
+    results: list[ImportRowResult]

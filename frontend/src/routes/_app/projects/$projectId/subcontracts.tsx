@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Handshake, Plus, Trash } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Can } from "@/components/layout/Can";
@@ -29,17 +29,12 @@ import {
 } from "@/components/ui/table";
 import { errDetail } from "@/lib/api/errors";
 import {
-  useAwardSubcontract,
-  useCertifyMilestone,
   useCreateSubcontract,
-  useGetSubcontract,
   useListSubcontracts,
   useListSuppliers,
-  useRejectMilestone,
-  useSubmitMilestone,
 } from "@/lib/api/generated/endpoints";
-import type { MilestoneRead, SubcontractRead } from "@/lib/api/generated/model";
-import { fmtDate, money, moneyExact } from "@/lib/format";
+import type { SubcontractRead } from "@/lib/api/generated/model";
+import { money, moneyExact } from "@/lib/format";
 import { toast } from "@/lib/toast";
 
 export const Route = createFileRoute("/_app/projects/$projectId/subcontracts")({
@@ -57,7 +52,6 @@ function ProjectSubcontracts() {
   const { projectId } = Route.useParams();
   const { data: contracts } = useListSubcontracts(projectId);
   const [createOpen, setCreateOpen] = useState(false);
-  const [openId, setOpenId] = useState<string | null>(null);
 
   const rows = contracts ?? [];
   const committed = rows.reduce((sum, c) => sum + Number(c.value), 0);
@@ -101,13 +95,25 @@ function ProjectSubcontracts() {
               </TableHeader>
               <TableBody>
                 {rows.map((contract: SubcontractRead) => (
-                  <TableRow
-                    key={contract.id}
-                    className="cursor-pointer"
-                    onClick={() => setOpenId(contract.id)}
-                  >
-                    <TableCell className="font-mono text-xs">{contract.doc_number}</TableCell>
-                    <TableCell className="font-medium">{contract.title}</TableCell>
+                  <TableRow key={contract.id}>
+                    <TableCell className="font-mono text-xs">
+                      <Link
+                        to="/subcontracts/$subcontractId"
+                        params={{ subcontractId: contract.id }}
+                        className="hover:underline"
+                      >
+                        {contract.doc_number}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      <Link
+                        to="/subcontracts/$subcontractId"
+                        params={{ subcontractId: contract.id }}
+                        className="hover:underline"
+                      >
+                        {contract.title}
+                      </Link>
+                    </TableCell>
                     <TableCell className="text-sm">{contract.supplier_name ?? "—"}</TableCell>
                     <TableCell className="text-right tabular-nums">
                       {moneyExact(contract.value)}
@@ -135,237 +141,6 @@ function ProjectSubcontracts() {
       </Card>
 
       <CreateDialog projectId={projectId} open={createOpen} onOpenChange={setCreateOpen} />
-      {openId && (
-        <SubcontractDialog
-          subcontractId={openId}
-          open={!!openId}
-          onOpenChange={(open) => !open && setOpenId(null)}
-        />
-      )}
-    </div>
-  );
-}
-
-/** The package itself: what is owed, what is held, and what is left to do.
- *
- *  Certified, retention and net are shown side by side because a
- *  subcontractor who reads only "certified" and gets paid the net will
- *  otherwise call about the difference every single month. */
-function SubcontractDialog({
-  subcontractId,
-  open,
-  onOpenChange,
-}: {
-  subcontractId: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const queryClient = useQueryClient();
-  const { data: contract } = useGetSubcontract(subcontractId);
-  const award = useAwardSubcontract();
-  const submit = useSubmitMilestone();
-  const certify = useCertifyMilestone();
-  const reject = useRejectMilestone();
-  const [rejecting, setRejecting] = useState<MilestoneRead | null>(null);
-  const [reason, setReason] = useState("");
-
-  const run = async (fn: () => Promise<unknown>, done: string) => {
-    try {
-      await fn();
-      await queryClient.invalidateQueries();
-      toast.success(done);
-    } catch (err) {
-      toast.error(errDetail(err));
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>
-            {contract ? `${contract.doc_number} · ${contract.title}` : "Subcontract"}
-          </DialogTitle>
-        </DialogHeader>
-
-        {contract && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <Figure label="Value" value={moneyExact(contract.value)} />
-              <Figure label="Certified" value={moneyExact(contract.certified)} />
-              <Figure
-                label="Retention held"
-                value={moneyExact(contract.retention_held)}
-                hint={`${Number(contract.retention_pct)}% of each stage`}
-              />
-              <Figure label="Net payable" value={moneyExact(contract.net_payable)} />
-            </div>
-
-            {contract.status === "draft" && (
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-warning/30 bg-warning/5 px-3 py-2 text-sm">
-                <span className="text-warning">
-                  Not awarded yet. Awarding checks the subcontractor's paperwork and refuses if
-                  anything mandatory has lapsed.
-                </span>
-                <Can perm="procurement:write">
-                  <Button
-                    size="sm"
-                    onClick={() =>
-                      void run(
-                        () => award.mutateAsync({ subcontractId }),
-                        "Awarded",
-                      )
-                    }
-                  >
-                    Award
-                  </Button>
-                </Can>
-              </div>
-            )}
-
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Stage</TableHead>
-                  <TableHead>Due</TableHead>
-                  <TableHead className="text-right">Priced at</TableHead>
-                  <TableHead className="text-right">Certified</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-40" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(contract.milestones ?? []).map((milestone) => (
-                  <TableRow key={milestone.id}>
-                    <TableCell className="font-medium">{milestone.name}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {milestone.due_date ? fmtDate(milestone.due_date) : "—"}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {moneyExact(milestone.value)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {milestone.certified_amount ? moneyExact(milestone.certified_amount) : "—"}
-                    </TableCell>
-                    <TableCell>
-                      <MilestoneBadge milestone={milestone} />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {contract.status === "awarded" && milestone.status === "pending" && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            void run(
-                              () => submit.mutateAsync({ milestoneId: milestone.id }),
-                              "Sent for certification",
-                            )
-                          }
-                        >
-                          Claim
-                        </Button>
-                      )}
-                      {contract.status === "awarded" && milestone.status === "submitted" && (
-                        <Can perm="project:write">
-                          <div className="flex justify-end gap-1.5">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setRejecting(milestone);
-                                setReason("");
-                              }}
-                            >
-                              Reject
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() =>
-                                void run(
-                                  () =>
-                                    certify.mutateAsync({
-                                      milestoneId: milestone.id,
-                                      data: {},
-                                    }),
-                                  "Certified",
-                                )
-                              }
-                            >
-                              Certify
-                            </Button>
-                          </div>
-                        </Can>
-                      )}
-                      {milestone.status === "rejected" && milestone.rejection_reason && (
-                        <span className="text-xs text-muted-foreground">
-                          {milestone.rejection_reason}
-                        </span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-
-            {rejecting && (
-              <div className="space-y-2 rounded-md border p-3">
-                <Label htmlFor="reject-reason">
-                  Why {rejecting.name} is going back
-                </Label>
-                <Textarea
-                  id="reject-reason"
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  placeholder="What has to be put right before this stage can be signed off"
-                />
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setRejecting(null)}>
-                    Cancel
-                  </Button>
-                  <Button
-                    size="sm"
-                    disabled={!reason.trim()}
-                    onClick={() =>
-                      void run(async () => {
-                        await reject.mutateAsync({
-                          milestoneId: rejecting.id,
-                          data: { reason },
-                        });
-                        setRejecting(null);
-                      }, "Sent back")
-                    }
-                  >
-                    Send Back
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function MilestoneBadge({ milestone }: { milestone: MilestoneRead }) {
-  switch (milestone.status) {
-    case "certified":
-      return <Badge variant="success">Certified {fmtDate(milestone.certified_on ?? null)}</Badge>;
-    case "submitted":
-      return <Badge variant="warning">Awaiting sign-off</Badge>;
-    case "rejected":
-      return <Badge variant="destructive">Sent back</Badge>;
-    default:
-      return <Badge variant="outline">Not started</Badge>;
-  }
-}
-
-function Figure({ label, value, hint }: { label: string; value: string; hint?: string }) {
-  return (
-    <div className="rounded-md border p-3">
-      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="mt-0.5 text-lg font-semibold tabular-nums">{value}</div>
-      {hint && <div className="text-xs text-muted-foreground">{hint}</div>}
     </div>
   );
 }

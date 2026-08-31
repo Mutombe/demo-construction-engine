@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { MilestoneRead } from './milestoneRead.ts';
+import type { RetentionReleaseRead } from './retentionReleaseRead.ts';
 import type { SubcontractStatus } from './subcontractStatus.ts';
 
 export interface SubcontractDetail {
@@ -29,7 +30,14 @@ export interface SubcontractDetail {
   /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
   retention_held?: string;
   /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
+  retention_released?: string;
+  /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
+  retention_outstanding?: string;
+  /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
   net_payable?: string;
   /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
   remaining?: string;
+  releases?: RetentionReleaseRead[];
+  project_name?: string | null;
+  vendor_compliant?: boolean | null;
 }

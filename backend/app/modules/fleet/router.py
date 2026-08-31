@@ -21,6 +21,7 @@ from app.modules.fleet.models import (
 from app.modules.fleet.schemas import (
     AssignmentCreate,
     AssignmentRead,
+    EquipmentCosts,
     EquipmentCreate,
     EquipmentRead,
     EquipmentUpdate,
@@ -32,6 +33,8 @@ from app.modules.fleet.schemas import (
     MeterReadingRead,
     ScheduleCreate,
     ScheduleRead,
+    TelematicsImport,
+    TelematicsImportResult,
 )
 
 router = APIRouter(tags=["fleet"])
@@ -268,3 +271,26 @@ def release_equipment(
     equipment_id: uuid.UUID, db: DbDep, _=fleet_write, when: date | None = None
 ) -> EquipmentRead:
     return _read(service.release(db, equipment_id, when))
+
+
+@router.get("/equipment/{equipment_id}/costs", response_model=EquipmentCosts)
+def get_equipment_costs(equipment_id: uuid.UUID, db: DbDep, days: int = 365) -> EquipmentCosts:
+    """Fuel, workshop and downtime for one machine, and the cost per hour run.
+
+    The figure that decides keep-or-hire, and the one nobody has, because fuel
+    sits in one system, the workshop in another and the hire invoice in a third.
+    """
+    return service.equipment_costs(db, equipment_id, days)
+
+
+@router.post("/fleet/telematics/import", response_model=TelematicsImportResult)
+def import_telematics(
+    body: TelematicsImport, db: DbDep, user: CurrentUser, _=fleet_write
+) -> TelematicsImportResult:
+    """Take a period of readings and fills from a tracker or bowser export.
+
+    Every row is applied on its own, so a file that is partly wrong still
+    lands the part that is right, and each refusal comes back with its line
+    number and its reason.
+    """
+    return service.import_telematics(db, body.rows, user)

@@ -431,3 +431,130 @@ def test_only_a_project_manager_certifies(client, db):
         headers=officer,
     )
     assert res.status_code == 403
+
+
+# --- Retention releases ------------------------------------------------------
+#
+# Retention is somebody else's money being held in our books. Getting it back
+# out is a separate act from certifying the work, and the two must not be able
+# to drift apart.
+
+
+def _certified_package(client, headers, db):
+    """A package with one stage certified, so 10% is being held."""
+    project = make_project(db)
+    supplier = make_supplier(db)
+    _make_compliant(client, headers, supplier)
+    contract = _subcontract(client, headers, project, supplier)
+    client.post(f"/api/v1/subcontracts/{contract['id']}/award", headers=headers)
+
+    milestone = contract["milestones"][0]
+    client.post(f"/api/v1/milestones/{milestone['id']}/submit", headers=headers)
+    res = client.post(
+        f"/api/v1/milestones/{milestone['id']}/certify", json={}, headers=headers
+    )
+    assert res.status_code == 200, res.text
+    return contract
+
+
+def test_certifying_holds_retention_that_shows_as_outstanding(client, db):
+    headers = _pm(db)
+    contract = _certified_package(client, headers, db)
+
+    detail = client.get(f"/api/v1/subcontracts/{contract['id']}", headers=headers).json()
+    assert Decimal(detail["retention_held"]) == Decimal("4000.00")
+    assert Decimal(detail["retention_released"]) == Decimal("0.00")
+    assert Decimal(detail["retention_outstanding"]) == Decimal("4000.00")
+
+
+def test_retention_can_be_released_in_part_and_the_rest_stays_held(client, db):
+    headers = _pm(db)
+    contract = _certified_package(client, headers, db)
+
+    res = client.post(
+        f"/api/v1/subcontracts/{contract['id']}/retention/release",
+        json={"amount": "1500", "reason": "Practical completion"},
+        headers=headers,
+    )
+    assert res.status_code == 201, res.text
+
+    detail = client.get(f"/api/v1/subcontracts/{contract['id']}", headers=headers).json()
+    assert Decimal(detail["retention_released"]) == Decimal("1500.00")
+    assert Decimal(detail["retention_outstanding"]) == Decimal("2500.00")
+    # The history survives; it is not netted away.
+    assert len(detail["releases"]) == 1
+    assert detail["releases"][0]["reason"] == "Practical completion"
+
+
+def test_more_retention_than_is_held_is_refused(client, db):
+    headers = _pm(db)
+    contract = _certified_package(client, headers, db)
+
+    res = client.post(
+        f"/api/v1/subcontracts/{contract['id']}/retention/release",
+        json={"amount": "9000"},
+        headers=headers,
+    )
+    assert res.status_code == 422
+    assert "4000" in res.json()["error"]["detail"]
+
+
+def test_releasing_twice_cannot_double_what_is_owed(client, db):
+    headers = _pm(db)
+    contract = _certified_package(client, headers, db)
+    url = f"/api/v1/subcontracts/{contract['id']}/retention/release"
+
+    assert client.post(url, json={}, headers=headers).status_code == 201
+    second = client.post(url, json={}, headers=headers)
+    assert second.status_code == 409
+    assert "no retention left" in second.json()["error"]["detail"].lower()
+
+
+def test_a_release_moves_the_money_rather_than_costing_the_job(client, db):
+    """Releasing retention is a balance-sheet move. The cost was taken when
+    the stage was certified, and taking it again would overstate the job."""
+    headers = _pm(db)
+    contract = _certified_package(client, headers, db)
+    project_id = contract["project_id"]
+
+    before = client.get(f"/api/v1/projects/{project_id}/summary", headers=headers).json()
+    client.post(
+        f"/api/v1/subcontracts/{contract['id']}/retention/release",
+        json={},
+        headers=headers,
+    )
+    after = client.get(f"/api/v1/projects/{project_id}/summary", headers=headers).json()
+
+    assert Decimal(after["actual_total"]) == Decimal(before["actual_total"])
+
+
+def test_the_retention_register_lists_what_is_still_held(client, db):
+    headers = _pm(db)
+    contract = _certified_package(client, headers, db)
+
+    register = client.get("/api/v1/retention", headers=headers).json()
+    row = next(r for r in register if r["subcontract_id"] == contract["id"])
+    assert Decimal(row["retention_outstanding"]) == Decimal("4000.00")
+
+    client.post(
+        f"/api/v1/subcontracts/{contract['id']}/retention/release",
+        json={},
+        headers=headers,
+    )
+    register = client.get("/api/v1/retention", headers=headers).json()
+    assert all(r["subcontract_id"] != contract["id"] for r in register)
+
+
+def test_a_package_with_nothing_certified_has_nothing_to_release(client, db):
+    headers = _pm(db)
+    project = make_project(db)
+    supplier = make_supplier(db)
+    _make_compliant(client, headers, supplier)
+    contract = _subcontract(client, headers, project, supplier)
+
+    res = client.post(
+        f"/api/v1/subcontracts/{contract['id']}/retention/release",
+        json={},
+        headers=headers,
+    )
+    assert res.status_code == 409

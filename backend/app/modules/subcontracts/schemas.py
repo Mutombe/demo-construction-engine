@@ -146,12 +146,48 @@ class SubcontractRead(BaseModel):
     awarded_at: datetime | None
 
 
+class RetentionReleaseCreate(BaseModel):
+    # Omit to release everything still held.
+    amount: Decimal | None = Field(default=None, gt=0)
+    released_on: date | None = None
+    reason: str | None = None
+
+
+class RetentionReleaseRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    subcontract_id: uuid.UUID
+    amount: Decimal
+    released_on: date
+    reason: str | None
+    journal_id: uuid.UUID | None
+
+
+class RetentionRegisterRow(BaseModel):
+    subcontract_id: uuid.UUID
+    doc_number: str
+    title: str
+    project_id: uuid.UUID
+    supplier_id: uuid.UUID
+    supplier_name: str | None = None
+    status: str
+    ends_on: date | None = None
+    retention_outstanding: Decimal
+    certified: Decimal
+
+
 class SubcontractDetail(SubcontractRead):
     milestones: list[MilestoneRead] = []
     certified: Decimal = Decimal("0")
     retention_held: Decimal = Decimal("0")
+    retention_released: Decimal = Decimal("0")
+    retention_outstanding: Decimal = Decimal("0")
     net_payable: Decimal = Decimal("0")
     remaining: Decimal = Decimal("0")
+    releases: list[RetentionReleaseRead] = []
+    project_name: str | None = None
+    vendor_compliant: bool | None = None
 
 
 class CertifyRequest(BaseModel):

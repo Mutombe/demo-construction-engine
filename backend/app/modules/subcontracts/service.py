@@ -30,6 +30,7 @@ from app.modules.procurement.models import Supplier
 from app.modules.subcontracts.models import (
     ComplianceDocument,
     ComplianceRequirement,
+    RetentionRelease,
     Subcontract,
     SubcontractMilestone,
 )
@@ -432,13 +433,128 @@ def subcontract_summary(db: Session, subcontract_id: uuid.UUID) -> dict:
             retention += Decimal(milestone.retention_held or 0)
         else:
             remaining += Decimal(milestone.value)
+    released = db.scalar(
+        select(func.coalesce(func.sum(RetentionRelease.amount), 0)).where(
+            RetentionRelease.subcontract_id == contract.id
+        )
+    ) or ZERO
+    released = Decimal(released)
+
     return {
         "subcontract_id": contract.id,
         "doc_number": contract.doc_number,
         "value": Decimal(contract.value),
         "certified": certified.quantize(CENT),
+        # What was withheld across every certificate, and what of it is still
+        # being held. Kept apart because the first is the history and the
+        # second is the liability, and a part-release makes them differ.
         "retention_held": retention.quantize(CENT),
+        "retention_released": released.quantize(CENT),
+        "retention_outstanding": (retention - released).quantize(CENT),
         "net_payable": (certified - retention).quantize(CENT),
         "remaining": remaining.quantize(CENT),
         "status": contract.status.value,
     }
+
+
+def release_retention(db: Session, subcontract_id: uuid.UUID, data, user=None):
+    """Hand back what was held, once the defects period is done with.
+
+    Retention moves out of the account it was parked in and into what the
+    subcontractor is actually owed. It is not a cost — the cost was taken when
+    the stage was certified — so nothing touches the job here, and releasing it
+    twice is refused rather than quietly doubling what is payable.
+    """
+    from app.modules.accounting import service as accounting
+    from app.modules.accounting import subsidiary
+
+    contract = get_subcontract(db, subcontract_id)
+    if contract.status is SubcontractStatus.draft:
+        raise ConflictError("Nothing has been certified on this package yet")
+
+    summary = subcontract_summary(db, subcontract_id)
+    available = Decimal(summary["retention_outstanding"])
+    if available <= 0:
+        raise ConflictError("There is no retention left to release on this package")
+
+    amount = Decimal(data.amount) if data.amount is not None else available
+    if amount <= 0:
+        raise ValidationFailedError("A release has to be worth something")
+    if amount > available:
+        raise ValidationFailedError(
+            f"Only {available} is still held on {contract.doc_number}"
+        )
+
+    released_on = data.released_on or date.today()
+    accounting.ensure_chart(db)
+    journal = accounting.create_journal(
+        db,
+        journal_date=released_on,
+        memo=f"{contract.doc_number} retention released",
+        source=JournalSource.manual,
+        project_id=contract.project_id,
+        created_by=getattr(user, "id", None),
+        lines=[
+            {"account_code": accounting.RETENTION_PAYABLE, "debit": amount},
+            {
+                "account_code": accounting.ACCOUNTS_PAYABLE,
+                "credit": amount,
+                "subsidiary_id": subsidiary.pocket_for(db, "supplier", contract.supplier_id).id,
+            },
+        ],
+    )
+    accounting.post(db, journal.id, user)
+
+    release = RetentionRelease(
+        subcontract_id=contract.id,
+        amount=amount,
+        released_on=released_on,
+        reason=data.reason,
+        journal_id=journal.id,
+        created_by=getattr(user, "id", None),
+    )
+    db.add(release)
+    db.flush()
+    return release
+
+
+def list_retention_releases(db: Session, subcontract_id: uuid.UUID):
+    return list(
+        db.scalars(
+            select(RetentionRelease)
+            .where(RetentionRelease.subcontract_id == subcontract_id)
+            .order_by(RetentionRelease.released_on.desc())
+        )
+    )
+
+
+def retention_register(db: Session):
+    """Everything still held across every package, oldest first.
+
+    This is the list somebody has to work through: money sitting in a
+    liability account that belongs to somebody else and gets forgotten,
+    because nothing on a project screen ever shows it.
+    """
+    rows = []
+    for contract in db.scalars(
+        select(Subcontract).where(Subcontract.status != SubcontractStatus.draft)
+    ):
+        summary = subcontract_summary(db, contract.id)
+        if Decimal(summary["retention_outstanding"]) <= 0:
+            continue
+        rows.append(
+            {
+                "subcontract_id": contract.id,
+                "doc_number": contract.doc_number,
+                "title": contract.title,
+                "project_id": contract.project_id,
+                "supplier_id": contract.supplier_id,
+                "supplier_name": contract.supplier.name if contract.supplier else None,
+                "status": contract.status.value,
+                "ends_on": contract.ends_on,
+                "retention_outstanding": summary["retention_outstanding"],
+                "certified": summary["certified"],
+            }
+        )
+    rows.sort(key=lambda row: (row["ends_on"] or date.max))
+    return rows

@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Drop, Gauge, Plus, Truck } from "@phosphor-icons/react";
+import { Drop, Gauge, Plus, Truck, Wrench } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Badge } from "@/components/ui/badge";
@@ -31,12 +31,16 @@ import { errDetail } from "@/lib/api/errors";
 import {
   useAssignEquipment,
   useCreateFuel,
+  useCreateMaintenance,
   useCreateReading,
   useGetEquipment,
+  useGetEquipmentCosts,
   useListAssignments,
   useListFuel,
+  useListMaintenance,
   useListProjects,
   useListReadings,
+  useListSchedules,
   useReleaseEquipment,
 } from "@/lib/api/generated/endpoints";
 import { fmtDate, moneyExact } from "@/lib/format";
@@ -53,11 +57,15 @@ function EquipmentDetail() {
   const { data: readings } = useListReadings(equipmentId, {});
   const { data: fuel } = useListFuel(equipmentId, {});
   const { data: assignments } = useListAssignments(equipmentId);
+  const { data: maintenance } = useListMaintenance(equipmentId);
+  const { data: schedules } = useListSchedules(equipmentId);
+  const { data: costs } = useGetEquipmentCosts(equipmentId, {});
   const release = useReleaseEquipment();
 
   const [readingOpen, setReadingOpen] = useState(false);
   const [fuelOpen, setFuelOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
+  const [serviceOpen, setServiceOpen] = useState(false);
 
   if (!machine) return <PageSkeleton rows={4} />;
 
@@ -101,6 +109,9 @@ function EquipmentDetail() {
           </Button>
           <Button variant="outline" onClick={() => setFuelOpen(true)}>
             <Drop /> Fuel
+          </Button>
+          <Button variant="outline" onClick={() => setServiceOpen(true)}>
+            <Wrench /> Service
           </Button>
           {machine.current_project_id ? (
             <Button variant="outline" onClick={() => void bringBack()}>
@@ -196,6 +207,46 @@ function EquipmentDetail() {
 
           <Card>
             <CardHeader>
+              <CardTitle className="text-base">Workshop</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              {maintenance?.length ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Work</TableHead>
+                      <TableHead className="text-right">Meter</TableHead>
+                      <TableHead className="text-right">Cost</TableHead>
+                      <TableHead className="text-right">Off the job</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {maintenance.map((job) => (
+                      <TableRow key={job.id}>
+                        <TableCell className="text-sm">{fmtDate(job.service_date)}</TableCell>
+                        <TableCell className="text-sm">{job.description}</TableCell>
+                        <TableCell className="text-right tabular-nums text-muted-foreground">
+                          {job.meter ? Number(job.meter).toLocaleString() : "—"}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {job.cost ? moneyExact(job.cost) : "—"}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-muted-foreground">
+                          {job.downtime_hours ? `${Number(job.downtime_hours)} hrs` : "—"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <EmptyState icon={<Wrench />} title="Never been in" />
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle className="text-base">Notes</CardTitle>
             </CardHeader>
             <CardContent>
@@ -230,6 +281,87 @@ function EquipmentDetail() {
 
           <Card>
             <CardHeader>
+              <CardTitle className="text-base">What it costs</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              {costs ? (
+                <>
+                  <Row label="Fuel" value={moneyExact(costs.fuel_cost)} />
+                  <Row label="Workshop" value={moneyExact(costs.workshop_cost)} />
+                  <div className="flex items-baseline justify-between border-t pt-2">
+                    <span className="text-muted-foreground">Last 12 months</span>
+                    <span className="font-semibold tabular-nums">
+                      {moneyExact(costs.total_cost)}
+                    </span>
+                  </div>
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-muted-foreground">
+                      Per {costs.meter_type === "hours" ? "hour" : "km"} run
+                    </span>
+                    <span className="font-medium tabular-nums">
+                      {costs.cost_per_unit ? moneyExact(costs.cost_per_unit) : "Not measured"}
+                    </span>
+                  </div>
+                  {costs.hourly_rate && costs.cost_per_unit && (
+                    <p
+                      className={
+                        Number(costs.cost_per_unit) > Number(costs.hourly_rate)
+                          ? "text-xs text-destructive"
+                          : "text-xs text-muted-foreground"
+                      }
+                    >
+                      {Number(costs.cost_per_unit) > Number(costs.hourly_rate)
+                        ? `Charged out at ${moneyExact(costs.hourly_rate)} and costing more than that to run.`
+                        : `Charged out at ${moneyExact(costs.hourly_rate)}.`}
+                    </p>
+                  )}
+                  {!costs.cost_per_unit && (
+                    <p className="text-xs text-muted-foreground">
+                      The meter has not moved in this window, so there is no cost per hour to
+                      report. A zero here would read as free.
+                    </p>
+                  )}
+                </>
+              ) : null}
+            </CardContent>
+          </Card>
+
+          {schedules && schedules.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Servicing</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                {schedules.map((schedule) => {
+                  const nextAt = schedule.last_done_meter && schedule.interval_meter
+                    ? Number(schedule.last_done_meter) + Number(schedule.interval_meter)
+                    : null;
+                  const toGo = nextAt !== null ? nextAt - Number(machine.current_meter) : null;
+                  return (
+                    <div key={schedule.id} className="flex items-baseline justify-between gap-2">
+                      <span className="truncate">{schedule.name}</span>
+                      <span
+                        className={
+                          toGo !== null && toGo <= 50
+                            ? "shrink-0 font-medium text-warning"
+                            : "shrink-0 text-muted-foreground"
+                        }
+                      >
+                        {toGo === null
+                          ? "On date only"
+                          : toGo <= 0
+                            ? `${Math.abs(toGo).toLocaleString()} ${unit} overdue`
+                            : `${toGo.toLocaleString()} ${unit} to go`}
+                      </span>
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          )}
+
+          <Card>
+            <CardHeader>
               <CardTitle className="text-base">Been on</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -259,6 +391,12 @@ function EquipmentDetail() {
         unit={unit}
       />
       <FuelDialog equipmentId={equipmentId} open={fuelOpen} onOpenChange={setFuelOpen} />
+      <ServiceDialog
+        equipmentId={equipmentId}
+        schedules={schedules ?? []}
+        open={serviceOpen}
+        onOpenChange={setServiceOpen}
+      />
       <AssignDialog equipmentId={equipmentId} open={assignOpen} onOpenChange={setAssignOpen} />
     </div>
   );
@@ -518,6 +656,144 @@ function AssignDialog({
           </Button>
           <Button disabled={!projectId || assign.isPending} onClick={() => void submit()}>
             <Plus /> Send
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ServiceDialog({
+  equipmentId,
+  schedules,
+  open,
+  onOpenChange,
+}: {
+  equipmentId: string;
+  schedules: { id: string; name: string }[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const queryClient = useQueryClient();
+  const create = useCreateMaintenance();
+  const [form, setForm] = useState({
+    schedule_id: "",
+    description: "",
+    cost: "",
+    downtime_hours: "",
+    meter: "",
+    reference: "",
+  });
+
+  const submit = async () => {
+    try {
+      await create.mutateAsync({
+        equipmentId,
+        data: {
+          schedule_id: form.schedule_id || null,
+          description: form.description,
+          cost: form.cost || null,
+          downtime_hours: form.downtime_hours || null,
+          meter: form.meter || null,
+          reference: form.reference || null,
+        },
+      });
+      await queryClient.invalidateQueries();
+      setForm({
+        schedule_id: "",
+        description: "",
+        cost: "",
+        downtime_hours: "",
+        meter: "",
+        reference: "",
+      });
+      onOpenChange(false);
+      toast.success("Service recorded");
+    } catch (err) {
+      toast.error(errDetail(err));
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Record a service</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {schedules.length > 0 && (
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label htmlFor="s-schedule">Against a schedule</Label>
+              <Select
+                id="s-schedule"
+                value={form.schedule_id}
+                onChange={(e) => setForm({ ...form, schedule_id: e.target.value })}
+              >
+                <option value="">Unplanned work</option>
+                {schedules.map((schedule) => (
+                  <option key={schedule.id} value={schedule.id}>
+                    {schedule.name}
+                  </option>
+                ))}
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Naming the schedule is what resets the clock on it. Unplanned work does not.
+              </p>
+            </div>
+          )}
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label htmlFor="s-desc">What was done</Label>
+            <Input
+              id="s-desc"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="s-meter">Meter at service</Label>
+            <Input
+              id="s-meter"
+              inputMode="decimal"
+              value={form.meter}
+              onChange={(e) => setForm({ ...form, meter: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="s-cost">Cost</Label>
+            <Input
+              id="s-cost"
+              inputMode="decimal"
+              value={form.cost}
+              onChange={(e) => setForm({ ...form, cost: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="s-downtime">Hours off the job</Label>
+            <Input
+              id="s-downtime"
+              inputMode="decimal"
+              value={form.downtime_hours}
+              onChange={(e) => setForm({ ...form, downtime_hours: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="s-ref">Job card</Label>
+            <Input
+              id="s-ref"
+              value={form.reference}
+              onChange={(e) => setForm({ ...form, reference: e.target.value })}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button
+            disabled={!form.description.trim() || create.isPending}
+            onClick={() => void submit()}
+          >
+            Save
           </Button>
         </DialogFooter>
       </DialogContent>
