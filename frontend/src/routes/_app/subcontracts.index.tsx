@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatCard } from "@/components/ui/stat-card";
+import { TableSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -59,9 +60,9 @@ const TABS: { key: Tab; label: string }[] = [
 function SubcontractRegister() {
   const { tab = "packages" } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
-  const { data: packages } = useListAllSubcontracts({});
-  const { data: retention } = useRetentionRegister();
-  const { data: expiring } = useGetExpiring({ days: 60 });
+  const { data: packages, isLoading: loadingPackages } = useListAllSubcontracts({});
+  const { data: retention, isLoading: loadingRetention } = useRetentionRegister();
+  const { data: expiring, isLoading: loadingExpiring } = useGetExpiring({ days: 60 });
 
   const rows = packages ?? [];
   const live = rows.filter((row) => row.status === "awarded");
@@ -123,7 +124,9 @@ function SubcontractRegister() {
       {tab === "packages" && (
         <Card>
           <CardContent className="p-0">
-            {rows.length ? (
+            {loadingPackages && !packages ? (
+              <TableSkeleton columns={7} />
+            ) : rows.length ? (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -195,7 +198,9 @@ function SubcontractRegister() {
               them, and nothing on a project screen shows it — so without this list it is only
               found when somebody rings up and asks.
             </div>
-            {(retention ?? []).length ? (
+            {loadingRetention && !retention ? (
+              <TableSkeleton columns={6} />
+            ) : (retention ?? []).length ? (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -252,7 +257,9 @@ function SubcontractRegister() {
               Certificates lapsing in the next 60 days, across every vendor. Chased before it
               stops a job rather than after.
             </div>
-            {(expiring ?? []).length ? (
+            {loadingExpiring && !expiring ? (
+              <TableSkeleton columns={5} />
+            ) : (expiring ?? []).length ? (
               <Table>
                 <TableHeader>
                   <TableRow>

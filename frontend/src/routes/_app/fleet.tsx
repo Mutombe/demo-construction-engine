@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import { Select } from "@/components/ui/select";
+import { StatCard } from "@/components/ui/stat-card";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -98,19 +99,24 @@ function FleetPage() {
 
       {summary && (
         <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat label="Machines" value={Number(summary.total)} icon={<Truck />} />
-          <Stat label="On site" value={Number(summary.on_site)} icon={<Truck />} tone="success" />
-          <Stat
-            label="Service due"
+          <StatCard label="Machines" value={Number(summary.total)} icon={<Truck />} sub="on the register" />
+          <StatCard
+            label="On Site"
+            value={Number(summary.on_site)}
+            icon={<Truck />}
+            tone="positive"
+          />
+          <StatCard
+            label="Service Due"
             value={Number(summary.maintenance_due)}
             icon={<Wrench />}
-            tone={Number(summary.maintenance_due) > 0 ? "warning" : undefined}
+            tone={Number(summary.maintenance_due) > 0 ? "negative" : "default"}
           />
-          <Stat
-            label="Fuel to review"
+          <StatCard
+            label="Fuel To Review"
             value={Number(summary.fuel_exceptions)}
             icon={<Drop />}
-            tone={Number(summary.fuel_exceptions) > 0 ? "warning" : undefined}
+            tone={Number(summary.fuel_exceptions) > 0 ? "negative" : "default"}
           />
         </div>
       )}
@@ -143,41 +149,6 @@ function FleetPage() {
       {tab === "fuel" && <Fuel />}
       {tab === "maintenance" && <Maintenance />}
     </div>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  icon,
-  tone,
-}: {
-  label: string;
-  value: number;
-  icon: React.ReactNode;
-  tone?: "success" | "warning";
-}) {
-  return (
-    <Card>
-      <CardContent className="flex items-center gap-3 p-4">
-        <span
-          className={cn(
-            "flex size-9 items-center justify-center rounded-lg [&_svg]:size-4.5",
-            tone === "warning"
-              ? "bg-warning/15 text-warning"
-              : tone === "success"
-                ? "bg-success/10 text-success"
-                : "bg-secondary text-secondary-foreground",
-          )}
-        >
-          {icon}
-        </span>
-        <div>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-          <p className="text-xl font-semibold tabular-nums">{value}</p>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 

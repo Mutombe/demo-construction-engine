@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Drop, Gauge, Plus, Truck, Wrench } from "@phosphor-icons/react";
+import { Drop, Gauge, PencilSimple, Plus, Truck, Wrench } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +42,7 @@ import {
   useListReadings,
   useListSchedules,
   useReleaseEquipment,
+  useUpdateEquipment,
 } from "@/lib/api/generated/endpoints";
 import { fmtDate, moneyExact } from "@/lib/format";
 import { toast } from "@/lib/toast";
@@ -66,6 +67,7 @@ function EquipmentDetail() {
   const [fuelOpen, setFuelOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
   const [serviceOpen, setServiceOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   if (!machine) return <PageSkeleton rows={4} />;
 
@@ -112,6 +114,9 @@ function EquipmentDetail() {
           </Button>
           <Button variant="outline" onClick={() => setServiceOpen(true)}>
             <Wrench /> Service
+          </Button>
+          <Button variant="outline" onClick={() => setEditOpen(true)}>
+            <PencilSimple /> Edit
           </Button>
           {machine.current_project_id ? (
             <Button variant="outline" onClick={() => void bringBack()}>
@@ -397,6 +402,7 @@ function EquipmentDetail() {
         open={serviceOpen}
         onOpenChange={setServiceOpen}
       />
+      <EditDialog machine={machine} open={editOpen} onOpenChange={setEditOpen} />
       <AssignDialog equipmentId={equipmentId} open={assignOpen} onOpenChange={setAssignOpen} />
     </div>
   );
@@ -793,6 +799,136 @@ function ServiceDialog({
             disabled={!form.description.trim() || create.isPending}
             onClick={() => void submit()}
           >
+            Save
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** Correcting the register.
+ *
+ *  Only the things that legitimately change: what it is called, what it is
+ *  charged out at, and where it is. The meter is not here — it moves by being
+ *  read, and letting somebody type it would undo the one rule that keeps
+ *  utilisation honest. */
+function EditDialog({
+  machine,
+  open,
+  onOpenChange,
+}: {
+  machine: {
+    id: string;
+    name: string;
+    status: string;
+    hourly_rate?: string | number | null;
+    expected_burn_rate?: string | number | null;
+    registration?: string | null;
+    notes?: string | null;
+  };
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const queryClient = useQueryClient();
+  const update = useUpdateEquipment();
+  const [form, setForm] = useState({
+    name: machine.name,
+    status: machine.status,
+    hourly_rate: machine.hourly_rate != null ? String(machine.hourly_rate) : "",
+    expected_burn_rate:
+      machine.expected_burn_rate != null ? String(machine.expected_burn_rate) : "",
+    registration: machine.registration ?? "",
+    notes: machine.notes ?? "",
+  });
+
+  const submit = async () => {
+    try {
+      await update.mutateAsync({
+        equipmentId: machine.id,
+        data: {
+          name: form.name,
+          status: form.status as never,
+          hourly_rate: form.hourly_rate || null,
+          expected_burn_rate: form.expected_burn_rate || null,
+          registration: form.registration || null,
+          notes: form.notes || null,
+        },
+      });
+      await queryClient.invalidateQueries();
+      onOpenChange(false);
+      toast.success("Register updated");
+    } catch (err) {
+      toast.error(errDetail(err));
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit {machine.name}</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label htmlFor="ed-name">Description</Label>
+            <Input
+              id="ed-name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="ed-status">Status</Label>
+            <Select
+              id="ed-status"
+              value={form.status}
+              onChange={(e) => setForm({ ...form, status: e.target.value })}
+            >
+              <option value="available">Available</option>
+              <option value="on_site">On Site</option>
+              <option value="workshop">In The Workshop</option>
+              <option value="standing">Standing</option>
+              <option value="off_hired">Off Hired</option>
+              <option value="disposed">Disposed</option>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="ed-reg">Registration</Label>
+            <Input
+              id="ed-reg"
+              value={form.registration}
+              onChange={(e) => setForm({ ...form, registration: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="ed-rate">Charge-out rate</Label>
+            <Input
+              id="ed-rate"
+              inputMode="decimal"
+              value={form.hourly_rate}
+              onChange={(e) => setForm({ ...form, hourly_rate: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="ed-burn">Expected burn (L/hr)</Label>
+            <Input
+              id="ed-burn"
+              inputMode="decimal"
+              value={form.expected_burn_rate}
+              onChange={(e) => setForm({ ...form, expected_burn_rate: e.target.value })}
+            />
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          The meter is not editable. It moves by being read, and typing it would undo the rule
+          that keeps every utilisation and burn figure honest.
+        </p>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button disabled={!form.name.trim() || update.isPending} onClick={() => void submit()}>
             Save
           </Button>
         </DialogFooter>

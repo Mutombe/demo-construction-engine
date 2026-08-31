@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { StatCard } from "@/components/ui/stat-card";
+import { TableSkeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
@@ -50,7 +51,7 @@ const STATUS_VARIANT: Record<string, "success" | "warning" | "destructive" | "ou
 
 function ProjectSubcontracts() {
   const { projectId } = Route.useParams();
-  const { data: contracts } = useListSubcontracts(projectId);
+  const { data: contracts, isLoading } = useListSubcontracts(projectId);
   const [createOpen, setCreateOpen] = useState(false);
 
   const rows = contracts ?? [];
@@ -81,7 +82,9 @@ function ProjectSubcontracts() {
 
       <Card>
         <CardContent className="p-0">
-          {rows.length ? (
+          {isLoading && !contracts ? (
+            <TableSkeleton columns={6} />
+          ) : rows.length ? (
             <Table>
               <TableHeader>
                 <TableRow>
