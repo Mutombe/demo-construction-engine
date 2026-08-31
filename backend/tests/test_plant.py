@@ -390,7 +390,7 @@ def test_a_machine_with_a_cost_and_a_life_is_written_down_monthly(client, db):
     assert res.status_code == 200, res.text
     assert Decimal(res.json()["total"]) == Decimal("2000.00")
 
-    register = client.get("/api/v1/fleet/assets", headers=headers).json()
+    register = client.get("/api/v1/fleet/assets", headers=headers).json()["items"]
     row = next(r for r in register if r["code"] == "PLT-300")
     assert Decimal(row["accumulated_depreciation"]) == Decimal("2000.00")
     assert Decimal(row["net_book_value"]) == Decimal("118000.00")
@@ -423,7 +423,7 @@ def test_the_same_month_cannot_be_depreciated_twice(client, db):
     assert again["posted"] == 0
     assert again["already_done"] == 1
 
-    register = client.get("/api/v1/fleet/assets", headers=headers).json()
+    register = client.get("/api/v1/fleet/assets", headers=headers).json()["items"]
     row = next(r for r in register if r["code"] == "PLT-302")
     assert Decimal(row["accumulated_depreciation"]) == Decimal("1000.00")
 
@@ -448,7 +448,7 @@ def test_depreciation_stops_at_the_residual(client, db):
 
     # 200 depreciable, never more, however many months are run.
     assert total == Decimal("200.00")
-    register = client.get("/api/v1/fleet/assets", headers=headers).json()
+    register = client.get("/api/v1/fleet/assets", headers=headers).json()["items"]
     row = next(r for r in register if r["code"] == "PLT-303")
     assert Decimal(row["net_book_value"]) == Decimal("1000.00")
 
@@ -467,7 +467,7 @@ def test_availability_counts_time_on_a_job_not_calendar_time(client, db):
         "/api/v1/fleet/availability",
         params={"start": str(PERIOD), "end": str(PERIOD + timedelta(days=30))},
         headers=headers,
-    ).json()
+    ).json()["items"]
     row = next(r for r in rows if r["code"] == "PLT-400")
     assert row["assigned_days"] == 0
     assert row["availability_pct"] is None
@@ -497,7 +497,7 @@ def test_downtime_shows_against_the_time_it_was_meant_to_be_working(client, db):
         "/api/v1/fleet/availability",
         params={"start": str(PERIOD), "end": str(PERIOD + timedelta(days=9))},
         headers=headers,
-    ).json()
+    ).json()["items"]
     row = next(r for r in rows if r["code"] == "PLT-401")
     # Ten assigned days at eight hours, one of them lost.
     assert row["assigned_days"] == 10

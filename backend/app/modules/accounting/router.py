@@ -8,6 +8,8 @@ from decimal import Decimal
 from pydantic import BaseModel, Field
 
 from app.common.enums import UserRole
+from app.common.pagination import PageParamsDep, page_of, paginate
+from app.common.schemas import Page
 from app.core.deps import CurrentUser, DbDep, require_roles
 from app.core.exceptions import ConflictError, NotFoundError, ValidationFailedError
 from app.modules.accounting import banking, cvr, payables, service, subsidiary
@@ -76,29 +78,31 @@ def update_account(
     return AccountRead.model_validate(account)
 
 
-@router.get("/accounts/{account_id}/ledger", response_model=list[LedgerRow])
+@router.get("/accounts/{account_id}/ledger", response_model=Page[LedgerRow])
 def get_account_ledger(
     account_id: uuid.UUID,
     db: DbDep,
+    params: PageParamsDep,
     _=books_read,
     start: date | None = None,
     end: date | None = None,
-) -> list[LedgerRow]:
+) -> Page[LedgerRow]:
+    """A running balance has to be computed over the whole period before it
+    can be sliced, so the page is taken after the fact rather than in SQL."""
     if db.get(Account, account_id) is None:
         raise NotFoundError("Account not found")
-    return [
-        LedgerRow.model_validate(row) for row in service.account_ledger(db, account_id, start, end)
-    ]
+    rows = service.account_ledger(db, account_id, start, end)
+    return page_of(rows, params, LedgerRow.model_validate)
 
 
-@router.get("/journals", response_model=list[JournalRead], dependencies=[books_read])
+@router.get("/journals", response_model=Page[JournalRead], dependencies=[books_read])
 def list_journals(
     db: DbDep,
+    params: PageParamsDep,
     start: date | None = None,
     end: date | None = None,
     project_id: uuid.UUID | None = None,
-    limit: int = 100,
-) -> list[JournalRead]:
+) -> Page[JournalRead]:
     stmt = select(Journal).order_by(Journal.journal_date.desc(), Journal.doc_number.desc())
     if start:
         stmt = stmt.where(Journal.journal_date >= start)
@@ -106,7 +110,7 @@ def list_journals(
         stmt = stmt.where(Journal.journal_date <= end)
     if project_id:
         stmt = stmt.where(Journal.project_id == project_id)
-    return [JournalRead.model_validate(j) for j in db.scalars(stmt.limit(min(limit, 500)))]
+    return paginate(db, stmt, params, JournalRead.model_validate)
 
 
 def _detail(journal) -> JournalDetail:

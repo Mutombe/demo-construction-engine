@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select
 
 from app.common.enums import UserRole
+from app.common.pagination import PageParamsDep, page_of, paginate
+from app.common.schemas import Page
 from app.core.deps import CurrentUser, DbDep, require_roles
 from app.core.exceptions import NotFoundError
 from app.modules.subcontracts import service
@@ -107,10 +109,10 @@ def set_status(
     return {"supplier_id": supplier.id, "vendor_status": supplier.vendor_status.value}
 
 
-@router.get("/compliance/expiring", response_model=list[ExpiringItem])
-def get_expiring(db: DbDep, days: int = 30) -> list[dict]:
+@router.get("/compliance/expiring", response_model=Page[ExpiringItem])
+def get_expiring(db: DbDep, params: PageParamsDep, days: int = 30) -> Page[ExpiringItem]:
     """Chased before it stops a job rather than after."""
-    return service.expiring_soon(db, days)
+    return page_of(service.expiring_soon(db, days), params)
 
 
 @router.get("/compliance/requirements", response_model=list[RequirementRead])
@@ -240,28 +242,28 @@ def reject_milestone(
     return service.reject_milestone(db, milestone_id, body.reason, user)
 
 
-@router.get("/subcontracts", response_model=list[SubcontractRead])
+@router.get("/subcontracts", response_model=Page[SubcontractRead])
 def list_all_subcontracts(
-    db: DbDep, supplier_id: uuid.UUID | None = None
-) -> list[SubcontractRead]:
+    db: DbDep, params: PageParamsDep, supplier_id: uuid.UUID | None = None
+) -> Page[SubcontractRead]:
     stmt = select(Subcontract).order_by(Subcontract.doc_number.desc())
     if supplier_id:
         stmt = stmt.where(Subcontract.supplier_id == supplier_id)
-    return [_read(row) for row in db.scalars(stmt)]
+    return paginate(db, stmt, params, _read)
 
 
 # --- Retention ---------------------------------------------------------------
 
 
-@router.get("/retention", response_model=list[RetentionRegisterRow])
-def retention_register(db: DbDep) -> list[RetentionRegisterRow]:
+@router.get("/retention", response_model=Page[RetentionRegisterRow])
+def retention_register(db: DbDep, params: PageParamsDep) -> Page[RetentionRegisterRow]:
     """Everything still held across every package, soonest to fall due first.
 
     Retention is other people's money sitting in a liability account. Nothing
     on a project screen shows it, so without this list it is only ever found
     when somebody rings up and asks for it.
     """
-    return service.retention_register(db)
+    return page_of(service.retention_register(db), params)
 
 
 @router.post(

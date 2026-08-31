@@ -267,7 +267,7 @@ class CertificateRead(BaseModel):
     notes: str | None
 
 
-class ComplianceItem(BaseModel):
+class EquipmentComplianceItem(BaseModel):
     cert_type: EquipmentCertType
     is_mandatory: bool
     state: str
@@ -286,7 +286,7 @@ class EquipmentCompliance(BaseModel):
     blocking: list[str] = []
     # Never supplied: shown, but does not stop it except on lifting gear.
     incomplete: list[str] = []
-    certificates: list[ComplianceItem] = []
+    certificates: list[EquipmentComplianceItem] = []
 
 
 class ExpiringCertificate(BaseModel):

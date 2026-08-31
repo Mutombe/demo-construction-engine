@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select
 
 from app.common.enums import EquipmentCategory, EquipmentStatus, UserRole
-from app.common.pagination import PageParamsDep
+from app.common.pagination import PageParamsDep, page_of, paginate
 from app.common.schemas import Page
 from app.core.deps import CurrentUser, DbDep, require_roles
 from app.core.exceptions import ConflictError, NotFoundError
@@ -140,17 +140,17 @@ def update_equipment(
 # --- Meter and fuel ----------------------------------------------------------
 
 
-@router.get("/equipment/{equipment_id}/readings", response_model=list[MeterReadingRead])
-def list_readings(equipment_id: uuid.UUID, db: DbDep, limit: int = 100):
+@router.get("/equipment/{equipment_id}/readings", response_model=Page[MeterReadingRead])
+def list_readings(equipment_id: uuid.UUID, db: DbDep, params: PageParamsDep):
+    """Weekly readings on a fleet of any size run to thousands of rows within
+    a year, so this has never been safe to return whole."""
     service.get_equipment(db, equipment_id)
-    return list(
-        db.scalars(
-            select(MeterReading)
-            .where(MeterReading.equipment_id == equipment_id)
-            .order_by(MeterReading.reading_date.desc())
-            .limit(min(limit, 500))
-        )
+    stmt = (
+        select(MeterReading)
+        .where(MeterReading.equipment_id == equipment_id)
+        .order_by(MeterReading.reading_date.desc(), MeterReading.created_at.desc())
     )
+    return paginate(db, stmt, params)
 
 
 @router.post("/equipment/{equipment_id}/readings", response_model=MeterReadingRead, status_code=201)
@@ -160,17 +160,15 @@ def create_reading(
     return service.record_reading(db, equipment_id, body, user)
 
 
-@router.get("/equipment/{equipment_id}/fuel", response_model=list[FuelLogRead])
-def list_fuel(equipment_id: uuid.UUID, db: DbDep, limit: int = 100):
+@router.get("/equipment/{equipment_id}/fuel", response_model=Page[FuelLogRead])
+def list_fuel(equipment_id: uuid.UUID, db: DbDep, params: PageParamsDep):
     service.get_equipment(db, equipment_id)
-    return list(
-        db.scalars(
-            select(FuelLog)
-            .where(FuelLog.equipment_id == equipment_id)
-            .order_by(FuelLog.log_date.desc())
-            .limit(min(limit, 500))
-        )
+    stmt = (
+        select(FuelLog)
+        .where(FuelLog.equipment_id == equipment_id)
+        .order_by(FuelLog.log_date.desc(), FuelLog.created_at.desc())
     )
+    return paginate(db, stmt, params)
 
 
 @router.post("/equipment/{equipment_id}/fuel", response_model=FuelLogRead, status_code=201)
@@ -241,16 +239,15 @@ def create_schedule(
     return schedule
 
 
-@router.get("/equipment/{equipment_id}/maintenance", response_model=list[MaintenanceRead])
-def list_maintenance(equipment_id: uuid.UUID, db: DbDep):
+@router.get("/equipment/{equipment_id}/maintenance", response_model=Page[MaintenanceRead])
+def list_maintenance(equipment_id: uuid.UUID, db: DbDep, params: PageParamsDep):
     service.get_equipment(db, equipment_id)
-    return list(
-        db.scalars(
-            select(MaintenanceRecord)
-            .where(MaintenanceRecord.equipment_id == equipment_id)
-            .order_by(MaintenanceRecord.service_date.desc())
-        )
+    stmt = (
+        select(MaintenanceRecord)
+        .where(MaintenanceRecord.equipment_id == equipment_id)
+        .order_by(MaintenanceRecord.service_date.desc())
     )
+    return paginate(db, stmt, params)
 
 
 @router.post("/equipment/{equipment_id}/maintenance", response_model=MaintenanceRead, status_code=201)
@@ -263,16 +260,15 @@ def create_maintenance(
 # --- Deployment --------------------------------------------------------------
 
 
-@router.get("/equipment/{equipment_id}/assignments", response_model=list[AssignmentRead])
-def list_assignments(equipment_id: uuid.UUID, db: DbDep):
+@router.get("/equipment/{equipment_id}/assignments", response_model=Page[AssignmentRead])
+def list_assignments(equipment_id: uuid.UUID, db: DbDep, params: PageParamsDep):
     service.get_equipment(db, equipment_id)
-    return list(
-        db.scalars(
-            select(EquipmentAssignment)
-            .where(EquipmentAssignment.equipment_id == equipment_id)
-            .order_by(EquipmentAssignment.started_on.desc())
-        )
+    stmt = (
+        select(EquipmentAssignment)
+        .where(EquipmentAssignment.equipment_id == equipment_id)
+        .order_by(EquipmentAssignment.started_on.desc())
     )
+    return paginate(db, stmt, params)
 
 
 @router.post("/equipment/{equipment_id}/assign", response_model=AssignmentRead, status_code=201)
@@ -384,12 +380,14 @@ def run_recharge(
     return plant.run_recharge(db, body.period_start, user)
 
 
-@router.get("/fleet/recharges", response_model=list[RechargeLine])
-def list_recharges(db: DbDep, project_id: uuid.UUID | None = None) -> list[RechargeLine]:
+@router.get("/fleet/recharges", response_model=Page[RechargeLine])
+def list_recharges(
+    db: DbDep, params: PageParamsDep, project_id: uuid.UUID | None = None
+) -> Page[RechargeLine]:
     stmt = select(PlantRecharge, Equipment).join(Equipment, Equipment.id == PlantRecharge.equipment_id)
     if project_id:
         stmt = stmt.where(PlantRecharge.project_id == project_id)
-    return [
+    rows = [
         RechargeLine(
             equipment_id=row.equipment_id,
             code=machine.code,
@@ -400,6 +398,7 @@ def list_recharges(db: DbDep, project_id: uuid.UUID | None = None) -> list[Recha
         )
         for row, machine in db.execute(stmt.order_by(PlantRecharge.period_start.desc())).all()
     ]
+    return page_of(rows, params)
 
 
 @router.get("/fleet/recovery", response_model=RecoveryReport)
@@ -419,13 +418,15 @@ def run_depreciation(
     return plant.run_depreciation(db, body.period_start, user)
 
 
-@router.get("/fleet/assets", response_model=list[AssetRow])
-def get_asset_register(db: DbDep) -> list[AssetRow]:
+@router.get("/fleet/assets", response_model=Page[AssetRow])
+def get_asset_register(db: DbDep, params: PageParamsDep) -> Page[AssetRow]:
     """What the plant is carried at, machine by machine."""
-    return plant.asset_register(db)
+    return page_of(plant.asset_register(db), params)
 
 
-@router.get("/fleet/availability", response_model=list[AvailabilityRow])
-def get_availability(db: DbDep, start: date, end: date) -> list[AvailabilityRow]:
+@router.get("/fleet/availability", response_model=Page[AvailabilityRow])
+def get_availability(
+    db: DbDep, params: PageParamsDep, start: date, end: date
+) -> Page[AvailabilityRow]:
     """Time on a job against time able to work, and what broke."""
-    return plant.availability(db, start, end)
+    return page_of(plant.availability(db, start, end), params)

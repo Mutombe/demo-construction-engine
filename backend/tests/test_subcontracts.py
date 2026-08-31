@@ -142,7 +142,7 @@ def test_everything_about_to_lapse_is_listed_in_one_place(client, db):
     _doc(client, headers, soon, "tax_clearance", TODAY + timedelta(days=7))
     _doc(client, headers, fine, "tax_clearance", TODAY + timedelta(days=300))
 
-    rows = client.get("/api/v1/compliance/expiring?days=30", headers=headers).json()
+    rows = client.get("/api/v1/compliance/expiring?days=30", headers=headers).json()["items"]
     names = {r["supplier_name"] for r in rows}
     assert "Lapsing Soon" in names
     assert "All Good" not in names
@@ -532,7 +532,7 @@ def test_the_retention_register_lists_what_is_still_held(client, db):
     headers = _pm(db)
     contract = _certified_package(client, headers, db)
 
-    register = client.get("/api/v1/retention", headers=headers).json()
+    register = client.get("/api/v1/retention", headers=headers).json()["items"]
     row = next(r for r in register if r["subcontract_id"] == contract["id"])
     assert Decimal(row["retention_outstanding"]) == Decimal("4000.00")
 
@@ -541,7 +541,7 @@ def test_the_retention_register_lists_what_is_still_held(client, db):
         json={},
         headers=headers,
     )
-    register = client.get("/api/v1/retention", headers=headers).json()
+    register = client.get("/api/v1/retention", headers=headers).json()["items"]
     assert all(r["subcontract_id"] != contract["id"] for r in register)
 
 

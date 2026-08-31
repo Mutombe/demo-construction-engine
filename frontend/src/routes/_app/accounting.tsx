@@ -1,3 +1,4 @@
+import { keepPreviousData } from "@tanstack/react-query";
 import { Link, createFileRoute, redirect } from "@tanstack/react-router";
 import { Bank, CheckCircle, Scales, Warning } from "@phosphor-icons/react";
 import { z } from "zod";
@@ -6,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import {
   Table,
   TableBody,
@@ -392,8 +394,16 @@ function StatementBlock({
 }
 
 function Journals() {
-  const { data } = useListJournals({});
+  // The journal grows for the life of the company, so it has never been
+  // something to fetch whole.
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const { data } = useListJournals(
+    { page, page_size: pageSize },
+    { query: { placeholderData: keepPreviousData } },
+  );
   if (!data) return <Skeleton />;
+  const rows = data.items;
 
   return (
     <Card>
@@ -410,14 +420,14 @@ function Journals() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.length === 0 && (
+            {rows.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} className="p-0">
                   <EmptyState icon={<Bank />} title="No journals yet" />
                 </TableCell>
               </TableRow>
             )}
-            {data.map((journal) => (
+            {rows.map((journal) => (
               <TableRow key={journal.id}>
                 <TableCell className="font-mono text-xs">{journal.doc_number}</TableCell>
                 <TableCell className="whitespace-nowrap text-sm">
@@ -447,6 +457,16 @@ function Journals() {
             ))}
           </TableBody>
         </Table>
+        <PaginationBar
+          page={page}
+          pageSize={pageSize}
+          total={data.total}
+          onPageChange={setPage}
+          onPageSizeChange={(size: number) => {
+            setPageSize(size);
+            setPage(1);
+          }}
+        />
       </CardContent>
     </Card>
   );

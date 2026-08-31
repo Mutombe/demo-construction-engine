@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Construction ERP API",
+    "title": "Datum API",
     "version": "0.1.0"
   },
   "paths": {
@@ -6369,6 +6369,29 @@
               "default": 30,
               "title": "Days"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
           }
         ],
         "responses": {
@@ -6377,11 +6400,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ExpiringItem"
-                  },
-                  "title": "Response Get Expiring"
+                  "$ref": "#/components/schemas/Page_ExpiringItem_"
                 }
               }
             }
@@ -6876,6 +6895,29 @@
               ],
               "title": "Supplier Id"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
           }
         ],
         "responses": {
@@ -6884,11 +6926,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SubcontractRead"
-                  },
-                  "title": "Response List All Subcontracts"
+                  "$ref": "#/components/schemas/Page_SubcontractRead_"
                 }
               }
             }
@@ -6914,27 +6952,58 @@
         "summary": "Retention Register",
         "description": "Everything still held across every package, soonest to fall due first.\n\nRetention is other people's money sitting in a liability account. Nothing\non a project screen shows it, so without this list it is only ever found\nwhen somebody rings up and asks for it.",
         "operationId": "retention_register",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/RetentionRegisterRow"
-                  },
-                  "type": "array",
-                  "title": "Response Retention Register"
+                  "$ref": "#/components/schemas/Page_RetentionRegisterRow_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
           }
-        },
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ]
+        }
       }
     },
     "/api/v1/subcontracts/{subcontract_id}/retention/release": {
@@ -7907,6 +7976,7 @@
           "fleet"
         ],
         "summary": "List Readings",
+        "description": "Weekly readings on a fleet of any size run to thousands of rows within\na year, so this has never been safe to return whole.",
         "operationId": "list_readings",
         "security": [
           {
@@ -7925,13 +7995,26 @@
             }
           },
           {
-            "name": "limit",
+            "name": "page",
             "in": "query",
             "required": false,
             "schema": {
               "type": "integer",
-              "default": 100,
-              "title": "Limit"
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
             }
           }
         ],
@@ -7941,11 +8024,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/MeterReadingRead"
-                  },
-                  "title": "Response List Readings"
+                  "$ref": "#/components/schemas/Page_MeterReadingRead_"
                 }
               }
             }
@@ -8043,13 +8122,26 @@
             }
           },
           {
-            "name": "limit",
+            "name": "page",
             "in": "query",
             "required": false,
             "schema": {
               "type": "integer",
-              "default": 100,
-              "title": "Limit"
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
             }
           }
         ],
@@ -8059,11 +8151,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/FuelLogRead"
-                  },
-                  "title": "Response List Fuel"
+                  "$ref": "#/components/schemas/Page_FuelLogRead_"
                 }
               }
             }
@@ -8474,6 +8562,29 @@
               "format": "uuid",
               "title": "Equipment Id"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
           }
         ],
         "responses": {
@@ -8482,11 +8593,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/MaintenanceRead"
-                  },
-                  "title": "Response List Maintenance"
+                  "$ref": "#/components/schemas/Page_MaintenanceRead_"
                 }
               }
             }
@@ -8582,6 +8689,29 @@
               "format": "uuid",
               "title": "Equipment Id"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
           }
         ],
         "responses": {
@@ -8590,11 +8720,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AssignmentRead"
-                  },
-                  "title": "Response List Assignments"
+                  "$ref": "#/components/schemas/Page_AssignmentRead_"
                 }
               }
             }
@@ -8839,6 +8965,632 @@
             "OAuth2PasswordBearer": []
           }
         ]
+      }
+    },
+    "/api/v1/equipment/{equipment_id}/compliance": {
+      "get": {
+        "tags": [
+          "fleet"
+        ],
+        "summary": "Get Equipment Compliance",
+        "description": "Whether this machine is legally able to work, document by document.",
+        "operationId": "get_equipment_compliance",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "equipment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Equipment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EquipmentCompliance"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/equipment/{equipment_id}/certificates": {
+      "post": {
+        "tags": [
+          "fleet"
+        ],
+        "summary": "Add Certificate",
+        "operationId": "add_certificate",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "equipment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Equipment Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertificateCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "fleet"
+        ],
+        "summary": "List Certificates",
+        "operationId": "list_certificates",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "equipment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Equipment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CertificateRead"
+                  },
+                  "title": "Response List Certificates"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/equipment/certificates/{certificate_id}": {
+      "delete": {
+        "tags": [
+          "fleet"
+        ],
+        "summary": "Remove Certificate",
+        "operationId": "remove_certificate",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "certificate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Certificate Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fleet/certificates/expiring": {
+      "get": {
+        "tags": [
+          "fleet"
+        ],
+        "summary": "Get Expiring Certificates",
+        "description": "Chased before it grounds a machine rather than after.",
+        "operationId": "get_expiring_certificates",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 30,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExpiringCertificate"
+                  },
+                  "title": "Response Get Expiring Certificates"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fleet/recharge": {
+      "post": {
+        "tags": [
+          "fleet"
+        ],
+        "summary": "Run Recharge",
+        "description": "Charge every job for the plant it used that month.\n\nRefuses while the books are on direct plant costing, where fuel and\nrepairs already reach the job \u2014 recharging as well would charge it twice.\nSafe to run again: what was already charged is left alone.",
+        "operationId": "run_recharge",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RechargeResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/fleet/recharges": {
+      "get": {
+        "tags": [
+          "fleet"
+        ],
+        "summary": "List Recharges",
+        "operationId": "list_recharges",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_RechargeLine_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fleet/recovery": {
+      "get": {
+        "tags": [
+          "fleet"
+        ],
+        "summary": "Get Recovery",
+        "description": "What the yard cost against what it charged out.",
+        "operationId": "get_recovery",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "End"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryReport"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fleet/depreciation": {
+      "post": {
+        "tags": [
+          "fleet"
+        ],
+        "summary": "Run Depreciation",
+        "description": "A month of wear, posted. Repeating a month changes nothing.",
+        "operationId": "run_depreciation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepreciationResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/fleet/assets": {
+      "get": {
+        "tags": [
+          "fleet"
+        ],
+        "summary": "Get Asset Register",
+        "description": "What the plant is carried at, machine by machine.",
+        "operationId": "get_asset_register",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_AssetRow_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fleet/availability": {
+      "get": {
+        "tags": [
+          "fleet"
+        ],
+        "summary": "Get Availability",
+        "description": "Time on a job against time able to work, and what broke.",
+        "operationId": "get_availability",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "End"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_AvailabilityRow_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/stock-items": {
@@ -15311,6 +16063,7 @@
           "accounting"
         ],
         "summary": "Get Account Ledger",
+        "description": "A running balance has to be computed over the whole period before it\ncan be sliced, so the page is taken after the fact rather than in SQL.",
         "operationId": "get_account_ledger",
         "security": [
           {
@@ -15361,6 +16114,29 @@
               ],
               "title": "End"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
           }
         ],
         "responses": {
@@ -15369,11 +16145,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LedgerRow"
-                  },
-                  "title": "Response Get Account Ledger"
+                  "$ref": "#/components/schemas/Page_LedgerRow_"
                 }
               }
             }
@@ -15456,13 +16228,26 @@
             }
           },
           {
-            "name": "limit",
+            "name": "page",
             "in": "query",
             "required": false,
             "schema": {
               "type": "integer",
-              "default": 100,
-              "title": "Limit"
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
             }
           }
         ],
@@ -15472,11 +16257,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/JournalRead"
-                  },
-                  "title": "Response List Journals"
+                  "$ref": "#/components/schemas/Page_JournalRead_"
                 }
               }
             }
@@ -18053,6 +18834,112 @@
         ],
         "title": "AiStatus"
       },
+      "AssetRow": {
+        "properties": {
+          "equipment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Equipment Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "ownership": {
+            "type": "string",
+            "title": "Ownership"
+          },
+          "purchase_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Date"
+          },
+          "purchase_cost": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Cost"
+          },
+          "residual_value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Residual Value"
+          },
+          "useful_life_months": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Useful Life Months"
+          },
+          "accumulated_depreciation": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Accumulated Depreciation"
+          },
+          "net_book_value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Net Book Value"
+          },
+          "monthly_charge": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Monthly Charge"
+          }
+        },
+        "type": "object",
+        "required": [
+          "equipment_id",
+          "code",
+          "name",
+          "ownership",
+          "accumulated_depreciation"
+        ],
+        "title": "AssetRow"
+      },
       "AssignmentCreate": {
         "properties": {
           "project_id": {
@@ -18146,6 +19033,93 @@
           "notes"
         ],
         "title": "AssignmentRead"
+      },
+      "AvailabilityRow": {
+        "properties": {
+          "equipment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Equipment Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "assigned_days": {
+            "type": "integer",
+            "title": "Assigned Days"
+          },
+          "scheduled_hours": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled Hours"
+          },
+          "downtime_hours": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Downtime Hours"
+          },
+          "breakdowns": {
+            "type": "integer",
+            "title": "Breakdowns"
+          },
+          "availability_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Availability Pct"
+          },
+          "mean_hours_between_failures": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean Hours Between Failures"
+          },
+          "metered": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metered"
+          }
+        },
+        "type": "object",
+        "required": [
+          "equipment_id",
+          "code",
+          "name",
+          "assigned_days",
+          "downtime_hours",
+          "breakdowns"
+        ],
+        "title": "AvailabilityRow"
       },
       "BalanceSheet": {
         "properties": {
@@ -19347,6 +20321,164 @@
         ],
         "title": "CategoryTotal"
       },
+      "CertificateCreate": {
+        "properties": {
+          "cert_type": {
+            "$ref": "#/components/schemas/EquipmentCertType"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "issued_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issued On"
+          },
+          "expires_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires On"
+          },
+          "media_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cert_type"
+        ],
+        "title": "CertificateCreate"
+      },
+      "CertificateRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "equipment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Equipment Id"
+          },
+          "cert_type": {
+            "$ref": "#/components/schemas/EquipmentCertType"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "issued_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issued On"
+          },
+          "expires_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires On"
+          },
+          "media_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "equipment_id",
+          "cert_type",
+          "reference",
+          "issued_on",
+          "expires_on",
+          "media_id",
+          "notes"
+        ],
+        "title": "CertificateRead"
+      },
       "CertifyRequest": {
         "properties": {
           "certified_amount": {
@@ -19877,6 +21009,9 @@
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Default Retention Pct"
+          },
+          "plant_costing_mode": {
+            "$ref": "#/components/schemas/PlantCostingMode"
           }
         },
         "type": "object",
@@ -19886,7 +21021,8 @@
           "currency",
           "vat_rate_pct",
           "fiscal_year_start_month",
-          "default_retention_pct"
+          "default_retention_pct",
+          "plant_costing_mode"
         ],
         "title": "CompanySettingsRead"
       },
@@ -19964,6 +21100,16 @@
               }
             ],
             "title": "Default Retention Pct"
+          },
+          "plant_costing_mode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlantCostingMode"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -21113,6 +22259,44 @@
         ],
         "title": "DependencyType"
       },
+      "DepreciationResult": {
+        "properties": {
+          "period_start": {
+            "type": "string",
+            "format": "date",
+            "title": "Period Start"
+          },
+          "posted": {
+            "type": "integer",
+            "title": "Posted"
+          },
+          "already_done": {
+            "type": "integer",
+            "title": "Already Done"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total"
+          },
+          "not_depreciated": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Not Depreciated",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "period_start",
+          "posted",
+          "already_done",
+          "total"
+        ],
+        "title": "DepreciationResult"
+      },
       "DiaryEntryCreate": {
         "properties": {
           "entry_date": {
@@ -21507,6 +22691,141 @@
           "other"
         ],
         "title": "EquipmentCategory"
+      },
+      "EquipmentCertType": {
+        "type": "string",
+        "enum": [
+          "insurance",
+          "roadworthiness",
+          "thorough_examination",
+          "fitness",
+          "calibration",
+          "operator_licence",
+          "other"
+        ],
+        "title": "EquipmentCertType",
+        "description": "Paperwork that has to be in date for a machine to work legally."
+      },
+      "EquipmentCompliance": {
+        "properties": {
+          "equipment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Equipment Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "is_compliant": {
+            "type": "boolean",
+            "title": "Is Compliant"
+          },
+          "blocking": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Blocking",
+            "default": []
+          },
+          "incomplete": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Incomplete",
+            "default": []
+          },
+          "certificates": {
+            "items": {
+              "$ref": "#/components/schemas/EquipmentComplianceItem"
+            },
+            "type": "array",
+            "title": "Certificates",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "equipment_id",
+          "code",
+          "name",
+          "is_compliant"
+        ],
+        "title": "EquipmentCompliance"
+      },
+      "EquipmentComplianceItem": {
+        "properties": {
+          "cert_type": {
+            "$ref": "#/components/schemas/EquipmentCertType"
+          },
+          "is_mandatory": {
+            "type": "boolean",
+            "title": "Is Mandatory"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "certificate_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Certificate Id"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "expires_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires On"
+          },
+          "days_to_expiry": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days To Expiry"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cert_type",
+          "is_mandatory",
+          "state"
+        ],
+        "title": "EquipmentComplianceItem"
       },
       "EquipmentCosts": {
         "properties": {
@@ -21976,6 +23295,29 @@
             ],
             "title": "Purchase Cost"
           },
+          "residual_value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Residual Value"
+          },
+          "useful_life_months": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Useful Life Months"
+          },
           "is_active": {
             "type": "boolean",
             "title": "Is Active"
@@ -22183,6 +23525,35 @@
               }
             ],
             "title": "Purchase Cost"
+          },
+          "residual_value": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Residual Value"
+          },
+          "useful_life_months": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 600.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Useful Life Months"
           },
           "notes": {
             "anyOf": [
@@ -22577,6 +23948,61 @@
           "cancelled"
         ],
         "title": "ExpenseStatus"
+      },
+      "ExpiringCertificate": {
+        "properties": {
+          "equipment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Equipment Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "cert_type": {
+            "$ref": "#/components/schemas/EquipmentCertType"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "expires_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Expires On"
+          },
+          "days_to_expiry": {
+            "type": "integer",
+            "title": "Days To Expiry"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          }
+        },
+        "type": "object",
+        "required": [
+          "equipment_id",
+          "code",
+          "name",
+          "cert_type",
+          "expires_on",
+          "days_to_expiry",
+          "state"
+        ],
+        "title": "ExpiringCertificate"
       },
       "ExpiringItem": {
         "properties": {
@@ -26307,6 +27733,99 @@
         ],
         "title": "Page[ActivityLogRead]"
       },
+      "Page_AssetRow_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AssetRow"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "Page[AssetRow]"
+      },
+      "Page_AssignmentRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AssignmentRead"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "Page[AssignmentRead]"
+      },
+      "Page_AvailabilityRow_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AvailabilityRow"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "Page[AvailabilityRow]"
+      },
       "Page_ClientRead_": {
         "properties": {
           "items": {
@@ -26493,6 +28012,68 @@
         ],
         "title": "Page[ExpenseClaimRead]"
       },
+      "Page_ExpiringItem_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ExpiringItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "Page[ExpiringItem]"
+      },
+      "Page_FuelLogRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/FuelLogRead"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "Page[FuelLogRead]"
+      },
       "Page_IngestionItemRead_": {
         "properties": {
           "items": {
@@ -26524,6 +28105,99 @@
         ],
         "title": "Page[IngestionItemRead]"
       },
+      "Page_JournalRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/JournalRead"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "Page[JournalRead]"
+      },
+      "Page_LedgerRow_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LedgerRow"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "Page[LedgerRow]"
+      },
+      "Page_MaintenanceRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MaintenanceRead"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "Page[MaintenanceRead]"
+      },
       "Page_MediaRead_": {
         "properties": {
           "items": {
@@ -26554,6 +28228,37 @@
           "page_size"
         ],
         "title": "Page[MediaRead]"
+      },
+      "Page_MeterReadingRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MeterReadingRead"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "Page[MeterReadingRead]"
       },
       "Page_NotificationRead_": {
         "properties": {
@@ -26679,6 +28384,37 @@
         ],
         "title": "Page[ProjectListItem]"
       },
+      "Page_RechargeLine_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RechargeLine"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "Page[RechargeLine]"
+      },
       "Page_RequisitionRead_": {
         "properties": {
           "items": {
@@ -26709,6 +28445,37 @@
           "page_size"
         ],
         "title": "Page[RequisitionRead]"
+      },
+      "Page_RetentionRegisterRow_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RetentionRegisterRow"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "Page[RetentionRegisterRow]"
       },
       "Page_RfqRead_": {
         "properties": {
@@ -26895,6 +28662,37 @@
           "page_size"
         ],
         "title": "Page[StocktakeRead]"
+      },
+      "Page_SubcontractRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SubcontractRead"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "Page[SubcontractRead]"
       },
       "Page_SupplierRead_": {
         "properties": {
@@ -28000,6 +29798,15 @@
           "last_photo"
         ],
         "title": "PhotoTimeline"
+      },
+      "PlantCostingMode": {
+        "type": "string",
+        "enum": [
+          "direct",
+          "internal_hire"
+        ],
+        "title": "PlantCostingMode",
+        "description": "How a job comes to bear the cost of the plant it used.\n\n`direct` sends fuel and repairs straight to whichever job the machine was\non. Simple, and what most small contractors do, but the job never bears\nthe cost of *owning* the machine \u2014 depreciation, insurance, the standing\ntime between jobs \u2014 so plant always looks cheaper than it is.\n\n`internal_hire` pools every running and ownership cost against the plant\ndepartment and charges jobs an hourly rate instead. The difference between\nthe two is the department's over- or under-recovery, which is the only\nnumber that says whether the yard is worth having.\n\nThe modes are mutually exclusive. Running a recharge while in `direct`\nwould charge a job for fuel it has already been charged for."
       },
       "PoCreate": {
         "properties": {
@@ -31187,6 +32994,93 @@
         "title": "RecallUsage",
         "description": "One place a recalled lot ended up."
       },
+      "RechargeLine": {
+        "properties": {
+          "equipment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Equipment Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "units": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Units"
+          },
+          "rate": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Rate"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "equipment_id",
+          "code",
+          "project_id",
+          "units",
+          "rate",
+          "amount"
+        ],
+        "title": "RechargeLine"
+      },
+      "RechargeResult": {
+        "properties": {
+          "period_start": {
+            "type": "string",
+            "format": "date",
+            "title": "Period Start"
+          },
+          "period_end": {
+            "type": "string",
+            "format": "date",
+            "title": "Period End"
+          },
+          "recharged": {
+            "type": "integer",
+            "title": "Recharged"
+          },
+          "already_done": {
+            "type": "integer",
+            "title": "Already Done"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/RechargeLine"
+            },
+            "type": "array",
+            "title": "Lines",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "period_start",
+          "period_end",
+          "recharged",
+          "already_done",
+          "total"
+        ],
+        "title": "RechargeResult"
+      },
       "Recommendation": {
         "properties": {
           "supplier_id": {
@@ -31210,6 +33104,49 @@
           "reasoning"
         ],
         "title": "Recommendation"
+      },
+      "RecoveryReport": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date",
+            "title": "End"
+          },
+          "mode": {
+            "type": "string",
+            "title": "Mode"
+          },
+          "pooled": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Pooled"
+          },
+          "recovered": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Recovered"
+          },
+          "under_recovered": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Under Recovered"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "mode",
+          "pooled",
+          "recovered",
+          "under_recovered"
+        ],
+        "title": "RecoveryReport"
       },
       "RejectRequest": {
         "properties": {
@@ -32911,6 +34848,21 @@
         },
         "type": "object",
         "title": "RfqUpdate"
+      },
+      "RunRequest": {
+        "properties": {
+          "period_start": {
+            "type": "string",
+            "format": "date",
+            "title": "Period Start"
+          }
+        },
+        "type": "object",
+        "required": [
+          "period_start"
+        ],
+        "title": "RunRequest",
+        "description": "Any day in the month is accepted; it is snapped to the first."
       },
       "ScheduleCreate": {
         "properties": {

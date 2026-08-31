@@ -199,7 +199,7 @@ def test_the_ledger_carries_the_running_balance(client, db):
 
     rows = client.get(
         f"/api/v1/accounting/accounts/{bank.id}/ledger", headers=headers
-    ).json()
+    ).json()["items"]
     assert [Decimal(r["balance_after"]) for r in rows] == [Decimal("100.00"), Decimal("140.00")]
 
 

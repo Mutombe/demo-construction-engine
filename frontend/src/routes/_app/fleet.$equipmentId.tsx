@@ -1,4 +1,4 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Drop, Gauge, PencilSimple, Plus, Truck, Wrench } from "@phosphor-icons/react";
 import { useState } from "react";
@@ -16,6 +16,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import { Select } from "@/components/ui/select";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import {
@@ -55,10 +56,30 @@ function EquipmentDetail() {
   const { equipmentId } = Route.useParams();
   const queryClient = useQueryClient();
   const { data: machine } = useGetEquipment(equipmentId);
-  const { data: readings } = useListReadings(equipmentId, {});
-  const { data: fuel } = useListFuel(equipmentId, {});
-  const { data: assignments } = useListAssignments(equipmentId);
-  const { data: maintenance } = useListMaintenance(equipmentId);
+  const [readingPage, setReadingPage] = useState(1);
+  const [fuelPage, setFuelPage] = useState(1);
+  const [jobPage, setJobPage] = useState(1);
+  const keep = { query: { placeholderData: keepPreviousData } };
+
+  const { data: readings } = useListReadings(
+    equipmentId,
+    { page: readingPage, page_size: DEFAULT_PAGE_SIZE },
+    keep,
+  );
+  const { data: fuel } = useListFuel(
+    equipmentId,
+    { page: fuelPage, page_size: DEFAULT_PAGE_SIZE },
+    keep,
+  );
+  const { data: assignments } = useListAssignments(equipmentId, {
+    page: 1,
+    page_size: 10,
+  });
+  const { data: maintenance } = useListMaintenance(
+    equipmentId,
+    { page: jobPage, page_size: DEFAULT_PAGE_SIZE },
+    keep,
+  );
   const { data: schedules } = useListSchedules(equipmentId);
   const { data: costs } = useGetEquipmentCosts(equipmentId, {});
   const release = useReleaseEquipment();
@@ -137,7 +158,7 @@ function EquipmentDetail() {
               <CardTitle className="text-base">Fuel</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              {fuel?.length ? (
+              {fuel?.items.length ? (
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -149,7 +170,7 @@ function EquipmentDetail() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {fuel.map((log) => (
+                    {fuel.items.map((log) => (
                       <TableRow key={log.id}>
                         <TableCell className="text-sm">{fmtDate(log.log_date)}</TableCell>
                         <TableCell className="text-right tabular-nums">
@@ -169,6 +190,14 @@ function EquipmentDetail() {
               ) : (
                 <EmptyState icon={<Drop />} title="No fuel logged" />
               )}
+              {fuel && (
+                <PaginationBar
+                  page={fuel.page}
+                  pageSize={fuel.page_size}
+                  total={fuel.total}
+                  onPageChange={setFuelPage}
+                />
+              )}
             </CardContent>
           </Card>
 
@@ -177,7 +206,7 @@ function EquipmentDetail() {
               <CardTitle className="text-base">Meter readings</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              {readings?.length ? (
+              {readings?.items.length ? (
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -188,7 +217,7 @@ function EquipmentDetail() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {readings.map((row) => (
+                    {readings.items.map((row) => (
                       <TableRow key={row.id}>
                         <TableCell className="text-sm">{fmtDate(row.reading_date)}</TableCell>
                         <TableCell className="text-right tabular-nums">
@@ -207,6 +236,14 @@ function EquipmentDetail() {
               ) : (
                 <EmptyState icon={<Gauge />} title="No readings yet" />
               )}
+              {readings && (
+                <PaginationBar
+                  page={readings.page}
+                  pageSize={readings.page_size}
+                  total={readings.total}
+                  onPageChange={setReadingPage}
+                />
+              )}
             </CardContent>
           </Card>
 
@@ -215,7 +252,7 @@ function EquipmentDetail() {
               <CardTitle className="text-base">Workshop</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              {maintenance?.length ? (
+              {maintenance?.items.length ? (
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -227,7 +264,7 @@ function EquipmentDetail() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {maintenance.map((job) => (
+                    {maintenance.items.map((job) => (
                       <TableRow key={job.id}>
                         <TableCell className="text-sm">{fmtDate(job.service_date)}</TableCell>
                         <TableCell className="text-sm">{job.description}</TableCell>
@@ -246,6 +283,14 @@ function EquipmentDetail() {
                 </Table>
               ) : (
                 <EmptyState icon={<Wrench />} title="Never been in" />
+              )}
+              {maintenance && (
+                <PaginationBar
+                  page={maintenance.page}
+                  pageSize={maintenance.page_size}
+                  total={maintenance.total}
+                  onPageChange={setJobPage}
+                />
               )}
             </CardContent>
           </Card>
@@ -370,8 +415,8 @@ function EquipmentDetail() {
               <CardTitle className="text-base">Been on</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {assignments?.length ? (
-                assignments.map((a) => (
+              {assignments?.items.length ? (
+                assignments.items.map((a) => (
                   <div key={a.id} className="text-sm">
                     <div className="flex justify-between gap-2">
                       <span className="truncate">{fmtDate(a.started_on)}</span>

@@ -1,13 +1,35 @@
 import { forwardRef, type HTMLAttributes, type TdHTMLAttributes, type ThHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
-export const Table = forwardRef<HTMLTableElement, HTMLAttributes<HTMLTableElement>>(
-  ({ className, ...props }, ref) => (
-    <div className="relative w-full overflow-auto">
-      <table ref={ref} className={cn("w-full caption-bottom text-sm", className)} {...props} />
-    </div>
-  ),
-);
+/** `maxHeight` turns the table into its own scroll area and pins the header
+ *  to the top of it. Worth doing on anything that can run past a screenful:
+ *  scrolling a hundred rows of figures with the column names gone is how
+ *  people read the wrong column. */
+export const Table = forwardRef<
+  HTMLTableElement,
+  HTMLAttributes<HTMLTableElement> & { maxHeight?: string }
+>(({ className, maxHeight, ...props }, ref) => (
+  <div
+    className={cn(
+      "relative w-full overflow-auto",
+      maxHeight &&
+        "[&_thead_th]:sticky [&_thead_th]:top-0 [&_thead_th]:z-10 [&_thead_th]:bg-card",
+    )}
+    style={maxHeight ? { maxHeight } : undefined}
+  >
+    <table
+      ref={ref}
+      className={cn(
+        "w-full caption-bottom text-sm",
+        // Digits line up down the column and between pages, so a number that
+        // changes length does not shift the ones around it.
+        "[&_td.num]:text-right [&_td.num]:tabular-nums [&_th.num]:text-right",
+        className,
+      )}
+      {...props}
+    />
+  </div>
+));
 Table.displayName = "Table";
 
 export const TableHeader = forwardRef<HTMLTableSectionElement, HTMLAttributes<HTMLTableSectionElement>>(

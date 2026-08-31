@@ -309,7 +309,7 @@ def test_moving_a_machine_closes_where_it_was(client, db):
 
     history = client.get(
         f"/api/v1/equipment/{machine['id']}/assignments", headers=headers
-    ).json()
+    ).json()["items"]
     assert len(history) == 2
     closed = next(a for a in history if a["project_id"] == str(first.id))
     assert closed["ended_on"] == str(TODAY + timedelta(days=7))
@@ -450,7 +450,7 @@ def test_an_export_lands_readings_and_fills_together(client, db):
     after = client.get(f"/api/v1/equipment/{machine['id']}", headers=headers).json()
     assert Decimal(after["current_meter"]) == Decimal("2110")
 
-    fuel = client.get(f"/api/v1/equipment/{machine['id']}/fuel", headers=headers).json()
+    fuel = client.get(f"/api/v1/equipment/{machine['id']}/fuel", headers=headers).json()["items"]
     assert len(fuel) == 2
 
 
@@ -492,5 +492,5 @@ def test_an_import_is_marked_as_telematics_not_as_someone_typing(client, db):
 
     readings = client.get(
         f"/api/v1/equipment/{machine['id']}/readings", headers=headers
-    ).json()
+    ).json()["items"]
     assert readings[0]["source"] == "telematics"

@@ -1,8 +1,10 @@
+import { keepPreviousData } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Handshake, HandCoins, ShieldWarning } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import { StatCard } from "@/components/ui/stat-card";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import {
@@ -24,10 +26,14 @@ import { cn } from "@/lib/utils";
 type Tab = "packages" | "retention" | "compliance";
 
 export const Route = createFileRoute("/_app/subcontracts/")({
-  validateSearch: (search: Record<string, unknown>): { tab?: Tab } => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { tab?: Tab; page?: number; pageSize?: number } => ({
     tab: (["packages", "retention", "compliance"] as const).includes(search.tab as Tab)
       ? (search.tab as Tab)
       : undefined,
+    page: Number(search.page) > 0 ? Number(search.page) : undefined,
+    pageSize: Number(search.pageSize) > 0 ? Number(search.pageSize) : undefined,
   }),
   component: SubcontractRegister,
 });
@@ -58,20 +64,41 @@ const TABS: { key: Tab; label: string }[] = [
 ];
 
 function SubcontractRegister() {
-  const { tab = "packages" } = Route.useSearch();
+  const { tab = "packages", page = 1, pageSize = DEFAULT_PAGE_SIZE } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
-  const { data: packages, isLoading: loadingPackages } = useListAllSubcontracts({});
-  const { data: retention, isLoading: loadingRetention } = useRetentionRegister();
-  const { data: expiring, isLoading: loadingExpiring } = useGetExpiring({ days: 60 });
 
-  const rows = packages ?? [];
-  const live = rows.filter((row) => row.status === "awarded");
-  const committed = rows.reduce((sum, row) => sum + Number(row.value), 0);
-  const held = (retention ?? []).reduce(
+  // One page at a time from the server. Each tab keeps its previous rows on
+  // screen while the next page loads, so paging does not blink.
+  const paging = { page, page_size: pageSize };
+  const keep = { query: { placeholderData: keepPreviousData } };
+  const { data: packages, isLoading: loadingPackages } = useListAllSubcontracts(paging, keep);
+  const { data: retention, isLoading: loadingRetention } = useRetentionRegister(paging, keep);
+  const { data: expiring, isLoading: loadingExpiring } = useGetExpiring(
+    { ...paging, days: 60 },
+    keep,
+  );
+
+  const rows = packages?.items ?? [];
+  const retentionRows = retention?.items ?? [];
+  const expiringRows = expiring?.items ?? [];
+
+  // Counted across the whole set rather than the page on screen: a total that
+  // changes when you turn the page is not a total.
+  const { data: allPackages } = useListAllSubcontracts({ page: 1, page_size: 200 });
+  const { data: allRetention } = useRetentionRegister({ page: 1, page_size: 200 });
+  const { data: allExpiring } = useGetExpiring({ page: 1, page_size: 200, days: 60 });
+
+  const live = (allPackages?.items ?? []).filter((row) => row.status === "awarded");
+  const committed = (allPackages?.items ?? []).reduce((sum, row) => sum + Number(row.value), 0);
+  const held = (allRetention?.items ?? []).reduce(
     (sum, row) => sum + Number(row.retention_outstanding),
     0,
   );
-  const lapsed = (expiring ?? []).filter((row) => row.state === "expired").length;
+  const lapsed = (allExpiring?.items ?? []).filter((row) => row.state === "expired").length;
+
+  const setPage = (next: number) => void navigate({ search: (old) => ({ ...old, page: next }) });
+  const setPageSize = (next: number) =>
+    void navigate({ search: (old) => ({ ...old, pageSize: next, page: 1 }) });
 
   return (
     <div>
@@ -84,14 +111,19 @@ function SubcontractRegister() {
       </div>
 
       <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Packages" value={rows.length} icon={<Handshake />} sub="all jobs" />
+        <StatCard
+          label="Packages"
+          value={packages?.total ?? 0}
+          icon={<Handshake />}
+          sub="all jobs"
+        />
         <StatCard label="Live" value={live.length} sub="awarded and running" />
         <StatCard label="Committed" value={money(committed)} tone="brand" />
         <StatCard
           label="Retention held"
           value={money(held)}
           icon={<HandCoins />}
-          sub={`${(retention ?? []).length} packages`}
+          sub={`${retention?.total ?? 0} packages`}
           tone={held > 0 ? "negative" : "default"}
         />
       </div>
@@ -102,7 +134,7 @@ function SubcontractRegister() {
             <button
               key={entry.key}
               type="button"
-              onClick={() => void navigate({ search: { tab: entry.key } })}
+              onClick={() => void navigate({ search: { tab: entry.key, pageSize } })}
               className={cn(
                 "border-b-2 px-3.5 py-2 text-sm font-medium transition-colors",
                 tab === entry.key
@@ -186,6 +218,13 @@ function SubcontractRegister() {
                 hint="Every package is created from a project's Subcontracts tab."
               />
             )}
+            <PaginationBar
+              page={page}
+              pageSize={pageSize}
+              total={packages?.total}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
           </CardContent>
         </Card>
       )}
@@ -200,7 +239,7 @@ function SubcontractRegister() {
             </div>
             {loadingRetention && !retention ? (
               <TableSkeleton columns={6} />
-            ) : (retention ?? []).length ? (
+            ) : retentionRows.length ? (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -213,7 +252,7 @@ function SubcontractRegister() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(retention ?? []).map((row) => (
+                  {retentionRows.map((row) => (
                     <TableRow key={row.subcontract_id}>
                       <TableCell className="font-mono text-xs">
                         <Link
@@ -246,6 +285,13 @@ function SubcontractRegister() {
                 hint="Either nothing has been certified, or all of it has been released."
               />
             )}
+            <PaginationBar
+              page={page}
+              pageSize={pageSize}
+              total={retention?.total}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
           </CardContent>
         </Card>
       )}
@@ -259,7 +305,7 @@ function SubcontractRegister() {
             </div>
             {loadingExpiring && !expiring ? (
               <TableSkeleton columns={5} />
-            ) : (expiring ?? []).length ? (
+            ) : expiringRows.length ? (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -271,7 +317,7 @@ function SubcontractRegister() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(expiring ?? []).map((row, index) => (
+                  {expiringRows.map((row, index) => (
                     <TableRow key={`${row.supplier_id}-${row.doc_type}-${index}`}>
                       <TableCell className="font-medium">
                         <Link
@@ -311,6 +357,13 @@ function SubcontractRegister() {
                 hint="Every vendor's paperwork runs past the next 60 days."
               />
             )}
+            <PaginationBar
+              page={page}
+              pageSize={pageSize}
+              total={expiring?.total}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
           </CardContent>
         </Card>
       )}
