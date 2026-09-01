@@ -20,6 +20,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.common.enums import (
     StockLocationKind,
+    StockLossReason,
     StockMovementType,
     StocktakeStatus,
     TrackingMode,
@@ -135,6 +136,11 @@ class StockMovement(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     doc_number: Mapped[str] = mapped_column(String(20), unique=True)
     movement_type: Mapped[StockMovementType] = mapped_column(
         Enum(StockMovementType, name="stock_movement_type", native_enum=True)
+    )
+    # Only meaningful on an adjustment. Null on goods in, issues and
+    # transfers, which already say why they happened by being what they are.
+    loss_reason: Mapped[StockLossReason | None] = mapped_column(
+        Enum(StockLossReason, name="stock_loss_reason", native_enum=True)
     )
     movement_date: Mapped[date] = mapped_column(Date, default=date.today)
     quantity: Mapped[Decimal] = mapped_column(Numeric(14, 3))

@@ -6,7 +6,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.common.doc_numbers import next_doc_number
-from app.common.enums import CostSource, StockMovementType
+from app.common.enums import CostSource, StockLossReason, StockMovementType
 from app.core.exceptions import ConflictError, NotFoundError, ValidationFailedError
 from app.modules.boq.models import BoqItem
 from app.modules.costs.models import CostEntry
@@ -584,8 +584,25 @@ def issue_to_project(
 
 
 def adjust(db: Session, item_id: uuid.UUID, data: AdjustRequest, user_id: uuid.UUID) -> StockItem:
+    """Correct the book, or record a loss.
+
+    Stock going out has to say why. Wastage, breakage, theft and a miscount
+    all reduce the same number and each needs a different response, so an
+    undifferentiated adjustment hides the only thing worth knowing. Stock
+    going *in* needs no reason: adding to the book is a correction by
+    definition, because nothing was lost.
+    """
     if data.quantity == 0:
         raise ValidationFailedError("Adjustment quantity cannot be zero")
+    reason = getattr(data, "loss_reason", None)
+    if data.quantity < 0 and reason is None:
+        raise ValidationFailedError(
+            "Say why the stock is going out. Wastage, breakage, theft and a bad "
+            "count each need a different answer, and one adjustment figure "
+            "cannot tell them apart."
+        )
+    if data.quantity > 0:
+        reason = StockLossReason.correction
     item = _lock_item(db, item_id)
     location = _resolve_location(db, getattr(data, "location_id", None))
     level = _lock_level(db, item.id, location.id)
@@ -605,6 +622,7 @@ def adjust(db: Session, item_id: uuid.UUID, data: AdjustRequest, user_id: uuid.U
             movement_date=data.movement_date or date.today(),
             quantity=data.quantity,
             unit_cost=item.unit_cost,
+            loss_reason=reason,
             notes=data.notes,
             created_by=user_id,
         )
@@ -767,6 +785,11 @@ def approve_stocktake(db: Session, stocktake_id: uuid.UUID, user_id: uuid.UUID):
                 location_id=stocktake.location_id,
                 quantity=variance,
                 movement_date=stocktake.count_date,
+                # A count variance is a correction by definition: it is the
+                # book being brought to what is actually on the shelf. Where
+                # the difference went is a separate question, and guessing at
+                # it here would put invented wastage into the loss report.
+                loss_reason=StockLossReason.correction,
                 notes=f"Stocktake {stocktake.doc_number}"
                 + (f": {line.notes}" if line.notes else ""),
             ),
@@ -1110,3 +1133,77 @@ def recall_trace(db: Session, batch_number: str):
         issued_quantity=sum((u.quantity for u in usages), Decimal("0")),
         usages=usages,
     )
+
+
+def loss_report(db: Session, start: date, end: date, project_id=None) -> dict:
+    """What left the store without reaching a job, and why.
+
+    Corrections are counted and reported but never added to the total. The
+    stock was not there to begin with, so nothing was lost — including them
+    would inflate a wastage figure with somebody's arithmetic, and wastage is
+    a number people are meant to act on.
+    """
+    from app.common.enums import REAL_LOSSES
+
+    rows = db.execute(
+        select(StockMovement, StockItem)
+        .join(StockItem, StockItem.id == StockMovement.stock_item_id)
+        .where(
+            StockMovement.movement_type == StockMovementType.adjustment,
+            StockMovement.quantity < 0,
+            StockMovement.movement_date >= start,
+            StockMovement.movement_date <= end,
+        )
+        .order_by(StockMovement.movement_date.desc())
+    ).all()
+
+    by_reason: dict = {}
+    by_item: dict = {}
+    total = Decimal("0")
+    corrections = Decimal("0")
+
+    for movement, item in rows:
+        reason = movement.loss_reason or StockLossReason.correction
+        quantity = abs(Decimal(movement.quantity))
+        value = (quantity * Decimal(movement.unit_cost or item.unit_cost or 0)).quantize(
+            Decimal("0.01")
+        )
+
+        bucket = by_reason.setdefault(
+            reason.value,
+            {"reason": reason.value, "movements": 0, "quantity": Decimal("0"),
+             "value": Decimal("0")},
+        )
+        bucket["movements"] += 1
+        bucket["quantity"] += quantity
+        bucket["value"] += value
+
+        if reason in REAL_LOSSES:
+            total += value
+            row = by_item.setdefault(
+                item.id,
+                {
+                    "stock_item_id": item.id,
+                    "code": item.code,
+                    "name": item.name,
+                    "unit": item.unit,
+                    "quantity": Decimal("0"),
+                    "value": Decimal("0"),
+                    "reasons": [],
+                },
+            )
+            row["quantity"] += quantity
+            row["value"] += value
+            if reason.value not in row["reasons"]:
+                row["reasons"].append(reason.value)
+        else:
+            corrections += value
+
+    return {
+        "start": start,
+        "end": end,
+        "total_value": total.quantize(Decimal("0.01")),
+        "correction_value": corrections.quantize(Decimal("0.01")),
+        "by_reason": sorted(by_reason.values(), key=lambda r: -r["value"]),
+        "by_item": sorted(by_item.values(), key=lambda r: -r["value"]),
+    }

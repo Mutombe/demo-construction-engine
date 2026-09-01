@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ChartLineUp, ListChecks, Package } from "@phosphor-icons/react";
+import { ChartLineUp, ListChecks, Package, TrashSimple } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 /** Stocktaking is a step inside inventory, not a destination of its own, so it
@@ -9,6 +9,7 @@ const TABS = [
   { to: "/inventory", label: "Stock Items", icon: <Package />, exact: true },
   { to: "/inventory/stocktake", label: "Stocktake", icon: <ListChecks />, exact: false },
   { to: "/inventory/insights", label: "Insights", icon: <ChartLineUp />, exact: false },
+  { to: "/inventory/losses", label: "Losses", icon: <TrashSimple />, exact: false },
 ] as const;
 
 export function InventoryTabs() {

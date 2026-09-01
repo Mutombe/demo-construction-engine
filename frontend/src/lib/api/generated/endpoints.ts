@@ -127,6 +127,7 @@ import type {
   GetIncomeStatementParams,
   GetInventoryAnalyticsParams,
   GetItemConsumptionParams,
+  GetLossReportParams,
   GetMaintenanceDue200Item,
   GetMatrix200,
   GetMediaFolderCountsParams,
@@ -207,6 +208,7 @@ import type {
   ListValuationsParams,
   ListWorkersParams,
   LoginRequest,
+  LossReport,
   MaintenanceCreate,
   MaintenanceRead,
   MatchRequest,
@@ -16928,6 +16930,105 @@ export function useGetItemConsumption<TData = Awaited<ReturnType<typeof getItemC
 
 
 /**
+ * Stock that left the store without reaching a job, grouped by why.
+ *
+ * Corrections are shown but never counted in the total: the stock was never
+ * there, so nothing was lost, and folding them in would inflate a wastage
+ * figure that people are meant to act on.
+ * @summary Get Loss Report
+ */
+export const getLossReport = (
+    params: GetLossReportParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<LossReport>(
+      {url: `/api/v1/inventory/losses`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getGetLossReportQueryKey = (params?: GetLossReportParams,) => {
+    return [
+    `/api/v1/inventory/losses`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetLossReportQueryOptions = <TData = Awaited<ReturnType<typeof getLossReport>>, TError = HTTPValidationError>(params: GetLossReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLossReport>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLossReportQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLossReport>>> = ({ signal }) => getLossReport(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLossReport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetLossReportQueryResult = NonNullable<Awaited<ReturnType<typeof getLossReport>>>
+export type GetLossReportQueryError = HTTPValidationError
+
+
+export function useGetLossReport<TData = Awaited<ReturnType<typeof getLossReport>>, TError = HTTPValidationError>(
+ params: GetLossReportParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLossReport>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLossReport>>,
+          TError,
+          Awaited<ReturnType<typeof getLossReport>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetLossReport<TData = Awaited<ReturnType<typeof getLossReport>>, TError = HTTPValidationError>(
+ params: GetLossReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLossReport>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLossReport>>,
+          TError,
+          Awaited<ReturnType<typeof getLossReport>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetLossReport<TData = Awaited<ReturnType<typeof getLossReport>>, TError = HTTPValidationError>(
+ params: GetLossReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLossReport>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Loss Report
+ */
+
+export function useGetLossReport<TData = Awaited<ReturnType<typeof getLossReport>>, TError = HTTPValidationError>(
+ params: GetLossReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLossReport>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetLossReportQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
  * @summary List Valuations
  */
 export const listValuations = (
@@ -19908,6 +20009,9 @@ if(bodyUploadMedia.folder !== undefined) {
  }
 if(bodyUploadMedia.caption !== undefined && bodyUploadMedia.caption !== null) {
  formData.append(`caption`, bodyUploadMedia.caption);
+ }
+if(bodyUploadMedia.client_op_id !== undefined && bodyUploadMedia.client_op_id !== null) {
+ formData.append(`client_op_id`, bodyUploadMedia.client_op_id);
  }
 
       return apiMutator<MediaRead>(

@@ -131,14 +131,14 @@ def test_adjustment_rules(client, db):
     # Below zero -> 409
     res = client.post(
         f"/api/v1/stock-items/{item['id']}/adjust",
-        json={"quantity": "-20", "notes": "stocktake"},
+        json={"quantity": "-20", "notes": "stocktake", "loss_reason": "correction"},
         headers=headers,
     )
     assert res.status_code == 409
     # Valid negative adjustment; WAC unchanged
     res = client.post(
         f"/api/v1/stock-items/{item['id']}/adjust",
-        json={"quantity": "-2", "notes": "breakage"},
+        json={"quantity": "-2", "notes": "breakage", "loss_reason": "breakage"},
         headers=headers,
     )
     assert Decimal(res.json()["qty_on_hand"]) == Decimal("8")
@@ -270,3 +270,109 @@ def test_inventory_roles(client, db):
         ).status_code
         == 403
     )
+
+
+# --- Losses ------------------------------------------------------------------
+#
+# Wastage, breakage, theft and a bad count all reduce the same number, and each
+# needs a different response. One undifferentiated adjustment figure hides the
+# only thing worth knowing about it.
+
+
+def _receive(client, headers, item, quantity, unit_cost):
+    return client.post(
+        f"/api/v1/stock-items/{item['id']}/goods-in",
+        json={"quantity": str(quantity), "unit_cost": str(unit_cost)},
+        headers=headers,
+    )
+
+
+def _adjust(client, headers, item, quantity, reason=None, notes="Adjustment"):
+    body = {"quantity": str(quantity), "notes": notes}
+    if reason:
+        body["loss_reason"] = reason
+    return client.post(
+        f"/api/v1/stock-items/{item['id']}/adjust", json=body, headers=headers
+    )
+
+
+def test_stock_going_out_has_to_say_why(client, db):
+    headers = _proc(db)
+    item = _make_item(client, headers, code="LOSS-1")
+    _receive(client, headers, item, 100, "10")
+
+    res = _adjust(client, headers, item, -5)
+    assert res.status_code == 422
+    assert "why" in res.json()["error"]["detail"].lower()
+
+
+def test_stock_going_in_needs_no_reason(client, db):
+    """Adding to the book is a correction by definition. Nothing was lost."""
+    headers = _proc(db)
+    item = _make_item(client, headers, code="LOSS-2")
+    _receive(client, headers, item, 100, "10")
+
+    assert _adjust(client, headers, item, 5).status_code == 200
+
+
+def test_losses_are_grouped_by_what_actually_happened(client, db):
+    headers = _proc(db)
+    item = _make_item(client, headers, code="LOSS-3")
+    _receive(client, headers, item, 200, "10")
+
+    _adjust(client, headers, item, -6, "wastage", "Offcuts")
+    _adjust(client, headers, item, -2, "breakage", "Dropped")
+    _adjust(client, headers, item, -4, "theft", "Gone overnight")
+
+    report = client.get(
+        "/api/v1/inventory/losses",
+        params={"start": "2020-01-01", "end": "2099-01-01"},
+        headers=headers,
+    ).json()
+
+    reasons = {row["reason"]: row for row in report["by_reason"]}
+    assert Decimal(reasons["wastage"]["value"]) == Decimal("60.00")
+    assert Decimal(reasons["breakage"]["value"]) == Decimal("20.00")
+    assert Decimal(reasons["theft"]["value"]) == Decimal("40.00")
+    assert Decimal(report["total_value"]) == Decimal("120.00")
+
+
+def test_a_miscount_is_not_counted_as_a_loss(client, db):
+    """The stock was never there. Folding corrections into wastage inflates a
+    figure people are supposed to act on."""
+    headers = _proc(db)
+    item = _make_item(client, headers, code="LOSS-4")
+    _receive(client, headers, item, 100, "10")
+
+    _adjust(client, headers, item, -5, "wastage", "Offcuts")
+    _adjust(client, headers, item, -20, "correction", "Never arrived, book was wrong")
+
+    report = client.get(
+        "/api/v1/inventory/losses",
+        params={"start": "2020-01-01", "end": "2099-01-01"},
+        headers=headers,
+    ).json()
+
+    assert Decimal(report["total_value"]) == Decimal("50.00")
+    assert Decimal(report["correction_value"]) == Decimal("200.00")
+    assert all(row["code"] != "LOSS-4" or "correction" not in row["reasons"]
+               for row in report["by_item"])
+
+
+def test_the_worst_item_comes_first(client, db):
+    headers = _proc(db)
+    cheap = _make_item(client, headers, code="LOSS-5")
+    dear = _make_item(client, headers, code="LOSS-6")
+    _receive(client, headers, cheap, 100, "1")
+    _receive(client, headers, dear, 100, "50")
+
+    _adjust(client, headers, cheap, -10, "wastage", "Offcuts")
+    _adjust(client, headers, dear, -3, "breakage", "Dropped")
+
+    report = client.get(
+        "/api/v1/inventory/losses",
+        params={"start": "2020-01-01", "end": "2099-01-01"},
+        headers=headers,
+    ).json()
+    codes = [row["code"] for row in report["by_item"]]
+    assert codes.index("LOSS-6") < codes.index("LOSS-5")

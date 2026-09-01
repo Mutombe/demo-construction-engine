@@ -364,3 +364,32 @@ class EquipmentCertType(StrEnum):
     calibration = "calibration"
     operator_licence = "operator_licence"
     other = "other"
+
+
+class StockLossReason(StrEnum):
+    """Why stock left without being issued to a job.
+
+    Kept apart because the response to each is different and a single
+    "adjustment" bucket hides that. Wastage is a rate to manage, breakage is a
+    handling problem, theft is a security one, and a miscount was never a loss
+    at all — it was always a bad number. Averaging the four together produces
+    a figure that cannot prompt anybody to do anything.
+    """
+
+    correction = "correction"
+    wastage = "wastage"
+    breakage = "breakage"
+    theft = "theft"
+    expiry = "expiry"
+    site_loss = "site_loss"
+
+
+# The ones that cost real money. A correction never did: the stock was not
+# there to begin with, the book was simply wrong.
+REAL_LOSSES = (
+    StockLossReason.wastage,
+    StockLossReason.breakage,
+    StockLossReason.theft,
+    StockLossReason.expiry,
+    StockLossReason.site_loss,
+)

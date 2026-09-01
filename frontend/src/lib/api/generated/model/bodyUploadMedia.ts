@@ -12,4 +12,5 @@ export interface BodyUploadMedia {
   entity_id: string;
   folder?: MediaFolder;
   caption?: string | null;
+  client_op_id?: string | null;
 }

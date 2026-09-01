@@ -11655,6 +11655,65 @@
         }
       }
     },
+    "/api/v1/inventory/losses": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Get Loss Report",
+        "description": "Stock that left the store without reaching a job, grouped by why.\n\nCorrections are shown but never counted in the total: the stock was never\nthere, so nothing was lost, and folding them in would inflate a wastage\nfigure that people are meant to act on.",
+        "operationId": "get_loss_report",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "End"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LossReport"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects/{project_id}/valuations": {
       "get": {
         "tags": [
@@ -19098,6 +19157,16 @@
             "minLength": 1,
             "title": "Notes"
           },
+          "loss_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StockLossReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "movement_date": {
             "anyOf": [
               {
@@ -19762,6 +19831,18 @@
               }
             ],
             "title": "Caption"
+          },
+          "client_op_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Op Id"
           }
         },
         "type": "object",
@@ -26342,6 +26423,55 @@
         ],
         "title": "IssueStatus"
       },
+      "ItemLossRow": {
+        "properties": {
+          "stock_item_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Stock Item Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "quantity": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Quantity"
+          },
+          "value": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reasons",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "stock_item_id",
+          "code",
+          "name",
+          "unit",
+          "quantity",
+          "value"
+        ],
+        "title": "ItemLossRow"
+      },
       "JournalCreate": {
         "properties": {
           "journal_date": {
@@ -26842,6 +26972,84 @@
           "password"
         ],
         "title": "LoginRequest"
+      },
+      "LossReport": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date",
+            "title": "End"
+          },
+          "total_value": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Value"
+          },
+          "correction_value": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Correction Value"
+          },
+          "by_reason": {
+            "items": {
+              "$ref": "#/components/schemas/LossRow"
+            },
+            "type": "array",
+            "title": "By Reason",
+            "default": []
+          },
+          "by_item": {
+            "items": {
+              "$ref": "#/components/schemas/ItemLossRow"
+            },
+            "type": "array",
+            "title": "By Item",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "total_value",
+          "correction_value"
+        ],
+        "title": "LossReport",
+        "description": "What left the store without reaching a job."
+      },
+      "LossRow": {
+        "properties": {
+          "reason": {
+            "$ref": "#/components/schemas/StockLossReason"
+          },
+          "movements": {
+            "type": "integer",
+            "title": "Movements"
+          },
+          "quantity": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Quantity"
+          },
+          "value": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason",
+          "movements",
+          "quantity",
+          "value"
+        ],
+        "title": "LossRow"
       },
       "MaintenanceCreate": {
         "properties": {
@@ -36758,6 +36966,19 @@
         },
         "type": "object",
         "title": "StockLocationUpdate"
+      },
+      "StockLossReason": {
+        "type": "string",
+        "enum": [
+          "correction",
+          "wastage",
+          "breakage",
+          "theft",
+          "expiry",
+          "site_loss"
+        ],
+        "title": "StockLossReason",
+        "description": "Why stock left without being issued to a job.\n\nKept apart because the response to each is different and a single\n\"adjustment\" bucket hides that. Wastage is a rate to manage, breakage is a\nhandling problem, theft is a security one, and a miscount was never a loss\nat all \u2014 it was always a bad number. Averaging the four together produces\na figure that cannot prompt anybody to do anything."
       },
       "StockMovementRead": {
         "properties": {

@@ -1,4 +1,5 @@
 import uuid
+from datetime import date
 from decimal import Decimal
 from typing import Annotated
 
@@ -12,11 +13,18 @@ from app.modules.inventory import analytics, service
 from app.common.enums import StocktakeStatus
 from app.modules.inventory.schemas import (
     AdjustRequest,
+    ConsumptionTrend,
+    DemandForecast,
+    ExpiryReport,
     GoodsInRequest,
+    InventoryAnalytics,
     IssueRequest,
+    LossReport,
+    RecallTrace,
     ReorderRequest,
     ReorderResult,
     ReorderSuggestions,
+    StockBatchRead,
     StockItemCreate,
     StockItemRead,
     StockItemUpdate,
@@ -25,17 +33,11 @@ from app.modules.inventory.schemas import (
     StockLocationRead,
     StockLocationUpdate,
     StockMovementRead,
+    StockTransferRead,
     StocktakeCountSet,
     StocktakeCreate,
     StocktakeDetail,
     StocktakeRead,
-    StockTransferRead,
-    ExpiryReport,
-    RecallTrace,
-    StockBatchRead,
-    ConsumptionTrend,
-    DemandForecast,
-    InventoryAnalytics,
     TransferRequest,
 )
 
@@ -314,3 +316,14 @@ def get_item_consumption(
     months: Annotated[int, Query(ge=2, le=24)] = 6,
 ) -> ConsumptionTrend:
     return analytics.item_consumption_trend(db, item_id, months)
+
+
+@router.get("/inventory/losses", response_model=LossReport)
+def get_loss_report(db: DbDep, start: date, end: date) -> LossReport:
+    """Stock that left the store without reaching a job, grouped by why.
+
+    Corrections are shown but never counted in the total: the stock was never
+    there, so nothing was lost, and folding them in would inflate a wastage
+    figure that people are meant to act on.
+    """
+    return service.loss_report(db, start, end)

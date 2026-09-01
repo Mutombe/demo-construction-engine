@@ -5,6 +5,7 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.common.enums import (
+    StockLossReason,
     StockLocationKind,
     StockMovementType,
     StocktakeStatus,
@@ -120,6 +121,10 @@ class AdjustRequest(BaseModel):
     location_id: uuid.UUID | None = None
     quantity: Decimal  # signed; validated non-zero in service
     notes: str = Field(min_length=1)
+    # Required when stock is going out. Adding to the book is a correction
+    # by definition — nothing was lost — but taking it away is a loss that
+    # somebody has to categorise before it can be managed.
+    loss_reason: StockLossReason | None = None
     movement_date: date | None = None
 
 
@@ -404,3 +409,34 @@ class ConsumptionTrend(BaseModel):
     stock_item_id: uuid.UUID
     months: list[ConsumptionMonth]
     total: Decimal
+
+
+class LossRow(BaseModel):
+    reason: StockLossReason
+    movements: int
+    quantity: Decimal
+    value: Decimal
+
+
+class ItemLossRow(BaseModel):
+    stock_item_id: uuid.UUID
+    code: str
+    name: str
+    unit: str
+    quantity: Decimal
+    value: Decimal
+    reasons: list[str] = []
+
+
+class LossReport(BaseModel):
+    """What left the store without reaching a job."""
+
+    start: date
+    end: date
+    total_value: Decimal
+    # Corrections are reported separately and never added in: the stock was
+    # never there, so nothing was lost. Folding them in would inflate a
+    # wastage figure with somebody's arithmetic.
+    correction_value: Decimal
+    by_reason: list[LossRow] = []
+    by_item: list[ItemLossRow] = []

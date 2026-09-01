@@ -4,11 +4,13 @@
  * Datum API
  * OpenAPI spec version: 0.1.0
  */
+import type { StockLossReason } from './stockLossReason.ts';
 
 export interface AdjustRequest {
   location_id?: string | null;
   quantity: number | string;
   /** @minLength 1 */
   notes: string;
+  loss_reason?: StockLossReason | null;
   movement_date?: string | null;
 }

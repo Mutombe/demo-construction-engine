@@ -52,6 +52,7 @@ export function MovementDialog({
   const [projectId, setProjectId] = useState("");
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
+  const [lossReason, setLossReason] = useState("");
   const [batchNumber, setBatchNumber] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
 
@@ -103,9 +104,17 @@ export function MovementDialog({
           toast.error("Adjustments require a note");
           return;
         }
+        if (Number(quantity) < 0 && !lossReason) {
+          toast.error("Say why the stock is going out");
+          return;
+        }
         await adjustMutation.mutateAsync({
           itemId: item.id,
-          data: { quantity, notes },
+          data: {
+            quantity,
+            notes,
+            loss_reason: (lossReason || null) as never,
+          },
         });
         toast.success("Stock adjusted");
       }
@@ -145,6 +154,30 @@ export function MovementDialog({
                 onChange={(e) => setQuantity(e.target.value)}
               />
             </div>
+            {kind === "adjust" && Number(quantity) < 0 && (
+              <div className="space-y-1.5">
+                <Label>
+                  Why it is going out
+                  <span className="ml-1 text-destructive">*</span>
+                </Label>
+                <Select
+                  value={lossReason}
+                  onChange={(e) => setLossReason(e.target.value)}
+                >
+                  <option value="">Choose a cause</option>
+                  <option value="wastage">Wastage</option>
+                  <option value="breakage">Breakage</option>
+                  <option value="theft">Theft</option>
+                  <option value="expiry">Out of date</option>
+                  <option value="site_loss">Lost on site</option>
+                  <option value="correction">Count correction</option>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Each needs a different answer, and one adjustment figure cannot tell them
+                  apart. A count correction is not a loss — the stock was never there.
+                </p>
+              </div>
+            )}
             {kind === "goods-in" && tracked && (
             <div className="grid grid-cols-2 gap-3 rounded-md border bg-muted/30 p-3">
               <div className="space-y-1.5">

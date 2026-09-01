@@ -251,7 +251,12 @@ def test_adjustment_is_bounded_by_the_location_not_the_company(client, db):
     # company holds 100
     res = client.post(
         f"/api/v1/stock-items/{item['id']}/adjust",
-        json={"location_id": yard["id"], "quantity": "-5", "notes": "breakage"},
+        json={
+            "location_id": yard["id"],
+            "quantity": "-5",
+            "notes": "breakage",
+            "loss_reason": "breakage",
+        },
         headers=headers,
     )
     assert res.status_code == 409
@@ -409,7 +414,7 @@ def test_levels_always_reconcile_with_the_item_total(client, db):
     )
     client.post(
         f"/api/v1/stock-items/{item['id']}/adjust",
-        json={"quantity": "-3", "notes": "damaged"},
+        json={"quantity": "-3", "notes": "damaged", "loss_reason": "breakage"},
         headers=headers,
     )
 
