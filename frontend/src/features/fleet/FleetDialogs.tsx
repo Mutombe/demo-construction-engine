@@ -161,13 +161,20 @@ export function RegisterDialog({
             </p>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="e-rate">Charge-out rate</Label>
+            <Label htmlFor="e-rate">
+              Charge-out rate per {form.meter_type === "hours" ? "hour" : "km"}
+            </Label>
             <Input
               id="e-rate"
               inputMode="decimal"
               value={form.hourly_rate}
               onChange={(e) => setForm({ ...form, hourly_rate: e.target.value })}
             />
+            <p className="text-xs text-muted-foreground">
+              {form.meter_type === "hours"
+                ? "What a job is charged for each hour it runs."
+                : "Per kilometre, not per hour. A truck charged at an hourly rate bills a job six figures for one month of tipping."}
+            </p>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="e-burn">Expected burn (L/hr)</Label>

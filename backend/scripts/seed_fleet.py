@@ -65,8 +65,12 @@ rng = random.Random(20260831)
 
 # --- The yard ----------------------------------------------------------------
 #
-# (code, name, category, ownership, meter type, opening meter, hourly rate,
-#  litres per hour it should burn)
+# (code, name, category, ownership, meter type, opening meter, charge-out
+#  rate PER METERED UNIT, litres per hour it should burn)
+#
+# The rate is per hour for yellow plant and per kilometre for anything on
+# distance. They are not remotely the same number: a tipper at an hourly
+# rate would recharge a job six figures for one month of tipping.
 #
 # `None` for the burn rate means nobody ever established one, which is the
 # normal state of a yard and is why the exception report learns a baseline
@@ -81,16 +85,38 @@ PLANT = [
     ("GRD-001", "Cat 140K Grader", "grader", "hired", "hours", 2240, 60, "16.0"),
     ("RLR-001", "Bomag BW211 Roller", "roller", "owned", "hours", 2760, 26, "8.5"),
     ("RLR-002", "Dynapac CA250 Roller", "roller", "owned", "hours", 1420, 26, None),
-    ("TIP-001", "Howo 30t Tipper", "tipper", "owned", "kilometres", 148_300, 22, None),
-    ("TIP-002", "Howo 30t Tipper", "tipper", "owned", "kilometres", 96_450, 22, None),
-    ("TIP-003", "Sinotruk 20t Tipper", "tipper", "hired", "kilometres", 211_900, 20, None),
+    ("TIP-001", "Howo 30t Tipper", "tipper", "owned", "kilometres", 148_300, "1.80", None),
+    ("TIP-002", "Howo 30t Tipper", "tipper", "owned", "kilometres", 96_450, "1.80", None),
+    ("TIP-003", "Sinotruk 20t Tipper", "tipper", "hired", "kilometres", 211_900, "1.65", None),
     ("CRN-001", "Potain MDT 219 Tower Crane", "crane", "hired", "hours", 640, 85, None),
     ("GEN-001", "FG Wilson 100kVA Generator", "generator", "owned", "hours", 8910, 12, "12.0"),
     ("GEN-002", "Perkins 60kVA Generator", "generator", "owned", "hours", 3120, 9, "7.5"),
     ("PMP-001", "Honda 3in Dewatering Pump", "pump", "owned", "hours", 740, 4, None),
-    ("LV-001", "Toyota Hilux D/C", "light_vehicle", "owned", "kilometres", 63_200, 8, None),
-    ("LV-002", "Isuzu D-Max D/C", "light_vehicle", "owned", "kilometres", 41_770, 8, None),
+    ("LV-001", "Toyota Hilux D/C", "light_vehicle", "owned", "kilometres", 63_200, "0.85", None),
+    ("LV-002", "Isuzu D-Max D/C", "light_vehicle", "owned", "kilometres", 41_770, "0.85", None),
 ]
+
+# What each machine is on the books at. Hired plant is zero: it belongs to
+# somebody else, so it is not an asset of ours and is not depreciated.
+PURCHASE_COSTS = {
+    "EXC-001": Decimal("88000"),
+    "EXC-002": Decimal("76000"),
+    "EXC-003": Decimal("0"),
+    "LDR-001": Decimal("82000"),
+    "LDR-002": Decimal("54000"),
+    "GRD-001": Decimal("0"),
+    "RLR-001": Decimal("47000"),
+    "RLR-002": Decimal("39000"),
+    "TIP-001": Decimal("46000"),
+    "TIP-002": Decimal("44000"),
+    "TIP-003": Decimal("0"),
+    "CRN-001": Decimal("0"),
+    "GEN-001": Decimal("23000"),
+    "GEN-002": Decimal("14500"),
+    "PMP-001": Decimal("3800"),
+    "LV-001": Decimal("34000"),
+    "LV-002": Decimal("31500"),
+}
 
 # One machine burns far more than its own history says it should. Somebody
 # needs to look at it, and the report is what makes them.
@@ -130,7 +156,7 @@ def seed_equipment(db) -> None:
                 ownership=Ownership(own),
                 meter_type=MeterType(meter),
                 current_meter=Decimal(opening),
-                hourly_rate=Decimal(rate),
+                hourly_rate=Decimal(str(rate)),
                 expected_burn_rate=Decimal(burn) if burn else None,
                 make=name.split()[0],
                 registration=f"AE{7000 + index * 13} {chr(65 + index % 26)}Z"
@@ -141,7 +167,9 @@ def seed_equipment(db) -> None:
                 if own == "hired" and hire_suppliers
                 else None,
                 purchase_date=TODAY - timedelta(days=400 + index * 55),
-                purchase_cost=Decimal(rate) * 1400,
+                # Hired plant is not ours to carry, so it has no cost and
+                # never appears on the asset register.
+                purchase_cost=PURCHASE_COSTS.get(code) or None,
             ),
             admin,
         )

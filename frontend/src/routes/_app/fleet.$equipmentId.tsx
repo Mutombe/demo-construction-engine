@@ -361,7 +361,7 @@ function EquipmentDetail() {
               <Row label="Meter" value={`${Number(machine.current_meter).toLocaleString()} ${unit}`} />
               <Row label="On" value={machine.current_project_name ?? "In the yard"} />
               <Row
-                label="Hourly rate"
+                label={`Rate per ${unit === "hrs" ? "hour" : "km"}`}
                 value={machine.hourly_rate ? moneyExact(machine.hourly_rate) : "Not set"}
               />
               <Row
@@ -955,6 +955,7 @@ function EditDialog({
     id: string;
     name: string;
     status: string;
+    meter_type: string;
     hourly_rate?: string | number | null;
     expected_burn_rate?: string | number | null;
     registration?: string | null;
@@ -1035,7 +1036,9 @@ function EditDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="ed-rate">Charge-out rate</Label>
+            <Label htmlFor="ed-rate">
+              Charge-out rate per {machine.meter_type === "hours" ? "hour" : "km"}
+            </Label>
             <Input
               id="ed-rate"
               inputMode="decimal"
