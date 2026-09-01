@@ -19,8 +19,11 @@ def _png_bytes() -> bytes:
 
 
 def _upload(client, headers, entity_type, entity_id, *, content=b"hello",
-            filename="note.txt", ctype="text/plain", folder=None, caption=None):
+            filename="note.txt", ctype="text/plain", folder=None, caption=None,
+            client_op_id=None):
     data = {"entity_type": entity_type, "entity_id": str(entity_id)}
+    if client_op_id:
+        data["client_op_id"] = str(client_op_id)
     if folder:
         data["folder"] = folder
     if caption:
@@ -182,3 +185,63 @@ def test_search_by_filename_and_caption(client, db):
     assert client.get("/api/v1/media?search=foundation", headers=headers).json()["total"] == 1
     assert client.get("/api/v1/media?search=warranty", headers=headers).json()["total"] == 1
     assert client.get("/api/v1/media?search=nothing-matches", headers=headers).json()["total"] == 0
+
+
+# --- Photographs captured with no signal --------------------------------------
+
+
+def test_a_photo_retried_after_a_dropped_upload_is_not_filed_twice(client, db):
+    """A phone that loses signal mid-upload sends the picture again. The id it
+    was given when it was taken is what stops that becoming two copies."""
+    import uuid as _uuid
+
+    from tests.factories import make_project
+
+    headers = _pm(db)
+    project = make_project(db)
+    op_id = _uuid.uuid4()
+
+    first = _upload(
+        client, headers, "project", project.id, content=b"jpegbytes",
+        filename="pour.jpg", ctype="image/jpeg", client_op_id=op_id,
+    )
+    assert first.status_code == 201, first.text
+
+    second = _upload(
+        client, headers, "project", project.id, content=b"jpegbytes",
+        filename="pour.jpg", ctype="image/jpeg", client_op_id=op_id,
+    )
+    assert second.status_code == 201
+    assert second.json()["id"] == first.json()["id"]
+
+    listing = client.get(
+        "/api/v1/media",
+        params={"entity_type": "project", "entity_id": str(project.id)},
+        headers=headers,
+    ).json()
+    assert listing["total"] == 1
+
+
+def test_two_photos_of_the_same_thing_are_still_two_photos(client, db):
+    """Idempotency is per capture, not per image. A foreman taking the same
+    view twice meant to."""
+    import uuid as _uuid
+
+    from tests.factories import make_project
+
+    headers = _pm(db)
+    project = make_project(db)
+
+    for _ in range(2):
+        res = _upload(
+            client, headers, "project", project.id, content=b"jpegbytes",
+            filename="pour.jpg", ctype="image/jpeg", client_op_id=_uuid.uuid4(),
+        )
+        assert res.status_code == 201
+
+    listing = client.get(
+        "/api/v1/media",
+        params={"entity_type": "project", "entity_id": str(project.id)},
+        headers=headers,
+    ).json()
+    assert listing["total"] == 2

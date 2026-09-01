@@ -6,6 +6,8 @@ from fastapi.responses import FileResponse
 from app.common.enums import MediaFolder, UserRole
 from app.common.pagination import PageParamsDep
 from app.common.schemas import Page
+from sqlalchemy import select
+
 from app.core.deps import CurrentUser, DbDep, require_roles
 from app.modules.media import service
 from app.modules.media.models import MediaFile
@@ -32,8 +34,19 @@ async def upload_media(
     entity_id: uuid.UUID = Form(...),
     folder: MediaFolder = Form(default=MediaFolder.other),
     caption: str | None = Form(default=None),
+    # Supplied by a device that captured the photo offline. Makes the
+    # upload safe to retry: a dropped connection costs a wasted request,
+    # never a second copy of the same photograph.
+    client_op_id: uuid.UUID | None = Form(default=None),
     user=Depends(media_write),
 ) -> MediaRead:
+    if client_op_id is not None:
+        existing = db.scalar(
+            select(MediaFile).where(MediaFile.client_op_id == client_op_id)
+        )
+        if existing is not None:
+            return _read(existing)
+
     content = await file.read()
     media = service.save_media(
         db,
@@ -46,6 +59,8 @@ async def upload_media(
         media_type=file.content_type or "application/octet-stream",
         user_id=user.id,
     )
+    media.client_op_id = client_op_id
+    db.flush()
     return _read(media)
 
 

@@ -19,7 +19,14 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api/axios";
 import { useListProjects } from "@/lib/api/generated/endpoints";
-import { enqueue, remove, type OutboxOperation } from "@/lib/offline/outbox";
+import {
+  enqueue,
+  remove,
+  removePhoto,
+  type OutboxOperation,
+  type OutboxPhoto,
+} from "@/lib/offline/outbox";
+import { PhotoForm } from "@/features/offline/PhotoForm";
 import { useOutbox } from "@/lib/offline/useOutbox";
 import { toast } from "@/lib/toast";
 
@@ -65,7 +72,7 @@ function useFieldPack(projectId: string | null) {
 }
 
 function FieldCapture() {
-  const { online, waiting, rejected, sending, send } = useOutbox();
+  const { online, waiting, rejected, photos, sending, send } = useOutbox();
   const { data: projects } = useListProjects({ page: 1, page_size: 100 });
   const [projectId, setProjectId] = useState<string>("");
   const { pack, loading } = useFieldPack(projectId || null);
@@ -98,14 +105,16 @@ function FieldCapture() {
             <CloudSlash className="h-4 w-4 text-warning" />
           )}
           {online ? "Connected" : "No signal — still recording"}
-          {waiting.length > 0 && (
-            <Badge variant="outline">{waiting.length} waiting to send</Badge>
+          {waiting.length + photos.length > 0 && (
+            <Badge variant="outline">
+              {waiting.length + photos.length} waiting to send
+            </Badge>
           )}
         </span>
         <Button
           variant="outline"
           size="sm"
-          disabled={!online || sending || !waiting.length}
+          disabled={!online || sending || !(waiting.length || photos.length)}
           onClick={() => void send()}
         >
           {sending ? "Sending…" : "Send Now"}
@@ -143,12 +152,13 @@ function FieldCapture() {
       {projectId && (
         <>
           <DiaryForm projectId={projectId} pack={pack} />
+          <PhotoForm projectId={projectId} />
           <IssueForm projectId={projectId} />
           <PlantForm projectId={projectId} pack={pack} />
         </>
       )}
 
-      <Queue waiting={waiting} rejected={rejected} />
+      <Queue waiting={waiting} rejected={rejected} photos={photos} />
     </div>
   );
 }
@@ -444,11 +454,13 @@ function PlantForm({ projectId, pack }: { projectId: string; pack: Pack | null }
 function Queue({
   waiting,
   rejected,
+  photos,
 }: {
   waiting: OutboxOperation[];
   rejected: OutboxOperation[];
+  photos: OutboxPhoto[];
 }) {
-  if (!waiting.length && !rejected.length) {
+  if (!waiting.length && !rejected.length && !photos.length) {
     return (
       <Card>
         <CardContent className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
@@ -464,6 +476,27 @@ function Queue({
         <CardTitle className="text-base">On this device</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
+        {photos.map((photo) => (
+          <div key={photo.client_op_id} className="flex items-center gap-2 text-sm">
+            <Badge variant={photo.attempts >= 5 ? "destructive" : "outline"}>
+              {photo.attempts >= 5 ? "Refused" : "Photo"}
+            </Badge>
+            <span className="flex-1 truncate">{photo.caption || photo.filename}</span>
+            <span className="shrink-0 text-xs text-muted-foreground">
+              {Math.round(photo.blob.size / 1024)} KB
+            </span>
+            {photo.attempts >= 5 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Discard photo"
+                onClick={() => void removePhoto(photo.client_op_id)}
+              >
+                <Trash />
+              </Button>
+            )}
+          </div>
+        ))}
         {waiting.map((op) => (
           <div key={op.client_op_id} className="flex items-center gap-2 text-sm">
             <Badge variant="outline">Waiting</Badge>

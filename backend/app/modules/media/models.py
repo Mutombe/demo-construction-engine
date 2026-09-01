@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Enum, Index, Integer, String
+from sqlalchemy import Enum, Index, Integer, String, text
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -23,8 +23,14 @@ class MediaFile(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
     __table_args__ = (
         Index("ix_media_files_entity", "entity_type", "entity_id"),
         Index("ix_media_files_sha256", "file_sha256"),
+        # The id a device gave the photo before it had signal. Unique, so a
+        # retry after a dropped upload returns the photo already stored
+        # rather than filing the same one twice.
+        Index("ux_media_files_client_op", "client_op_id", unique=True,
+              postgresql_where=text("client_op_id IS NOT NULL")),
     )
 
+    client_op_id: Mapped[uuid.UUID | None] = mapped_column(PG_UUID(as_uuid=True))
     entity_type: Mapped[str] = mapped_column(String(30))
     entity_id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True))
     folder: Mapped[MediaFolder] = mapped_column(

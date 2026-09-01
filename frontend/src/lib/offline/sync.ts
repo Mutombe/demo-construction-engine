@@ -7,7 +7,16 @@
  */
 
 import { api } from "@/lib/api/axios";
-import { deviceId, markRejected, pending, remove, subscribe } from "@/lib/offline/outbox";
+import {
+  allPhotos,
+  deviceId,
+  markRejected,
+  notePhotoFailure,
+  pending,
+  remove,
+  removePhoto,
+  subscribe,
+} from "@/lib/offline/outbox";
 
 export interface SyncResult {
   client_op_id: string;
@@ -72,7 +81,7 @@ export async function drain(): Promise<SyncSummary | null> {
  *  back without the browser saying so — which on a site radio it often does. */
 export function startSyncLoop(): () => void {
   const attempt = () => {
-    void drain();
+    void drain().then(() => drainPhotos());
   };
   window.addEventListener("online", attempt);
   const timer = window.setInterval(attempt, 60_000);
@@ -84,4 +93,49 @@ export function startSyncLoop(): () => void {
     window.clearInterval(timer);
     unsubscribe();
   };
+}
+
+
+/** Photographs, one at a time.
+
+ *  Sent individually rather than in the backlog: they are megabytes each, and
+ *  a single large photo on a bad connection would otherwise hold up a whole
+ *  day of typed records behind it. Each carries the id it was given when it
+ *  was taken, so a retry after a dropped upload returns the photo already
+ *  stored rather than filing a second copy of it.
+ */
+export async function drainPhotos(): Promise<number> {
+  if (!navigator.onLine) return 0;
+  const queued = await allPhotos();
+  let sent = 0;
+
+  for (const photo of queued) {
+    // A photo the server keeps refusing is left alone after a few goes. It
+    // stays on the device and visible rather than being retried forever on a
+    // metered connection.
+    if (photo.attempts >= 5) continue;
+
+    const form = new FormData();
+    form.append("file", photo.blob, photo.filename);
+    form.append("entity_type", photo.entity_type);
+    form.append("entity_id", photo.entity_id);
+    form.append("folder", "progress");
+    form.append("client_op_id", photo.client_op_id);
+    if (photo.caption) form.append("caption", photo.caption);
+
+    try {
+      await api.post("/api/v1/media", form);
+      await removePhoto(photo.client_op_id);
+      sent += 1;
+    } catch (err) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      // A refusal is about this photo and will not fix itself; a network
+      // failure will. Only the first is worth counting against the limit.
+      if (status && status >= 400 && status < 500) {
+        await notePhotoFailure(photo.client_op_id, "The server would not accept this photo");
+      }
+      break;
+    }
+  }
+  return sent;
 }

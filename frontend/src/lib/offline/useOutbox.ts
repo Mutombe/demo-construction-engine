@@ -1,11 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
-import { all, subscribe, type OutboxOperation } from "@/lib/offline/outbox";
-import { drain } from "@/lib/offline/sync";
+import {
+  all,
+  allPhotos,
+  subscribe,
+  type OutboxOperation,
+  type OutboxPhoto,
+} from "@/lib/offline/outbox";
+import { drain, drainPhotos } from "@/lib/offline/sync";
 
 export interface OutboxState {
   online: boolean;
   waiting: OutboxOperation[];
   rejected: OutboxOperation[];
+  photos: OutboxPhoto[];
   sending: boolean;
   send: () => Promise<void>;
 }
@@ -13,11 +20,13 @@ export interface OutboxState {
 /** What is still on this device, and whether it can leave. */
 export function useOutbox(): OutboxState {
   const [rows, setRows] = useState<OutboxOperation[]>([]);
+  const [photos, setPhotos] = useState<OutboxPhoto[]>([]);
   const [online, setOnline] = useState(() => navigator.onLine);
   const [sending, setSending] = useState(false);
 
   const reload = useCallback(() => {
     void all().then(setRows);
+    void allPhotos().then(setPhotos);
   }, []);
 
   useEffect(() => {
@@ -38,6 +47,7 @@ export function useOutbox(): OutboxState {
     setSending(true);
     try {
       await drain();
+      await drainPhotos();
     } finally {
       setSending(false);
       reload();
@@ -48,6 +58,7 @@ export function useOutbox(): OutboxState {
     online,
     waiting: rows.filter((row) => row.status !== "rejected"),
     rejected: rows.filter((row) => row.status === "rejected"),
+    photos,
     sending,
     send,
   };
