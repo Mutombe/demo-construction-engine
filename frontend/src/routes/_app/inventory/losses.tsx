@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ErrorState } from "@/components/ui/list-state";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/ui/stat-card";
 import {
@@ -52,7 +53,8 @@ function Losses() {
   const start = search.start ?? monthsAgo(3);
   const end = search.end ?? new Date().toISOString().slice(0, 10);
 
-  const { data, isLoading } = useGetLossReport({ start, end });
+  const query = useGetLossReport({ start, end });
+  const { data, isLoading } = query;
 
   const byReason = (data?.by_reason ?? []).filter((row) => row.reason !== NOT_A_LOSS);
   const worst = byReason[0];
@@ -123,7 +125,9 @@ function Losses() {
             </p>
           </CardHeader>
           <CardContent className="p-0">
-            {isLoading && !data ? (
+            {query.isError ? (
+              <ErrorState error={query.error} onRetry={() => void query.refetch()} />
+            ) : isLoading && !data ? (
               <TableSkeleton columns={4} />
             ) : (data?.by_reason ?? []).length ? (
               <Table>
@@ -182,7 +186,9 @@ function Losses() {
             </p>
           </CardHeader>
           <CardContent className="p-0">
-            {isLoading && !data ? (
+            {query.isError ? (
+              <ErrorState error={query.error} onRetry={() => void query.refetch()} />
+            ) : isLoading && !data ? (
               <TableSkeleton columns={4} />
             ) : (data?.by_item ?? []).length ? (
               <Table maxHeight="55vh">

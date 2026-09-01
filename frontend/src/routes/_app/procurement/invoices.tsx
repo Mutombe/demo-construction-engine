@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ErrorState } from "@/components/ui/list-state";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/ui/stat-card";
 import {
@@ -35,7 +36,8 @@ export const Route = createFileRoute("/_app/procurement/invoices")({
 
 function SupplierInvoices() {
   const queryClient = useQueryClient();
-  const { data: invoices, isLoading } = useListSupplierInvoices({ status: "submitted" });
+  const invoicesQuery = useListSupplierInvoices({ status: "submitted" });
+  const { data: invoices, isLoading } = invoicesQuery;
   const { data: mismatches } = useGetMatchingReport();
   const decide = useDecideSupplierInvoice();
   const [querying, setQuerying] = useState<string | null>(null);
@@ -130,7 +132,12 @@ function SupplierInvoices() {
           <CardTitle className="text-base">Waiting on a decision</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {isLoading && !invoices ? (
+          {invoicesQuery.isError ? (
+            <ErrorState
+              error={invoicesQuery.error}
+              onRetry={() => void invoicesQuery.refetch()}
+            />
+          ) : isLoading && !invoices ? (
             <TableSkeleton columns={5} />
           ) : rows.length ? (
             <Table maxHeight="55vh">

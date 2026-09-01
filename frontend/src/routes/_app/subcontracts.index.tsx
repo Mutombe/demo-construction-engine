@@ -4,6 +4,7 @@ import { Handshake, HandCoins, ShieldWarning } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/list-state";
 import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import { StatCard } from "@/components/ui/stat-card";
 import { TableSkeleton } from "@/components/ui/skeleton";
@@ -71,12 +72,12 @@ function SubcontractRegister() {
   // screen while the next page loads, so paging does not blink.
   const paging = { page, page_size: pageSize };
   const keep = { query: { placeholderData: keepPreviousData } };
-  const { data: packages, isLoading: loadingPackages } = useListAllSubcontracts(paging, keep);
-  const { data: retention, isLoading: loadingRetention } = useRetentionRegister(paging, keep);
-  const { data: expiring, isLoading: loadingExpiring } = useGetExpiring(
-    { ...paging, days: 60 },
-    keep,
-  );
+  const packagesQuery = useListAllSubcontracts(paging, keep);
+  const retentionQuery = useRetentionRegister(paging, keep);
+  const expiringQuery = useGetExpiring({ ...paging, days: 60 }, keep);
+  const { data: packages, isLoading: loadingPackages } = packagesQuery;
+  const { data: retention, isLoading: loadingRetention } = retentionQuery;
+  const { data: expiring, isLoading: loadingExpiring } = expiringQuery;
 
   const rows = packages?.items ?? [];
   const retentionRows = retention?.items ?? [];
@@ -156,7 +157,12 @@ function SubcontractRegister() {
       {tab === "packages" && (
         <Card>
           <CardContent className="p-0">
-            {loadingPackages && !packages ? (
+            {packagesQuery.isError ? (
+              <ErrorState
+                error={packagesQuery.error}
+                onRetry={() => void packagesQuery.refetch()}
+              />
+            ) : loadingPackages && !packages ? (
               <TableSkeleton columns={7} />
             ) : rows.length ? (
               <Table>
@@ -237,7 +243,12 @@ function SubcontractRegister() {
               them, and nothing on a project screen shows it — so without this list it is only
               found when somebody rings up and asks.
             </div>
-            {loadingRetention && !retention ? (
+            {retentionQuery.isError ? (
+              <ErrorState
+                error={retentionQuery.error}
+                onRetry={() => void retentionQuery.refetch()}
+              />
+            ) : loadingRetention && !retention ? (
               <TableSkeleton columns={6} />
             ) : retentionRows.length ? (
               <Table>
@@ -303,7 +314,12 @@ function SubcontractRegister() {
               Certificates lapsing in the next 60 days, across every vendor. Chased before it
               stops a job rather than after.
             </div>
-            {loadingExpiring && !expiring ? (
+            {expiringQuery.isError ? (
+              <ErrorState
+                error={expiringQuery.error}
+                onRetry={() => void expiringQuery.refetch()}
+              />
+            ) : loadingExpiring && !expiring ? (
               <TableSkeleton columns={5} />
             ) : expiringRows.length ? (
               <Table>

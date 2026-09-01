@@ -29,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import { Select } from "@/components/ui/select";
+import { ErrorState } from "@/components/ui/list-state";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -69,7 +70,8 @@ export const Route = createFileRoute("/_app/fleet/$equipmentId")({
 function EquipmentDetail() {
   const { equipmentId } = Route.useParams();
   const queryClient = useQueryClient();
-  const { data: machine } = useGetEquipment(equipmentId);
+  const machineQuery = useGetEquipment(equipmentId);
+  const { data: machine } = machineQuery;
   const [readingPage, setReadingPage] = useState(1);
   const [fuelPage, setFuelPage] = useState(1);
   const [jobPage, setJobPage] = useState(1);
@@ -106,6 +108,14 @@ function EquipmentDetail() {
   const [editOpen, setEditOpen] = useState(false);
   const [certOpen, setCertOpen] = useState(false);
 
+  if (machineQuery.isError) {
+    return (
+      <ErrorState
+        error={machineQuery.error}
+        onRetry={() => void machineQuery.refetch()}
+      />
+    );
+  }
   if (!machine) return <PageSkeleton rows={4} />;
 
   const unit = machine.meter_type === "hours" ? "hrs" : "km";

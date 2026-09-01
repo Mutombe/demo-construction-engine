@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ErrorState } from "@/components/ui/list-state";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -59,7 +60,8 @@ const STATUS_VARIANT: Record<string, "success" | "warning" | "destructive" | "ou
 function SubcontractDetail() {
   const { subcontractId } = Route.useParams();
   const queryClient = useQueryClient();
-  const { data: contract } = useGetSubcontract(subcontractId);
+  const contractQuery = useGetSubcontract(subcontractId);
+  const { data: contract } = contractQuery;
   const award = useAwardSubcontract();
   const submit = useSubmitMilestone();
   const certify = useCertifyMilestone();
@@ -69,6 +71,14 @@ function SubcontractDetail() {
   const [reason, setReason] = useState("");
   const [releaseOpen, setReleaseOpen] = useState(false);
 
+  if (contractQuery.isError) {
+    return (
+      <ErrorState
+        error={contractQuery.error}
+        onRetry={() => void contractQuery.refetch()}
+      />
+    );
+  }
   if (!contract) return <PageSkeleton rows={5} />;
 
   const run = async (fn: () => Promise<unknown>, done: string) => {

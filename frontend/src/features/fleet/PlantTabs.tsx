@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
+import { ErrorState } from "@/components/ui/list-state";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/ui/stat-card";
 import {
@@ -61,10 +62,11 @@ function monthsAgo(count: number) {
 export function Assets() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const { data, isLoading } = useGetAssetRegister(
+  const query = useGetAssetRegister(
     { page, page_size: pageSize },
     { query: { placeholderData: keepPreviousData } },
   );
+  const { data, isLoading } = query;
   const rows = data?.items ?? [];
 
   const carried = rows.reduce((sum, row) => sum + Number(row.net_book_value ?? 0), 0);
@@ -87,7 +89,9 @@ export function Assets() {
 
       <Card>
         <CardContent className="p-0">
-          {isLoading && !data ? (
+          {query.isError ? (
+            <ErrorState error={query.error} onRetry={() => void query.refetch()} />
+          ) : isLoading && !data ? (
             <TableSkeleton columns={7} />
           ) : rows.length ? (
             <Table maxHeight="60vh">
@@ -235,10 +239,11 @@ export function Availability() {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const start = monthsAgo(3);
   const end = new Date().toISOString().slice(0, 10);
-  const { data, isLoading } = useGetAvailability(
+  const query = useGetAvailability(
     { start, end, page, page_size: pageSize },
     { query: { placeholderData: keepPreviousData } },
   );
+  const { data, isLoading } = query;
   const rows = data?.items ?? [];
 
   return (
@@ -249,7 +254,9 @@ export function Availability() {
           calendar days — one in the yard is unused, not unavailable, and adding the two together
           makes both numbers meaningless.
         </div>
-        {isLoading && !data ? (
+        {query.isError ? (
+          <ErrorState error={query.error} onRetry={() => void query.refetch()} />
+        ) : isLoading && !data ? (
           <TableSkeleton columns={6} />
         ) : rows.length ? (
           <Table maxHeight="60vh">
@@ -427,10 +434,11 @@ export function Costing() {
 export function Certificates() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const { data, isLoading } = useGetExpiringCertificates(
+  const query = useGetExpiringCertificates(
     { days: 60 },
     { query: { placeholderData: keepPreviousData } },
   );
+  const { data, isLoading } = query;
   const all = data ?? [];
   const rows = all.slice((page - 1) * pageSize, page * pageSize);
 
@@ -441,7 +449,9 @@ export function Certificates() {
           Certificates lapsing in the next 60 days. An expired one stops the machine going to
           site; lifting gear is stopped by a missing examination too.
         </div>
-        {isLoading && !data ? (
+        {query.isError ? (
+          <ErrorState error={query.error} onRetry={() => void query.refetch()} />
+        ) : isLoading && !data ? (
           <TableSkeleton columns={5} />
         ) : rows.length ? (
           <Table maxHeight="60vh">
