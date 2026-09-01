@@ -20,6 +20,8 @@ export interface SubcontractDetail {
   value: string;
   /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
   retention_pct: string;
+  /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
+  withholding_pct?: string;
   status: SubcontractStatus;
   starts_on: string | null;
   ends_on: string | null;

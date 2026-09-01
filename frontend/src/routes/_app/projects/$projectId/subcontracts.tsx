@@ -171,6 +171,7 @@ function CreateDialog({
     title: "",
     scope: "",
     retention_pct: "10",
+    withholding_pct: "0",
     starts_on: "",
     ends_on: "",
   });
@@ -189,6 +190,7 @@ function CreateDialog({
           scope: form.scope || null,
           value: String(total),
           retention_pct: form.retention_pct || "0",
+          withholding_pct: form.withholding_pct || "0",
           starts_on: form.starts_on || null,
           ends_on: form.ends_on || null,
           milestones: filled.map((s) => ({
@@ -205,6 +207,7 @@ function CreateDialog({
         title: "",
         scope: "",
         retention_pct: "10",
+        withholding_pct: "0",
         starts_on: "",
         ends_on: "",
       });
@@ -265,6 +268,19 @@ function CreateDialog({
               value={form.retention_pct}
               onChange={(e) => setForm({ ...form, retention_pct: e.target.value })}
             />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="sc-withholding">Withholding tax %</Label>
+            <Input
+              id="sc-withholding"
+              inputMode="decimal"
+              value={form.withholding_pct}
+              onChange={(e) => setForm({ ...form, withholding_pct: e.target.value })}
+            />
+            <p className="text-xs text-muted-foreground">
+              Zero where they hold a valid tax clearance — which is a decision to record, not
+              one to leave blank and hope.
+            </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">

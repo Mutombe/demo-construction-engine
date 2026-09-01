@@ -16,6 +16,7 @@ export interface SubcontractCreate {
   scope?: string | null;
   value?: number | string;
   retention_pct?: number | string;
+  withholding_pct?: number | string;
   starts_on?: string | null;
   ends_on?: string | null;
   notes?: string | null;

@@ -27,6 +27,11 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { CommentThread } from "@/features/comments/CommentThread";
+import {
+  BackCharges,
+  PaymentCertificate,
+  Variations,
+} from "@/features/subcontracts/Commercials";
 import { errDetail } from "@/lib/api/errors";
 import {
   useAwardSubcontract,
@@ -302,6 +307,10 @@ function SubcontractDetail() {
             </Card>
           )}
 
+          <Variations subcontractId={subcontractId} />
+
+          <BackCharges subcontractId={subcontractId} />
+
           {contract.scope && (
             <Card>
               <CardHeader>
@@ -324,6 +333,8 @@ function SubcontractDetail() {
         </div>
 
         <div className="space-y-4">
+          <PaymentCertificate subcontractId={subcontractId} />
+
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Retention</CardTitle>
