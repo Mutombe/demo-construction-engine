@@ -75,6 +75,7 @@ const NAV: NavGroup[] = [
     items: [
       { to: "/procurement", label: "Procurement", icon: <ShoppingCart />, permission: "procurement:read" },
       { to: "/procurement/requisitions", label: "Material Requests", icon: <ClipboardText />, permission: "procurement:read" },
+      { to: "/procurement/invoices", label: "Supplier Invoices", icon: <Receipt />, permission: "procurement:read" },
       { to: "/inventory", label: "Inventory", icon: <Package />, permission: "inventory:read" },
       { to: "/fleet", label: "Plant & Fleet", icon: <Truck /> },
       { to: "/subcontracts", label: "Subcontracts", icon: <Handshake />, permission: "procurement:read" },

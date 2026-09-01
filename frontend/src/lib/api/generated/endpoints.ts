@@ -30,6 +30,8 @@ import type {
   AdjustRequest,
   Ageing,
   AiStatus,
+  AppModulesInventorySchemasIssueRequest,
+  AppModulesProcurementSupplierPortalRouterIssueRequest,
   AssignmentCreate,
   AssignmentRead,
   BackChargeCreate,
@@ -77,6 +79,7 @@ import type {
   CreateCommentParams,
   DeadlineItem,
   DeadlinesParams,
+  DecisionRequest,
   DeletedRecordRead,
   DemandForecast,
   DependencyCreate,
@@ -162,7 +165,8 @@ import type {
   InviteCreate,
   InviteCreated,
   InviteRead,
-  IssueRequest,
+  InvoiceRead,
+  InvoiceSubmit,
   JournalCreate,
   JournalDetail,
   ListAccountsParams,
@@ -200,6 +204,7 @@ import type {
   ListStocktakesParams,
   ListSubsidiaryAccounts200Item,
   ListSubsidiaryAccountsParams,
+  ListSupplierInvoicesParams,
   ListSuppliersParams,
   ListTasksParams,
   ListTimesheetsParams,
@@ -212,6 +217,7 @@ import type {
   MaintenanceCreate,
   MaintenanceRead,
   MatchRequest,
+  MatchRow,
   MatchTransaction200,
   MatrixUpdate,
   MeUpdate,
@@ -284,6 +290,7 @@ import type {
   PortalLinkCreate,
   PortalLinkCreated,
   PortalLinkRead,
+  PortalOverview,
   PortalPhotoFileParams,
   PortalPhotoTimeline,
   PortalProjectDetail,
@@ -376,6 +383,8 @@ import type {
   TimesheetPushResult,
   TimesheetRead,
   TimesheetUpdate,
+  TokenIssued,
+  TokenRead,
   TokenResponse,
   TransferRequest,
   TrialBalance,
@@ -11103,6 +11112,488 @@ export function useGetPaymentCertificate<TData = Awaited<ReturnType<typeof getPa
 
 
 /**
+ * @summary List Links
+ */
+export const listLinks = (
+    supplierId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<TokenRead[]>(
+      {url: `/api/v1/suppliers/${supplierId}/portal-links`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getListLinksQueryKey = (supplierId: string,) => {
+    return [
+    `/api/v1/suppliers/${supplierId}/portal-links`
+    ] as const;
+    }
+
+
+export const getListLinksQueryOptions = <TData = Awaited<ReturnType<typeof listLinks>>, TError = HTTPValidationError>(supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLinks>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListLinksQueryKey(supplierId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listLinks>>> = ({ signal }) => listLinks(supplierId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: supplierId !== null && supplierId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listLinks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListLinksQueryResult = NonNullable<Awaited<ReturnType<typeof listLinks>>>
+export type ListLinksQueryError = HTTPValidationError
+
+
+export function useListLinks<TData = Awaited<ReturnType<typeof listLinks>>, TError = HTTPValidationError>(
+ supplierId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLinks>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listLinks>>,
+          TError,
+          Awaited<ReturnType<typeof listLinks>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLinks<TData = Awaited<ReturnType<typeof listLinks>>, TError = HTTPValidationError>(
+ supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLinks>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listLinks>>,
+          TError,
+          Awaited<ReturnType<typeof listLinks>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLinks<TData = Awaited<ReturnType<typeof listLinks>>, TError = HTTPValidationError>(
+ supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLinks>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Links
+ */
+
+export function useListLinks<TData = Awaited<ReturnType<typeof listLinks>>, TError = HTTPValidationError>(
+ supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLinks>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListLinksQueryOptions(supplierId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Mint a link for a supplier. The URL comes back once and cannot be
+ * recovered afterwards — only its hash is kept.
+ * @summary Issue Link
+ */
+export const issueLink = (
+    supplierId: string,
+    appModulesProcurementSupplierPortalRouterIssueRequest: AppModulesProcurementSupplierPortalRouterIssueRequest,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<TokenIssued>(
+      {url: `/api/v1/suppliers/${supplierId}/portal-links`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: appModulesProcurementSupplierPortalRouterIssueRequest, signal
+    },
+      );
+    }
+
+
+
+
+export const getIssueLinkMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof issueLink>>, TError,{supplierId: string;data: AppModulesProcurementSupplierPortalRouterIssueRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof issueLink>>, TError,{supplierId: string;data: AppModulesProcurementSupplierPortalRouterIssueRequest}, TContext> => {
+
+const mutationKey = ['issueLink'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof issueLink>>, {supplierId: string;data: AppModulesProcurementSupplierPortalRouterIssueRequest}> = (props) => {
+          const {supplierId,data} = props ?? {};
+
+          return  issueLink(supplierId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type IssueLinkMutationResult = NonNullable<Awaited<ReturnType<typeof issueLink>>>
+    export type IssueLinkMutationBody = AppModulesProcurementSupplierPortalRouterIssueRequest
+    export type IssueLinkMutationError = HTTPValidationError
+
+    /**
+ * @summary Issue Link
+ */
+export const useIssueLink = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof issueLink>>, TError,{supplierId: string;data: AppModulesProcurementSupplierPortalRouterIssueRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof issueLink>>,
+        TError,
+        {supplierId: string;data: AppModulesProcurementSupplierPortalRouterIssueRequest},
+        TContext
+      > => {
+      return useMutation(getIssueLinkMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Revoke Link
+ */
+export const revokeLink = (
+    tokenId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<void>(
+      {url: `/api/v1/portal-links/${tokenId}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getRevokeLinkMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeLink>>, TError,{tokenId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof revokeLink>>, TError,{tokenId: string}, TContext> => {
+
+const mutationKey = ['revokeLink'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof revokeLink>>, {tokenId: string}> = (props) => {
+          const {tokenId} = props ?? {};
+
+          return  revokeLink(tokenId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RevokeLinkMutationResult = NonNullable<Awaited<ReturnType<typeof revokeLink>>>
+
+    export type RevokeLinkMutationError = HTTPValidationError
+
+    /**
+ * @summary Revoke Link
+ */
+export const useRevokeLink = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeLink>>, TError,{tokenId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof revokeLink>>,
+        TError,
+        {tokenId: string},
+        TContext
+      > => {
+      return useMutation(getRevokeLinkMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary List Supplier Invoices
+ */
+export const listSupplierInvoices = (
+    params?: ListSupplierInvoicesParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<InvoiceRead[]>(
+      {url: `/api/v1/supplier-invoices`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getListSupplierInvoicesQueryKey = (params?: ListSupplierInvoicesParams,) => {
+    return [
+    `/api/v1/supplier-invoices`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListSupplierInvoicesQueryOptions = <TData = Awaited<ReturnType<typeof listSupplierInvoices>>, TError = HTTPValidationError>(params?: ListSupplierInvoicesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSupplierInvoices>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSupplierInvoicesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSupplierInvoices>>> = ({ signal }) => listSupplierInvoices(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSupplierInvoices>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListSupplierInvoicesQueryResult = NonNullable<Awaited<ReturnType<typeof listSupplierInvoices>>>
+export type ListSupplierInvoicesQueryError = HTTPValidationError
+
+
+export function useListSupplierInvoices<TData = Awaited<ReturnType<typeof listSupplierInvoices>>, TError = HTTPValidationError>(
+ params: undefined |  ListSupplierInvoicesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSupplierInvoices>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSupplierInvoices>>,
+          TError,
+          Awaited<ReturnType<typeof listSupplierInvoices>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListSupplierInvoices<TData = Awaited<ReturnType<typeof listSupplierInvoices>>, TError = HTTPValidationError>(
+ params?: ListSupplierInvoicesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSupplierInvoices>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSupplierInvoices>>,
+          TError,
+          Awaited<ReturnType<typeof listSupplierInvoices>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListSupplierInvoices<TData = Awaited<ReturnType<typeof listSupplierInvoices>>, TError = HTTPValidationError>(
+ params?: ListSupplierInvoicesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSupplierInvoices>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Supplier Invoices
+ */
+
+export function useListSupplierInvoices<TData = Awaited<ReturnType<typeof listSupplierInvoices>>, TError = HTTPValidationError>(
+ params?: ListSupplierInvoicesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSupplierInvoices>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListSupplierInvoicesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Accept the claim or send it back with a reason.
+ * @summary Decide Supplier Invoice
+ */
+export const decideSupplierInvoice = (
+    invoiceId: string,
+    decisionRequest: DecisionRequest,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<InvoiceRead>(
+      {url: `/api/v1/supplier-invoices/${invoiceId}/decide`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: decisionRequest, signal
+    },
+      );
+    }
+
+
+
+
+export const getDecideSupplierInvoiceMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof decideSupplierInvoice>>, TError,{invoiceId: string;data: DecisionRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof decideSupplierInvoice>>, TError,{invoiceId: string;data: DecisionRequest}, TContext> => {
+
+const mutationKey = ['decideSupplierInvoice'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof decideSupplierInvoice>>, {invoiceId: string;data: DecisionRequest}> = (props) => {
+          const {invoiceId,data} = props ?? {};
+
+          return  decideSupplierInvoice(invoiceId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DecideSupplierInvoiceMutationResult = NonNullable<Awaited<ReturnType<typeof decideSupplierInvoice>>>
+    export type DecideSupplierInvoiceMutationBody = DecisionRequest
+    export type DecideSupplierInvoiceMutationError = HTTPValidationError
+
+    /**
+ * @summary Decide Supplier Invoice
+ */
+export const useDecideSupplierInvoice = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof decideSupplierInvoice>>, TError,{invoiceId: string;data: DecisionRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof decideSupplierInvoice>>,
+        TError,
+        {invoiceId: string;data: DecisionRequest},
+        TContext
+      > => {
+      return useMutation(getDecideSupplierInvoiceMutationOptions(options), queryClient);
+    }
+
+/**
+ * Claims that do not agree with the order they are against.
+ *
+ * The reason the portal earns its keep: a supplier billing more than was
+ * ordered is caught here rather than after it has been paid.
+ * @summary Get Matching Report
+ */
+export const getMatchingReport = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<MatchRow[]>(
+      {url: `/api/v1/supplier-invoices/matching`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetMatchingReportQueryKey = () => {
+    return [
+    `/api/v1/supplier-invoices/matching`
+    ] as const;
+    }
+
+
+export const getGetMatchingReportQueryOptions = <TData = Awaited<ReturnType<typeof getMatchingReport>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMatchingReport>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMatchingReportQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMatchingReport>>> = ({ signal }) => getMatchingReport(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMatchingReport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMatchingReportQueryResult = NonNullable<Awaited<ReturnType<typeof getMatchingReport>>>
+export type GetMatchingReportQueryError = unknown
+
+
+export function useGetMatchingReport<TData = Awaited<ReturnType<typeof getMatchingReport>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMatchingReport>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMatchingReport>>,
+          TError,
+          Awaited<ReturnType<typeof getMatchingReport>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMatchingReport<TData = Awaited<ReturnType<typeof getMatchingReport>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMatchingReport>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMatchingReport>>,
+          TError,
+          Awaited<ReturnType<typeof getMatchingReport>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMatchingReport<TData = Awaited<ReturnType<typeof getMatchingReport>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMatchingReport>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Matching Report
+ */
+
+export function useGetMatchingReport<TData = Awaited<ReturnType<typeof getMatchingReport>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMatchingReport>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMatchingReportQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
  * The small pack a device keeps so its forms still work with no signal.
  * @summary Get Bootstrap
  */
@@ -15301,7 +15792,7 @@ export const useGoodsIn = <TError = HTTPValidationError,
  */
 export const issueStock = (
     itemId: string,
-    issueRequest: IssueRequest,
+    appModulesInventorySchemasIssueRequest: AppModulesInventorySchemasIssueRequest,
  signal?: AbortSignal
 ) => {
 
@@ -15309,7 +15800,7 @@ export const issueStock = (
       return apiMutator<StockItemRead>(
       {url: `/api/v1/stock-items/${itemId}/issue`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: issueRequest, signal
+      data: appModulesInventorySchemasIssueRequest, signal
     },
       );
     }
@@ -15318,8 +15809,8 @@ export const issueStock = (
 
 
 export const getIssueStockMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof issueStock>>, TError,{itemId: string;data: IssueRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof issueStock>>, TError,{itemId: string;data: IssueRequest}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof issueStock>>, TError,{itemId: string;data: AppModulesInventorySchemasIssueRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof issueStock>>, TError,{itemId: string;data: AppModulesInventorySchemasIssueRequest}, TContext> => {
 
 const mutationKey = ['issueStock'];
 const {mutation: mutationOptions} = options ?
@@ -15331,7 +15822,7 @@ const {mutation: mutationOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof issueStock>>, {itemId: string;data: IssueRequest}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof issueStock>>, {itemId: string;data: AppModulesInventorySchemasIssueRequest}> = (props) => {
           const {itemId,data} = props ?? {};
 
           return  issueStock(itemId,data,)
@@ -15345,18 +15836,18 @@ const {mutation: mutationOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type IssueStockMutationResult = NonNullable<Awaited<ReturnType<typeof issueStock>>>
-    export type IssueStockMutationBody = IssueRequest
+    export type IssueStockMutationBody = AppModulesInventorySchemasIssueRequest
     export type IssueStockMutationError = HTTPValidationError
 
     /**
  * @summary Issue Stock
  */
 export const useIssueStock = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof issueStock>>, TError,{itemId: string;data: IssueRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof issueStock>>, TError,{itemId: string;data: AppModulesInventorySchemasIssueRequest}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof issueStock>>,
         TError,
-        {itemId: string;data: IssueRequest},
+        {itemId: string;data: AppModulesInventorySchemasIssueRequest},
         TContext
       > => {
       return useMutation(getIssueStockMutationOptions(options), queryClient);
@@ -27703,4 +28194,169 @@ export const useSupplierSubmitQuote = <TError = HTTPValidationError,
         TContext
       > => {
       return useMutation(getSupplierSubmitQuoteMutationOptions(options), queryClient);
+    }
+
+/**
+ * Their orders, their invoices, and any paperwork of theirs that lapsed.
+ * @summary Portal Overview
+ */
+export const portalOverview = (
+    token: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<PortalOverview>(
+      {url: `/api/v1/supplier-portal/${token}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getPortalOverviewQueryKey = (token: string,) => {
+    return [
+    `/api/v1/supplier-portal/${token}`
+    ] as const;
+    }
+
+
+export const getPortalOverviewQueryOptions = <TData = Awaited<ReturnType<typeof portalOverview>>, TError = HTTPValidationError>(token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalOverview>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPortalOverviewQueryKey(token);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof portalOverview>>> = ({ signal }) => portalOverview(token, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: token !== null && token !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof portalOverview>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PortalOverviewQueryResult = NonNullable<Awaited<ReturnType<typeof portalOverview>>>
+export type PortalOverviewQueryError = HTTPValidationError
+
+
+export function usePortalOverview<TData = Awaited<ReturnType<typeof portalOverview>>, TError = HTTPValidationError>(
+ token: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalOverview>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof portalOverview>>,
+          TError,
+          Awaited<ReturnType<typeof portalOverview>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePortalOverview<TData = Awaited<ReturnType<typeof portalOverview>>, TError = HTTPValidationError>(
+ token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalOverview>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof portalOverview>>,
+          TError,
+          Awaited<ReturnType<typeof portalOverview>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePortalOverview<TData = Awaited<ReturnType<typeof portalOverview>>, TError = HTTPValidationError>(
+ token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalOverview>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Portal Overview
+ */
+
+export function usePortalOverview<TData = Awaited<ReturnType<typeof portalOverview>>, TError = HTTPValidationError>(
+ token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof portalOverview>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPortalOverviewQueryOptions(token,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Submit an invoice against an order.
+ *
+ * Records a claim; posts nothing. The payable was created when the goods
+ * were received, and booking this as well would owe them twice for one
+ * delivery.
+ * @summary Portal Submit Invoice
+ */
+export const portalSubmitInvoice = (
+    token: string,
+    invoiceSubmit: InvoiceSubmit,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<InvoiceRead>(
+      {url: `/api/v1/supplier-portal/${token}/invoices`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: invoiceSubmit, signal
+    },
+      );
+    }
+
+
+
+
+export const getPortalSubmitInvoiceMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof portalSubmitInvoice>>, TError,{token: string;data: InvoiceSubmit}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof portalSubmitInvoice>>, TError,{token: string;data: InvoiceSubmit}, TContext> => {
+
+const mutationKey = ['portalSubmitInvoice'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof portalSubmitInvoice>>, {token: string;data: InvoiceSubmit}> = (props) => {
+          const {token,data} = props ?? {};
+
+          return  portalSubmitInvoice(token,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PortalSubmitInvoiceMutationResult = NonNullable<Awaited<ReturnType<typeof portalSubmitInvoice>>>
+    export type PortalSubmitInvoiceMutationBody = InvoiceSubmit
+    export type PortalSubmitInvoiceMutationError = HTTPValidationError
+
+    /**
+ * @summary Portal Submit Invoice
+ */
+export const usePortalSubmitInvoice = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof portalSubmitInvoice>>, TError,{token: string;data: InvoiceSubmit}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof portalSubmitInvoice>>,
+        TError,
+        {token: string;data: InvoiceSubmit},
+        TContext
+      > => {
+      return useMutation(getPortalSubmitInvoiceMutationOptions(options), queryClient);
     }

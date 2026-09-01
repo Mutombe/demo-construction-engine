@@ -22,6 +22,7 @@ import { Route as AppWorkloadRouteImport } from './routes/_app/workload'
 import { Route as AcceptInviteTokenRouteImport } from './routes/accept-invite.$token'
 import { Route as PortalTokenRouteImport } from './routes/portal/$token'
 import { Route as RfqTokenRouteImport } from './routes/rfq/$token'
+import { Route as SupplierTokenRouteImport } from './routes/supplier.$token'
 import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
 import { Route as AppClientsIndexRouteImport } from './routes/_app/clients/index'
 import { Route as AppClientsClientIdRouteImport } from './routes/_app/clients/$clientId'
@@ -36,6 +37,7 @@ import { Route as AppInventoryLossesRouteImport } from './routes/_app/inventory/
 import { Route as AppInventoryStocktakeRouteImport } from './routes/_app/inventory/stocktake'
 import { Route as AppPayrollIndexRouteImport } from './routes/_app/payroll/index'
 import { Route as AppProcurementIndexRouteImport } from './routes/_app/procurement/index'
+import { Route as AppProcurementInvoicesRouteImport } from './routes/_app/procurement/invoices'
 import { Route as AppProcurementRequisitionsRouteImport } from './routes/_app/procurement/requisitions'
 import { Route as AppProcurementSuppliersRouteImport } from './routes/_app/procurement/suppliers'
 import { Route as AppProjectsIndexRouteImport } from './routes/_app/projects/index'
@@ -127,6 +129,11 @@ const RfqTokenRoute = RfqTokenRouteImport.update({
   path: '/rfq/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SupplierTokenRoute = SupplierTokenRouteImport.update({
+  id: '/supplier/$token',
+  path: '/supplier/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
@@ -195,6 +202,11 @@ const AppPayrollIndexRoute = AppPayrollIndexRouteImport.update({
 const AppProcurementIndexRoute = AppProcurementIndexRouteImport.update({
   id: '/procurement/',
   path: '/procurement/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProcurementInvoicesRoute = AppProcurementInvoicesRouteImport.update({
+  id: '/procurement/invoices',
+  path: '/procurement/invoices',
   getParentRoute: () => AppRoute,
 } as any)
 const AppProcurementRequisitionsRoute =
@@ -356,6 +368,7 @@ export interface FileRoutesByFullPath {
   '/accept-invite/$token': typeof AcceptInviteTokenRoute
   '/portal/$token': typeof PortalTokenRoute
   '/rfq/$token': typeof RfqTokenRoute
+  '/supplier/$token': typeof SupplierTokenRoute
   '/clients/$clientId': typeof AppClientsClientIdRoute
   '/expenses/$claimId': typeof AppExpensesClaimIdRoute
   '/fleet/$equipmentId': typeof AppFleetEquipmentIdRoute
@@ -363,6 +376,7 @@ export interface FileRoutesByFullPath {
   '/inventory/insights': typeof AppInventoryInsightsRoute
   '/inventory/losses': typeof AppInventoryLossesRoute
   '/inventory/stocktake': typeof AppInventoryStocktakeRouteWithChildren
+  '/procurement/invoices': typeof AppProcurementInvoicesRoute
   '/procurement/requisitions': typeof AppProcurementRequisitionsRouteWithChildren
   '/procurement/suppliers': typeof AppProcurementSuppliersRouteWithChildren
   '/projects/$projectId': typeof AppProjectsProjectIdRouteWithChildren
@@ -409,6 +423,7 @@ export interface FileRoutesByTo {
   '/accept-invite/$token': typeof AcceptInviteTokenRoute
   '/portal/$token': typeof PortalTokenRoute
   '/rfq/$token': typeof RfqTokenRoute
+  '/supplier/$token': typeof SupplierTokenRoute
   '/': typeof AppIndexRoute
   '/clients/$clientId': typeof AppClientsClientIdRoute
   '/expenses/$claimId': typeof AppExpensesClaimIdRoute
@@ -417,6 +432,7 @@ export interface FileRoutesByTo {
   '/inventory/insights': typeof AppInventoryInsightsRoute
   '/inventory/losses': typeof AppInventoryLossesRoute
   '/inventory/stocktake': typeof AppInventoryStocktakeRouteWithChildren
+  '/procurement/invoices': typeof AppProcurementInvoicesRoute
   '/procurement/requisitions': typeof AppProcurementRequisitionsRouteWithChildren
   '/procurement/suppliers': typeof AppProcurementSuppliersRouteWithChildren
   '/subcontracts/$subcontractId': typeof AppSubcontractsSubcontractIdRoute
@@ -464,6 +480,7 @@ export interface FileRoutesById {
   '/accept-invite/$token': typeof AcceptInviteTokenRoute
   '/portal/$token': typeof PortalTokenRoute
   '/rfq/$token': typeof RfqTokenRoute
+  '/supplier/$token': typeof SupplierTokenRoute
   '/_app/': typeof AppIndexRoute
   '/_app/clients/$clientId': typeof AppClientsClientIdRoute
   '/_app/expenses/$claimId': typeof AppExpensesClaimIdRoute
@@ -472,6 +489,7 @@ export interface FileRoutesById {
   '/_app/inventory/insights': typeof AppInventoryInsightsRoute
   '/_app/inventory/losses': typeof AppInventoryLossesRoute
   '/_app/inventory/stocktake': typeof AppInventoryStocktakeRouteWithChildren
+  '/_app/procurement/invoices': typeof AppProcurementInvoicesRoute
   '/_app/procurement/requisitions': typeof AppProcurementRequisitionsRouteWithChildren
   '/_app/procurement/suppliers': typeof AppProcurementSuppliersRouteWithChildren
   '/_app/projects/$projectId': typeof AppProjectsProjectIdRouteWithChildren
@@ -521,6 +539,7 @@ export interface FileRouteTypes {
     | '/accept-invite/$token'
     | '/portal/$token'
     | '/rfq/$token'
+    | '/supplier/$token'
     | '/clients/$clientId'
     | '/expenses/$claimId'
     | '/fleet/$equipmentId'
@@ -528,6 +547,7 @@ export interface FileRouteTypes {
     | '/inventory/insights'
     | '/inventory/losses'
     | '/inventory/stocktake'
+    | '/procurement/invoices'
     | '/procurement/requisitions'
     | '/procurement/suppliers'
     | '/projects/$projectId'
@@ -574,6 +594,7 @@ export interface FileRouteTypes {
     | '/accept-invite/$token'
     | '/portal/$token'
     | '/rfq/$token'
+    | '/supplier/$token'
     | '/'
     | '/clients/$clientId'
     | '/expenses/$claimId'
@@ -582,6 +603,7 @@ export interface FileRouteTypes {
     | '/inventory/insights'
     | '/inventory/losses'
     | '/inventory/stocktake'
+    | '/procurement/invoices'
     | '/procurement/requisitions'
     | '/procurement/suppliers'
     | '/subcontracts/$subcontractId'
@@ -628,6 +650,7 @@ export interface FileRouteTypes {
     | '/accept-invite/$token'
     | '/portal/$token'
     | '/rfq/$token'
+    | '/supplier/$token'
     | '/_app/'
     | '/_app/clients/$clientId'
     | '/_app/expenses/$claimId'
@@ -636,6 +659,7 @@ export interface FileRouteTypes {
     | '/_app/inventory/insights'
     | '/_app/inventory/losses'
     | '/_app/inventory/stocktake'
+    | '/_app/procurement/invoices'
     | '/_app/procurement/requisitions'
     | '/_app/procurement/suppliers'
     | '/_app/projects/$projectId'
@@ -677,6 +701,7 @@ export interface RootRouteChildren {
   AcceptInviteTokenRoute: typeof AcceptInviteTokenRoute
   PortalTokenRoute: typeof PortalTokenRoute
   RfqTokenRoute: typeof RfqTokenRoute
+  SupplierTokenRoute: typeof SupplierTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -770,6 +795,13 @@ declare module '@tanstack/react-router' {
       path: '/rfq/$token'
       fullPath: '/rfq/$token'
       preLoaderRoute: typeof RfqTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/supplier/$token': {
+      id: '/supplier/$token'
+      path: '/supplier/$token'
+      fullPath: '/supplier/$token'
+      preLoaderRoute: typeof SupplierTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/admin/': {
@@ -868,6 +900,13 @@ declare module '@tanstack/react-router' {
       path: '/procurement'
       fullPath: '/procurement/'
       preLoaderRoute: typeof AppProcurementIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/procurement/invoices': {
+      id: '/_app/procurement/invoices'
+      path: '/procurement/invoices'
+      fullPath: '/procurement/invoices'
+      preLoaderRoute: typeof AppProcurementInvoicesRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/procurement/requisitions': {
@@ -1152,6 +1191,7 @@ interface AppRouteChildren {
   AppInventoryInsightsRoute: typeof AppInventoryInsightsRoute
   AppInventoryLossesRoute: typeof AppInventoryLossesRoute
   AppInventoryStocktakeRoute: typeof AppInventoryStocktakeRouteWithChildren
+  AppProcurementInvoicesRoute: typeof AppProcurementInvoicesRoute
   AppProcurementRequisitionsRoute: typeof AppProcurementRequisitionsRouteWithChildren
   AppProcurementSuppliersRoute: typeof AppProcurementSuppliersRouteWithChildren
   AppProjectsProjectIdRoute: typeof AppProjectsProjectIdRouteWithChildren
@@ -1190,6 +1230,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppInventoryInsightsRoute: AppInventoryInsightsRoute,
   AppInventoryLossesRoute: AppInventoryLossesRoute,
   AppInventoryStocktakeRoute: AppInventoryStocktakeRouteWithChildren,
+  AppProcurementInvoicesRoute: AppProcurementInvoicesRoute,
   AppProcurementRequisitionsRoute: AppProcurementRequisitionsRouteWithChildren,
   AppProcurementSuppliersRoute: AppProcurementSuppliersRouteWithChildren,
   AppProjectsProjectIdRoute: AppProjectsProjectIdRouteWithChildren,
@@ -1221,6 +1262,7 @@ const rootRouteChildren: RootRouteChildren = {
   AcceptInviteTokenRoute: AcceptInviteTokenRoute,
   PortalTokenRoute: PortalTokenRoute,
   RfqTokenRoute: RfqTokenRoute,
+  SupplierTokenRoute: SupplierTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

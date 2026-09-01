@@ -27,6 +27,12 @@ from app.modules.portal.router import links_router as portal_links_router
 from app.modules.portal.router import portal_router
 from app.modules.procurement.router import router as procurement_router
 from app.modules.procurement.router import supplier_router as rfq_portal_router
+from app.modules.procurement.supplier_portal_router import (
+    router as supplier_portal_router,
+)
+from app.modules.procurement.supplier_portal_router import (
+    staff_router as supplier_portal_staff_router,
+)
 from app.modules.requisitions.router import router as requisitions_router
 from app.modules.projects.router import router as projects_router
 from app.modules.reports.router import router as reports_router
@@ -81,6 +87,7 @@ def create_app() -> FastAPI:
     protected.include_router(requisitions_router)
     protected.include_router(site_router)
     protected.include_router(subcontracts_router)
+    protected.include_router(supplier_portal_staff_router)
     protected.include_router(sync_router)
     protected.include_router(expenses_router)
     protected.include_router(fleet_router)
@@ -107,6 +114,11 @@ def create_app() -> FastAPI:
     # Suppliers pricing an RFQ: a fourth auth surface (X-Rfq-Token), also
     # deliberately outside `protected`.
     api.include_router(rfq_portal_router)
+    # The supplier portal carries its token in the path rather than a
+    # header, like the client portal, so the whole router sits outside
+    # `protected`. Every route in it is scoped to the supplier the token
+    # resolves to and never takes a supplier id from the caller.
+    api.include_router(supplier_portal_router)
 
     app.include_router(api)
     return app

@@ -5,7 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface IssueRequest {
+export interface AppModulesInventorySchemasIssueRequest {
   location_id?: string | null;
   batch_id?: string | null;
   project_id: string;

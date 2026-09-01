@@ -7540,6 +7540,321 @@
         }
       }
     },
+    "/api/v1/suppliers/{supplier_id}/portal-links": {
+      "get": {
+        "tags": [
+          "supplier-portal"
+        ],
+        "summary": "List Links",
+        "operationId": "list_links",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "supplier_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Supplier Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TokenRead"
+                  },
+                  "title": "Response List Links"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "supplier-portal"
+        ],
+        "summary": "Issue Link",
+        "description": "Mint a link for a supplier. The URL comes back once and cannot be\nrecovered afterwards \u2014 only its hash is kept.",
+        "operationId": "issue_link",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "supplier_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Supplier Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__modules__procurement__supplier_portal_router__IssueRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenIssued"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal-links/{token_id}": {
+      "delete": {
+        "tags": [
+          "supplier-portal"
+        ],
+        "summary": "Revoke Link",
+        "operationId": "revoke_link",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "token_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Token Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/supplier-invoices": {
+      "get": {
+        "tags": [
+          "supplier-portal"
+        ],
+        "summary": "List Supplier Invoices",
+        "operationId": "list_supplier_invoices",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "supplier_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Supplier Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InvoiceRead"
+                  },
+                  "title": "Response List Supplier Invoices"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/supplier-invoices/{invoice_id}/decide": {
+      "post": {
+        "tags": [
+          "supplier-portal"
+        ],
+        "summary": "Decide Supplier Invoice",
+        "description": "Accept the claim or send it back with a reason.",
+        "operationId": "decide_supplier_invoice",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "invoice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Invoice Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/supplier-invoices/matching": {
+      "get": {
+        "tags": [
+          "supplier-portal"
+        ],
+        "summary": "Get Matching Report",
+        "description": "Claims that do not agree with the order they are against.\n\nThe reason the portal earns its keep: a supplier billing more than was\nordered is caught here rather than after it has been paid.",
+        "operationId": "get_matching_report",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MatchRow"
+                  },
+                  "type": "array",
+                  "title": "Response Get Matching Report"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/sync/bootstrap/{project_id}": {
       "get": {
         "tags": [
@@ -10555,7 +10870,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/IssueRequest"
+                "$ref": "#/components/schemas/app__modules__inventory__schemas__IssueRequest"
               }
             }
           }
@@ -18880,6 +19195,102 @@
           }
         }
       }
+    },
+    "/api/v1/supplier-portal/{token}": {
+      "get": {
+        "tags": [
+          "supplier-portal"
+        ],
+        "summary": "Portal Overview",
+        "description": "Their orders, their invoices, and any paperwork of theirs that lapsed.",
+        "operationId": "portal_overview",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalOverview"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/supplier-portal/{token}/invoices": {
+      "post": {
+        "tags": [
+          "supplier-portal"
+        ],
+        "summary": "Portal Submit Invoice",
+        "description": "Submit an invoice against an order.\n\nRecords a claim; posts nothing. The payable was created when the goods\nwere received, and booking this as well would owe them twice for one\ndelivery.",
+        "operationId": "portal_submit_invoice",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceSubmit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -22551,6 +22962,30 @@
           "is_overdue"
         ],
         "title": "DeadlineItem"
+      },
+      "DecisionRequest": {
+        "properties": {
+          "accept": {
+            "type": "boolean",
+            "title": "Accept"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "accept"
+        ],
+        "title": "DecisionRequest"
       },
       "DeletedRecordRead": {
         "properties": {
@@ -26318,38 +26753,23 @@
         ],
         "title": "InviteRead"
       },
-      "IssueRequest": {
+      "InvoiceRead": {
         "properties": {
-          "location_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Location Id"
-          },
-          "batch_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Batch Id"
-          },
-          "project_id": {
+          "id": {
             "type": "string",
             "format": "uuid",
-            "title": "Project Id"
+            "title": "Id"
           },
-          "boq_item_id": {
+          "doc_number": {
+            "type": "string",
+            "title": "Doc Number"
+          },
+          "supplier_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Supplier Id"
+          },
+          "purchase_order_id": {
             "anyOf": [
               {
                 "type": "string",
@@ -26359,9 +26779,116 @@
                 "type": "null"
               }
             ],
-            "title": "Boq Item Id"
+            "title": "Purchase Order Id"
           },
-          "quantity": {
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "invoice_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Invoice Date"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount"
+          },
+          "variance": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Variance"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "decision_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "doc_number",
+          "supplier_id",
+          "purchase_order_id",
+          "reference",
+          "invoice_date",
+          "amount",
+          "variance",
+          "status",
+          "notes",
+          "decision_note"
+        ],
+        "title": "InvoiceRead"
+      },
+      "InvoiceSubmit": {
+        "properties": {
+          "purchase_order_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Order Id"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 60
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "invoice_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Date"
+          },
+          "amount": {
             "anyOf": [
               {
                 "type": "number",
@@ -26372,19 +26899,7 @@
                 "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
-            "title": "Quantity"
-          },
-          "movement_date": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Movement Date"
+            "title": "Amount"
           },
           "notes": {
             "anyOf": [
@@ -26400,10 +26915,9 @@
         },
         "type": "object",
         "required": [
-          "project_id",
-          "quantity"
+          "amount"
         ],
-        "title": "IssueRequest"
+        "title": "InvoiceSubmit"
       },
       "IssueSeverity": {
         "type": "string",
@@ -27269,6 +27783,82 @@
           "journal_id"
         ],
         "title": "MatchRequest"
+      },
+      "MatchRow": {
+        "properties": {
+          "invoice_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Invoice Id"
+          },
+          "doc_number": {
+            "type": "string",
+            "title": "Doc Number"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount"
+          },
+          "order_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Number"
+          },
+          "ordered": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ordered"
+          },
+          "variance": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Variance"
+          },
+          "issue": {
+            "type": "string",
+            "title": "Issue"
+          }
+        },
+        "type": "object",
+        "required": [
+          "invoice_id",
+          "doc_number",
+          "amount",
+          "issue"
+        ],
+        "title": "MatchRow"
       },
       "MatrixCell": {
         "properties": {
@@ -31338,6 +31928,70 @@
         "type": "object",
         "title": "PoUpdate"
       },
+      "PortalInvoice": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "doc_number": {
+            "type": "string",
+            "title": "Doc Number"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "invoice_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Invoice Date"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "variance": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Variance"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "doc_number",
+          "invoice_date",
+          "amount",
+          "status",
+          "variance"
+        ],
+        "title": "PortalInvoice"
+      },
       "PortalLinkCreate": {
         "properties": {
           "label": {
@@ -31496,6 +32150,95 @@
           "created_at"
         ],
         "title": "PortalLinkRead"
+      },
+      "PortalOrder": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "doc_number": {
+            "type": "string",
+            "title": "Doc Number"
+          },
+          "order_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Date"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "total_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "doc_number",
+          "status",
+          "total_amount"
+        ],
+        "title": "PortalOrder"
+      },
+      "PortalOverview": {
+        "properties": {
+          "supplier_name": {
+            "type": "string",
+            "title": "Supplier Name"
+          },
+          "company_name": {
+            "type": "string",
+            "title": "Company Name"
+          },
+          "is_compliant": {
+            "type": "boolean",
+            "title": "Is Compliant"
+          },
+          "missing_documents": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Documents",
+            "default": []
+          },
+          "orders": {
+            "items": {
+              "$ref": "#/components/schemas/PortalOrder"
+            },
+            "type": "array",
+            "title": "Orders",
+            "default": []
+          },
+          "invoices": {
+            "items": {
+              "$ref": "#/components/schemas/PortalInvoice"
+            },
+            "type": "array",
+            "title": "Invoices",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "supplier_name",
+          "company_name",
+          "is_compliant"
+        ],
+        "title": "PortalOverview"
       },
       "PortalPhase": {
         "properties": {
@@ -40489,6 +41232,102 @@
         "type": "object",
         "title": "TimesheetUpdate"
       },
+      "TokenIssued": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "url"
+        ],
+        "title": "TokenIssued"
+      },
+      "TokenRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "supplier_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Supplier Id"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "supplier_id",
+          "label"
+        ],
+        "title": "TokenRead"
+      },
       "TokenResponse": {
         "properties": {
           "access_token": {
@@ -42531,6 +43370,118 @@
           "days"
         ],
         "title": "WorkloadWorker"
+      },
+      "app__modules__inventory__schemas__IssueRequest": {
+        "properties": {
+          "location_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "batch_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Batch Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "boq_item_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Boq Item Id"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "movement_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Movement Date"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "quantity"
+        ],
+        "title": "IssueRequest"
+      },
+      "app__modules__procurement__supplier_portal_router__IssueRequest": {
+        "properties": {
+          "label": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "days": {
+            "type": "integer",
+            "maximum": 1095.0,
+            "minimum": 1.0,
+            "title": "Days",
+            "default": 365
+          }
+        },
+        "type": "object",
+        "title": "IssueRequest"
       }
     },
     "securitySchemes": {

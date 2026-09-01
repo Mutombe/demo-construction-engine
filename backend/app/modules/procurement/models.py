@@ -228,3 +228,59 @@ class RfqInvite(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
 
     rfq: Mapped["Rfq"] = relationship()
     supplier: Mapped["Supplier"] = relationship()
+
+
+class SupplierAccessToken(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
+    """A link that lets one supplier see their own orders and nothing else.
+
+    Only the hash is stored. A leaked database hands nobody a working link,
+    and the raw token is shown once when it is issued.
+    """
+
+    __tablename__ = "supplier_access_tokens"
+
+    supplier_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("suppliers.id", ondelete="CASCADE"), index=True
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    label: Mapped[str | None] = mapped_column(String(120))
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class SupplierInvoice(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
+    """A supplier's claim against an order.
+
+    Deliberately not a posting. Receiving the order already created the
+    payable, so booking this as well would owe them twice for one delivery.
+    It exists to be matched: the variance against what was ordered is the
+    figure that catches overbilling before anybody pays it.
+    """
+
+    __tablename__ = "supplier_invoices"
+    __table_args__ = (
+        UniqueConstraint("supplier_id", "reference", name="uq_supplier_invoice_reference"),
+    )
+
+    doc_number: Mapped[str] = mapped_column(String(30), unique=True, index=True)
+    supplier_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("suppliers.id", ondelete="CASCADE"), index=True
+    )
+    purchase_order_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("purchase_orders.id", ondelete="SET NULL"), index=True
+    )
+    # Their number for it, which is what they will quote when they ring.
+    reference: Mapped[str | None] = mapped_column(String(60))
+    invoice_date: Mapped[date] = mapped_column(Date, default=date.today)
+    amount: Mapped[Decimal] = mapped_column(Numeric(16, 2))
+    # Positive means they are claiming more than the order was for.
+    variance: Mapped[Decimal] = mapped_column(Numeric(16, 2), default=Decimal("0"))
+    # submitted | accepted | queried
+    status: Mapped[str] = mapped_column(String(20), default="submitted", index=True)
+    notes: Mapped[str | None] = mapped_column(Text)
+    decision_note: Mapped[str | None] = mapped_column(Text)
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    decided_by: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL", use_alter=True)
+    )
