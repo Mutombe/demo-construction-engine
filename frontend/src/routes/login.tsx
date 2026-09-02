@@ -54,7 +54,8 @@ function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="items-center pb-2 pt-7 text-center">
           {/* The card is light, so the wordmark is used as drawn. */}
-          <img src="/company-logo.png" alt="" className="mb-3 h-9 w-auto dark:brightness-0 dark:invert" />
+          <img src="/datum-mark.png" alt="" className="mb-2 h-11 w-auto" />
+          <div className="text-lg font-semibold tracking-tight">Datum</div>
           <p className="text-sm text-muted-foreground">Sign in to your workspace</p>
         </CardHeader>
         <CardContent className="pt-4">

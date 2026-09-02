@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { AddressBook, Bank, Buildings, CalendarBlank, CaretDoubleLeft, CaretDoubleRight, ChartBar, ClipboardText, Gear, MagnifyingGlass, HardHat, MapTrifold, Money, Package, Receipt, ShieldCheck, ShoppingCart, SignOut, SquaresFour, Tray, Truck, UsersThree, DeviceMobile, Handshake, List, X } from "@phosphor-icons/react";
+import { AddressBook, Bank, Buildings, CalendarBlank, CaretDoubleLeft, CaretDoubleRight, ChartBar, ClipboardText, Gear, MagnifyingGlass, MapTrifold, Money, Package, Receipt, ShieldCheck, ShoppingCart, SignOut, SquaresFour, Tray, Truck, UsersThree, DeviceMobile, Handshake, List, X } from "@phosphor-icons/react";
 import { ClaudeIcon } from "@/components/ui/claude-icon";
 import { useEffect, useState, type ReactNode } from "react";
 import { create } from "zustand";
@@ -252,24 +252,16 @@ export function AppShell({ children }: { children: ReactNode }) {
           <X className="size-4" />
         </button>
         <div className="flex h-14 items-center gap-2.5 px-3.5">
-          {iconsOnly ? (
-            // The wordmark is 3:1 and unreadable at 56px, so the collapsed rail
-            // keeps the mark and drops the name.
-            <div
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground"
-              title={company?.name ?? "Datum"}
-            >
-              <HardHat className="h-4.5 w-4.5" />
+          {/* The mark is full colour and reads on the dark panel as drawn, so
+              unlike a monochrome wordmark it is never inverted. */}
+          <img src="/datum-mark.png" alt="" className="h-7 w-auto shrink-0" />
+          {!iconsOnly && (
+            <div className="min-w-0">
+              <div className="truncate text-sm font-semibold tracking-tight">Datum</div>
+              {company?.name && (
+                <div className="truncate text-[11px] text-sidebar-muted">{company.name}</div>
+              )}
             </div>
-          ) : (
-            <img
-              src="/company-logo.png"
-              alt={company?.name ?? "Datum"}
-              // A charcoal wordmark on a sidebar that is dark in both themes.
-              // brightness-0 flattens it to black, invert takes it to white,
-              // and transparency survives both — so one asset serves either.
-              className="h-7 w-auto max-w-full brightness-0 invert"
-            />
           )}
         </div>
 
