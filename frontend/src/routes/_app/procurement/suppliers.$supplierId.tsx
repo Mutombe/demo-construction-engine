@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/table";
 import { PoStatusBadge, QuoteStatusBadge } from "@/features/procurement/StatusBadges";
 import { SupplierPortalPanel } from "@/features/procurement/SupplierPortalPanel";
+import { SupplierRatingCard } from "@/features/procurement/SupplierRating";
 import { VendorCompliance } from "@/features/subcontracts/VendorCompliance";
 import { SupplierFormDialog } from "@/features/procurement/SupplierFormDialog";
 import {
@@ -209,6 +210,10 @@ function SupplierDetailPage() {
         />
         <StatCard label="PO value" value={money(totals.po_value)} tone="brand" />
         <StatCard label="Quotes received" value={totals.quote_count} icon={<FileText />} />
+      </div>
+
+      <div className="mb-4">
+        <SupplierRatingCard supplierId={supplierId} />
       </div>
 
       <Scorecard scorecard={activity.scorecard} />

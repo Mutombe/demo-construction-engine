@@ -316,6 +316,7 @@ def main() -> None:
             seed_plant_recharge,
             seed_depreciation,
             seed_supplier_invoices,
+            seed_assessments,
         ):
             step(db)
             db.commit()
@@ -323,6 +324,67 @@ def main() -> None:
     finally:
         db.close()
 
+
+
+
+# --- Supplier performance ----------------------------------------------------
+
+# Deliberately uneven. A register where every supplier scores four proves
+# nothing; the screen exists to show the one you should stop using.
+SUPPLIER_SHAPES = [
+    (5, 5, True, "Straight off the truck, driver waited while we counted it"),
+    (4, 4, True, "Good load, an hour late but they rang ahead"),
+    (2, 3, False, "Short delivery and two broken pallets; had to chase twice"),
+    (4, 5, True, "No issues at all"),
+    (3, 2, False, "Right material, but nobody answers the phone"),
+    (5, 4, True, "Sound as always"),
+]
+
+
+def seed_assessments(db) -> None:
+    from app.common.enums import PoStatus
+    from app.modules.procurement import rating
+    from app.modules.procurement.models import PurchaseOrder, SupplierAssessment
+    from app.modules.procurement.schemas import AssessmentCreate
+
+    if db.scalar(select(func.count()).select_from(SupplierAssessment)):
+        print("assessments: already judged")
+        return
+
+    admin = _admin(db)
+    received = list(
+        db.scalars(
+            select(PurchaseOrder)
+            .where(PurchaseOrder.status == PoStatus.received)
+            .order_by(PurchaseOrder.received_date.desc())
+        )
+    )
+    if not received:
+        print("assessments: nothing delivered to judge")
+        return
+
+    # Most deliveries get judged, but not all of them — the outstanding list
+    # exists precisely because this never happens perfectly.
+    judged = 0
+    for index, order in enumerate(received):
+        if index % 4 == 3:
+            continue
+        quality, professionalism, again, note = SUPPLIER_SHAPES[index % len(SUPPLIER_SHAPES)]
+        rating.record_assessment(
+            db,
+            order.id,
+            AssessmentCreate(
+                quality=quality,
+                professionalism=professionalism,
+                would_use_again=again,
+                notes=note,
+            ),
+            admin,
+        )
+        judged += 1
+
+    outstanding = len(rating.unassessed_deliveries(db))
+    print(f"assessments: {judged} deliveries judged, {outstanding} still outstanding")
 
 if __name__ == "__main__":
     main()

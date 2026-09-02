@@ -284,3 +284,36 @@ class SupplierInvoice(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
     decided_by: Mapped[uuid.UUID | None] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL", use_alter=True)
     )
+
+
+class SupplierAssessment(Base, UUIDPrimaryKeyMixin, TimestampMixin, AuditMixin):
+    """How a delivery actually went, judged by whoever took it in.
+
+    Quality and professionalism are the two things about a supplier that no
+    record anywhere implies. Whether they were late is in the dates; whether
+    they charged what they quoted is in the numbers; whether the blocks were
+    sound and whether their driver was a nuisance are known only to the person
+    who signed for them, and are lost the moment that person moves on.
+
+    One assessment per order, so a supplier cannot be marked twice for the same
+    delivery and a scorecard cannot be padded.
+    """
+
+    __tablename__ = "supplier_assessments"
+    __table_args__ = (
+        UniqueConstraint("purchase_order_id", name="uq_assessment_per_order"),
+    )
+
+    supplier_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("suppliers.id", ondelete="CASCADE"), index=True
+    )
+    purchase_order_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("purchase_orders.id", ondelete="CASCADE")
+    )
+    assessed_on: Mapped[date] = mapped_column(Date, default=date.today)
+    # One to five. Null where the person taking delivery had no view, which is
+    # different from a middling score and is kept apart from it.
+    quality: Mapped[int | None] = mapped_column(Integer)
+    professionalism: Mapped[int | None] = mapped_column(Integer)
+    would_use_again: Mapped[bool | None] = mapped_column(Boolean)
+    notes: Mapped[str | None] = mapped_column(Text)

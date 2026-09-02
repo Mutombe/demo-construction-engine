@@ -32,11 +32,14 @@ import type {
   AiStatus,
   AppModulesInventorySchemasIssueRequest,
   AppModulesProcurementSupplierPortalRouterIssueRequest,
+  AssessmentCreate,
+  AssessmentRead,
   AssignmentCreate,
   AssignmentRead,
   BackChargeCreate,
   BackChargeRead,
   BalanceSheet,
+  BidComparisonRow,
   BodyUploadIngestionItem,
   BodyUploadMedia,
   Bootstrap,
@@ -146,6 +149,7 @@ import type {
   GetSubsidiaryReconciliation200Item,
   GetSuggestedMatches200Item,
   GetTrialBalanceParams,
+  GetUnassessedParams,
   GetUserPermissions200,
   GetUtilisation200Item,
   GetUtilisationParams,
@@ -366,6 +370,7 @@ import type {
   SupplierPaymentRead,
   SupplierQuoteReceipt,
   SupplierQuoteSubmit,
+  SupplierRating,
   SupplierRead,
   SupplierRfqView,
   SupplierUpdate,
@@ -388,6 +393,7 @@ import type {
   TokenResponse,
   TransferRequest,
   TrialBalance,
+  UnassessedDelivery,
   UnmatchTransaction200,
   UnpostedEntry,
   UnreadCount,
@@ -7564,6 +7570,557 @@ export function useDownloadRfqPdf<TData = Awaited<ReturnType<typeof downloadRfqP
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getDownloadRfqPdfQueryOptions(rfqId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Judge one delivery on quality and professionalism.
+ *
+ * Everything else about a supplier is already in the record. These two are
+ * known only to the person who took the goods in, and are lost the day that
+ * person moves on.
+ * @summary Assess Delivery
+ */
+export const assessDelivery = (
+    poId: string,
+    assessmentCreate: AssessmentCreate,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<AssessmentRead>(
+      {url: `/api/v1/purchase-orders/${poId}/assessment`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: assessmentCreate, signal
+    },
+      );
+    }
+
+
+
+
+export const getAssessDeliveryMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assessDelivery>>, TError,{poId: string;data: AssessmentCreate}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof assessDelivery>>, TError,{poId: string;data: AssessmentCreate}, TContext> => {
+
+const mutationKey = ['assessDelivery'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assessDelivery>>, {poId: string;data: AssessmentCreate}> = (props) => {
+          const {poId,data} = props ?? {};
+
+          return  assessDelivery(poId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AssessDeliveryMutationResult = NonNullable<Awaited<ReturnType<typeof assessDelivery>>>
+    export type AssessDeliveryMutationBody = AssessmentCreate
+    export type AssessDeliveryMutationError = HTTPValidationError
+
+    /**
+ * @summary Assess Delivery
+ */
+export const useAssessDelivery = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assessDelivery>>, TError,{poId: string;data: AssessmentCreate}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof assessDelivery>>,
+        TError,
+        {poId: string;data: AssessmentCreate},
+        TContext
+      > => {
+      return useMutation(getAssessDeliveryMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary List Assessments
+ */
+export const listAssessments = (
+    supplierId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<AssessmentRead[]>(
+      {url: `/api/v1/suppliers/${supplierId}/assessments`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getListAssessmentsQueryKey = (supplierId: string,) => {
+    return [
+    `/api/v1/suppliers/${supplierId}/assessments`
+    ] as const;
+    }
+
+
+export const getListAssessmentsQueryOptions = <TData = Awaited<ReturnType<typeof listAssessments>>, TError = HTTPValidationError>(supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAssessments>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAssessmentsQueryKey(supplierId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAssessments>>> = ({ signal }) => listAssessments(supplierId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: supplierId !== null && supplierId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAssessments>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListAssessmentsQueryResult = NonNullable<Awaited<ReturnType<typeof listAssessments>>>
+export type ListAssessmentsQueryError = HTTPValidationError
+
+
+export function useListAssessments<TData = Awaited<ReturnType<typeof listAssessments>>, TError = HTTPValidationError>(
+ supplierId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAssessments>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAssessments>>,
+          TError,
+          Awaited<ReturnType<typeof listAssessments>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListAssessments<TData = Awaited<ReturnType<typeof listAssessments>>, TError = HTTPValidationError>(
+ supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAssessments>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAssessments>>,
+          TError,
+          Awaited<ReturnType<typeof listAssessments>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListAssessments<TData = Awaited<ReturnType<typeof listAssessments>>, TError = HTTPValidationError>(
+ supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAssessments>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Assessments
+ */
+
+export function useListAssessments<TData = Awaited<ReturnType<typeof listAssessments>>, TError = HTTPValidationError>(
+ supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAssessments>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListAssessmentsQueryOptions(supplierId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Quality, price, delivery and professionalism, with what each rests on.
+ * @summary Get Supplier Rating
+ */
+export const getSupplierRating = (
+    supplierId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<SupplierRating>(
+      {url: `/api/v1/suppliers/${supplierId}/rating`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetSupplierRatingQueryKey = (supplierId: string,) => {
+    return [
+    `/api/v1/suppliers/${supplierId}/rating`
+    ] as const;
+    }
+
+
+export const getGetSupplierRatingQueryOptions = <TData = Awaited<ReturnType<typeof getSupplierRating>>, TError = HTTPValidationError>(supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupplierRating>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSupplierRatingQueryKey(supplierId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSupplierRating>>> = ({ signal }) => getSupplierRating(supplierId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: supplierId !== null && supplierId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSupplierRating>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetSupplierRatingQueryResult = NonNullable<Awaited<ReturnType<typeof getSupplierRating>>>
+export type GetSupplierRatingQueryError = HTTPValidationError
+
+
+export function useGetSupplierRating<TData = Awaited<ReturnType<typeof getSupplierRating>>, TError = HTTPValidationError>(
+ supplierId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupplierRating>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSupplierRating>>,
+          TError,
+          Awaited<ReturnType<typeof getSupplierRating>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSupplierRating<TData = Awaited<ReturnType<typeof getSupplierRating>>, TError = HTTPValidationError>(
+ supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupplierRating>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSupplierRating>>,
+          TError,
+          Awaited<ReturnType<typeof getSupplierRating>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSupplierRating<TData = Awaited<ReturnType<typeof getSupplierRating>>, TError = HTTPValidationError>(
+ supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupplierRating>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Supplier Rating
+ */
+
+export function useGetSupplierRating<TData = Awaited<ReturnType<typeof getSupplierRating>>, TError = HTTPValidationError>(
+ supplierId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupplierRating>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetSupplierRatingQueryOptions(supplierId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Everybody who has been traded with, best first.
+ *
+ * Suppliers with no history are left out rather than ranked last: never
+ * having been used is not the same as having been used badly.
+ * @summary Get Leaderboard
+ */
+export const getLeaderboard = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<SupplierRating[]>(
+      {url: `/api/v1/supplier-ratings`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetLeaderboardQueryKey = () => {
+    return [
+    `/api/v1/supplier-ratings`
+    ] as const;
+    }
+
+
+export const getGetLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof getLeaderboard>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLeaderboard>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLeaderboardQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLeaderboard>>> = ({ signal }) => getLeaderboard(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLeaderboard>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetLeaderboardQueryResult = NonNullable<Awaited<ReturnType<typeof getLeaderboard>>>
+export type GetLeaderboardQueryError = unknown
+
+
+export function useGetLeaderboard<TData = Awaited<ReturnType<typeof getLeaderboard>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLeaderboard>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLeaderboard>>,
+          TError,
+          Awaited<ReturnType<typeof getLeaderboard>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetLeaderboard<TData = Awaited<ReturnType<typeof getLeaderboard>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLeaderboard>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLeaderboard>>,
+          TError,
+          Awaited<ReturnType<typeof getLeaderboard>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetLeaderboard<TData = Awaited<ReturnType<typeof getLeaderboard>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLeaderboard>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Leaderboard
+ */
+
+export function useGetLeaderboard<TData = Awaited<ReturnType<typeof getLeaderboard>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLeaderboard>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetLeaderboardQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Deliveries nobody has judged yet.
+ *
+ * Left to memory this never gets done, and a scorecard with nothing in it is
+ * the result.
+ * @summary Get Unassessed
+ */
+export const getUnassessed = (
+    params?: GetUnassessedParams,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<UnassessedDelivery[]>(
+      {url: `/api/v1/deliveries/unassessed`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getGetUnassessedQueryKey = (params?: GetUnassessedParams,) => {
+    return [
+    `/api/v1/deliveries/unassessed`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetUnassessedQueryOptions = <TData = Awaited<ReturnType<typeof getUnassessed>>, TError = HTTPValidationError>(params?: GetUnassessedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUnassessed>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUnassessedQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUnassessed>>> = ({ signal }) => getUnassessed(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUnassessed>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetUnassessedQueryResult = NonNullable<Awaited<ReturnType<typeof getUnassessed>>>
+export type GetUnassessedQueryError = HTTPValidationError
+
+
+export function useGetUnassessed<TData = Awaited<ReturnType<typeof getUnassessed>>, TError = HTTPValidationError>(
+ params: undefined |  GetUnassessedParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUnassessed>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUnassessed>>,
+          TError,
+          Awaited<ReturnType<typeof getUnassessed>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUnassessed<TData = Awaited<ReturnType<typeof getUnassessed>>, TError = HTTPValidationError>(
+ params?: GetUnassessedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUnassessed>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUnassessed>>,
+          TError,
+          Awaited<ReturnType<typeof getUnassessed>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUnassessed<TData = Awaited<ReturnType<typeof getUnassessed>>, TError = HTTPValidationError>(
+ params?: GetUnassessedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUnassessed>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Unassessed
+ */
+
+export function useGetUnassessed<TData = Awaited<ReturnType<typeof getUnassessed>>, TError = HTTPValidationError>(
+ params?: GetUnassessedParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUnassessed>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetUnassessedQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Every bid on this enquiry with the bidder's record beside it.
+ *
+ * The reason for keeping any of this history: it has to be in front of
+ * somebody at the moment they are choosing, not filed where it gets looked up
+ * after the order has already gone out.
+ * @summary Compare Bids
+ */
+export const compareBids = (
+    rfqId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<BidComparisonRow[]>(
+      {url: `/api/v1/rfqs/${rfqId}/bid-comparison`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getCompareBidsQueryKey = (rfqId: string,) => {
+    return [
+    `/api/v1/rfqs/${rfqId}/bid-comparison`
+    ] as const;
+    }
+
+
+export const getCompareBidsQueryOptions = <TData = Awaited<ReturnType<typeof compareBids>>, TError = HTTPValidationError>(rfqId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof compareBids>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCompareBidsQueryKey(rfqId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof compareBids>>> = ({ signal }) => compareBids(rfqId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: rfqId !== null && rfqId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof compareBids>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type CompareBidsQueryResult = NonNullable<Awaited<ReturnType<typeof compareBids>>>
+export type CompareBidsQueryError = HTTPValidationError
+
+
+export function useCompareBids<TData = Awaited<ReturnType<typeof compareBids>>, TError = HTTPValidationError>(
+ rfqId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof compareBids>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof compareBids>>,
+          TError,
+          Awaited<ReturnType<typeof compareBids>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCompareBids<TData = Awaited<ReturnType<typeof compareBids>>, TError = HTTPValidationError>(
+ rfqId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof compareBids>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof compareBids>>,
+          TError,
+          Awaited<ReturnType<typeof compareBids>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCompareBids<TData = Awaited<ReturnType<typeof compareBids>>, TError = HTTPValidationError>(
+ rfqId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof compareBids>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Compare Bids
+ */
+
+export function useCompareBids<TData = Awaited<ReturnType<typeof compareBids>>, TError = HTTPValidationError>(
+ rfqId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof compareBids>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCompareBidsQueryOptions(rfqId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

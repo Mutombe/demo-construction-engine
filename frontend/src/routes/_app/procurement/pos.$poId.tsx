@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { DownloadSimple, Package, PaperPlaneTilt, Prohibit } from "@phosphor-icons/react";
+import { DownloadSimple, Package, PaperPlaneTilt, Prohibit, Star } from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "@/lib/toast";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
@@ -21,6 +21,7 @@ import {
 import { PageSkeleton } from "@/components/ui/skeleton";
 import { RichMarkdown } from "@/components/ui/markdown";
 import { ReceivePoDialog } from "@/features/procurement/ReceivePoDialog";
+import { AssessDeliveryDialog } from "@/features/procurement/SupplierRating";
 import { downloadFile } from "@/lib/api/download";
 import { PoStatusBadge } from "@/features/procurement/StatusBadges";
 import {
@@ -52,6 +53,7 @@ function PoDetailPage() {
   const issueMutation = useIssuePurchaseOrder();
   const cancelMutation = useCancelPurchaseOrder();
   const [receiveOpen, setReceiveOpen] = useState(false);
+  const [assessOpen, setAssessOpen] = useState(false);
 
   if (!po) {
     return <PageSkeleton rows={5} />;
@@ -139,6 +141,13 @@ function PoDetailPage() {
                 }
               >
                 <PaperPlaneTilt /> Issue
+              </Button>
+            </Can>
+          )}
+          {po.status === "received" && (
+            <Can perm="procurement:write">
+              <Button variant="outline" onClick={() => setAssessOpen(true)}>
+                <Star /> Rate Supplier
               </Button>
             </Can>
           )}
@@ -265,6 +274,13 @@ function PoDetailPage() {
           )}
         </div>
       </div>
+      <AssessDeliveryDialog
+        purchaseOrderId={poId}
+        supplierName={po.supplier_name}
+        open={assessOpen}
+        onOpenChange={setAssessOpen}
+      />
+
       <ReceivePoDialog open={receiveOpen} onOpenChange={setReceiveOpen} po={po} />
     </div>
   );

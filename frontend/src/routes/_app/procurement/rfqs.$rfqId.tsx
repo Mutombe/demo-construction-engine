@@ -25,6 +25,7 @@ import { RichMarkdown } from "@/components/ui/markdown";
 import { PoFromQuoteDialog } from "@/features/procurement/PoFromQuoteDialog";
 import { QuoteCompare } from "@/features/procurement/QuoteCompare";
 import { QuoteExtractDialog } from "@/features/procurement/QuoteExtractDialog";
+import { BidComparison } from "@/features/procurement/BidComparison";
 import { QuoteStatusBadge, RfqStatusBadge } from "@/features/procurement/StatusBadges";
 import {
   getGetRfqQueryOptions,
@@ -191,6 +192,12 @@ function RfqDetailPage() {
 
         <div className="space-y-4">
           <Card>
+      {(quotes?.length ?? 0) > 0 && (
+        <div className="mb-4">
+          <BidComparison rfqId={rfqId} />
+        </div>
+      )}
+
             <CardHeader>
               <CardTitle>Quotes ({quotes?.length ?? 0})</CardTitle>
             </CardHeader>

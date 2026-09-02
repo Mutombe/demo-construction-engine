@@ -1,4 +1,5 @@
 import uuid
+from decimal import Decimal
 
 from fastapi import APIRouter, Depends, Response
 
@@ -6,15 +7,12 @@ from app.common.enums import UserRole
 from app.common.pagination import PageParamsDep
 from app.common.schemas import Page
 from app.core.deps import CurrentUser, DbDep, require_roles
-from app.modules.procurement import rfq_portal, service
+from app.modules.procurement import rating, rfq_portal, service
 from app.modules.procurement.pdf import rfq_pdf
 from app.modules.procurement.schemas import (
-    RfqInviteCreated,
-    RfqInviteRead,
-    RfqSendRequest,
-    SupplierQuoteReceipt,
-    SupplierQuoteSubmit,
-    SupplierRfqView,
+    AssessmentCreate,
+    AssessmentRead,
+    BidComparisonRow,
     PoCreate,
     PoDetail,
     PoRead,
@@ -25,13 +23,21 @@ from app.modules.procurement.schemas import (
     QuoteUpdate,
     RfqCreate,
     RfqDetail,
+    RfqInviteCreated,
+    RfqInviteRead,
     RfqItemsReplace,
     RfqRead,
+    RfqSendRequest,
     RfqUpdate,
     SupplierActivity,
     SupplierCreate,
+    SupplierQuoteReceipt,
+    SupplierQuoteSubmit,
+    SupplierRating,
     SupplierRead,
+    SupplierRfqView,
     SupplierUpdate,
+    UnassessedDelivery,
 )
 
 router = APIRouter(tags=["procurement"])
@@ -324,3 +330,100 @@ def download_rfq_pdf(rfq_id: uuid.UUID, db: DbDep, _=proc_write) -> Response:
             "Content-Disposition": f'attachment; filename="{rfq.doc_number}_rfq.pdf"'
         },
     )
+
+
+# --- Supplier performance ----------------------------------------------------
+
+
+@router.post(
+    "/purchase-orders/{po_id}/assessment",
+    response_model=AssessmentRead,
+    status_code=201,
+)
+def assess_delivery(
+    po_id: uuid.UUID, body: AssessmentCreate, db: DbDep, user=Depends(proc_user)
+) -> AssessmentRead:
+    """Judge one delivery on quality and professionalism.
+
+    Everything else about a supplier is already in the record. These two are
+    known only to the person who took the goods in, and are lost the day that
+    person moves on.
+    """
+    return rating.record_assessment(db, po_id, body, user)
+
+
+@router.get("/suppliers/{supplier_id}/assessments", response_model=list[AssessmentRead])
+def list_assessments(supplier_id: uuid.UUID, db: DbDep) -> list[AssessmentRead]:
+    return rating.list_assessments(db, supplier_id)
+
+
+@router.get("/suppliers/{supplier_id}/rating", response_model=SupplierRating)
+def get_supplier_rating(supplier_id: uuid.UUID, db: DbDep) -> SupplierRating:
+    """Quality, price, delivery and professionalism, with what each rests on."""
+    return rating.supplier_rating(db, supplier_id)
+
+
+@router.get("/supplier-ratings", response_model=list[SupplierRating])
+def get_leaderboard(db: DbDep) -> list[SupplierRating]:
+    """Everybody who has been traded with, best first.
+
+    Suppliers with no history are left out rather than ranked last: never
+    having been used is not the same as having been used badly.
+    """
+    return rating.leaderboard(db)
+
+
+@router.get("/deliveries/unassessed", response_model=list[UnassessedDelivery])
+def get_unassessed(db: DbDep, limit: int = 50) -> list[UnassessedDelivery]:
+    """Deliveries nobody has judged yet.
+
+    Left to memory this never gets done, and a scorecard with nothing in it is
+    the result.
+    """
+    return rating.unassessed_deliveries(db, limit)
+
+
+@router.get("/rfqs/{rfq_id}/bid-comparison", response_model=list[BidComparisonRow])
+def compare_bids(rfq_id: uuid.UUID, db: DbDep) -> list[BidComparisonRow]:
+    """Every bid on this enquiry with the bidder's record beside it.
+
+    The reason for keeping any of this history: it has to be in front of
+    somebody at the moment they are choosing, not filed where it gets looked up
+    after the order has already gone out.
+    """
+    quotes = service.list_quotes(db, rfq_id)
+    if not quotes:
+        return []
+
+    ratings = rating.ratings_for(db, [q.supplier_id for q in quotes])
+    totals = [Decimal(q.total_amount or 0) for q in quotes if q.total_amount]
+    best = min(totals) if totals else None
+
+    rows = []
+    for quote in quotes:
+        score = ratings.get(quote.supplier_id, {})
+        total = Decimal(quote.total_amount or 0)
+        rows.append(
+            BidComparisonRow(
+                quote_id=quote.id,
+                supplier_id=quote.supplier_id,
+                supplier_name=getattr(quote, "supplier_name", None),
+                total_amount=total,
+                status=quote.status.value if hasattr(quote.status, "value") else quote.status,
+                above_lowest_pct=(
+                    ((total - best) / best * 100).quantize(Decimal("0.1"))
+                    if best and best > 0 and total > 0
+                    else None
+                ),
+                overall=score.get("overall"),
+                quality=score.get("quality"),
+                delivery=score.get("delivery"),
+                professionalism=score.get("professionalism"),
+                on_time_pct=score.get("on_time_pct"),
+                assessments=score.get("assessments", 0),
+                provisional=score.get("provisional", True),
+            )
+        )
+    # Cheapest first, since that is the order the question is usually asked in.
+    rows.sort(key=lambda r: r.total_amount or Decimal("0"))
+    return rows

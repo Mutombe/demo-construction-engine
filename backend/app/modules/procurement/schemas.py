@@ -359,3 +359,78 @@ class SupplierQuoteReceipt(BaseModel):
     doc_number: str
     total_amount: Decimal
     received_date: date
+
+
+class AssessmentCreate(BaseModel):
+    """Scored one to five, or left blank where the person had no view."""
+
+    quality: int | None = Field(default=None, ge=1, le=5)
+    professionalism: int | None = Field(default=None, ge=1, le=5)
+    would_use_again: bool | None = None
+    assessed_on: date | None = None
+    notes: str | None = None
+
+
+class AssessmentRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    supplier_id: uuid.UUID
+    purchase_order_id: uuid.UUID
+    assessed_on: date
+    quality: int | None
+    professionalism: int | None
+    would_use_again: bool | None
+    notes: str | None
+
+
+class SupplierRating(BaseModel):
+    """The four dimensions, and what each is built on.
+
+    Every score is null rather than zero where there is no evidence, and the
+    overall is withheld unless all four parts are known.
+    """
+
+    supplier_id: uuid.UUID
+    supplier_name: str
+    quality: Decimal | None = None
+    professionalism: Decimal | None = None
+    delivery: Decimal | None = None
+    price: Decimal | None = None
+    overall: Decimal | None = None
+    assessments: int = 0
+    judged_deliveries: int = 0
+    contested_enquiries: int = 0
+    lowest_bid_count: int = 0
+    avg_above_lowest_pct: Decimal | None = None
+    on_time_pct: Decimal | None = None
+    would_use_again_pct: Decimal | None = None
+    provisional: bool = True
+
+
+class UnassessedDelivery(BaseModel):
+    purchase_order_id: uuid.UUID
+    doc_number: str
+    supplier_id: uuid.UUID
+    supplier_name: str
+    received_date: date | None = None
+    total_amount: Decimal
+
+
+class BidComparisonRow(BaseModel):
+    """One bid, with the bidder's track record beside the price."""
+
+    quote_id: uuid.UUID
+    supplier_id: uuid.UUID
+    supplier_name: str | None = None
+    total_amount: Decimal
+    status: str
+    # How much dearer than the best bid on this enquiry. Zero is the cheapest.
+    above_lowest_pct: Decimal | None = None
+    overall: Decimal | None = None
+    quality: Decimal | None = None
+    delivery: Decimal | None = None
+    professionalism: Decimal | None = None
+    on_time_pct: Decimal | None = None
+    assessments: int = 0
+    provisional: bool = True
