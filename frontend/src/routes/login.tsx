@@ -56,7 +56,8 @@ function LoginPage() {
           {/* The card is light, so the wordmark is used as drawn. */}
           <img src="/datum-mark.png" alt="" className="mb-2 h-11 w-auto" />
           <div className="text-lg font-semibold tracking-tight">Datum</div>
-          <p className="text-sm text-muted-foreground">Sign in to your workspace</p>
+          <p className="text-xs text-muted-foreground">Ground truth for construction</p>
+          <p className="mt-2 text-sm text-muted-foreground">Sign in to your workspace</p>
         </CardHeader>
         <CardContent className="pt-4">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
