@@ -17,6 +17,7 @@ import {
 } from "@/lib/api/generated/endpoints";
 import type { RequisitionRead } from "@/lib/api/generated/model";
 import { toast } from "@/lib/toast";
+import { reputationLabel, useReputations } from "@/features/procurement/ReputationTag";
 
 /** Shared by the request queue and the request detail page so both offer the
  *  same conversion, with the same guarantees, from wherever you happen to be. */
@@ -30,6 +31,7 @@ export function ConvertToPoDialog({
   onDone: (poId: string) => Promise<void>;
 }) {
   const { data: suppliers } = useListSuppliers({ page_size: 100, active_only: true });
+  const reputations = useReputations();
   const convertMutation = useConvertRequisitionToPo();
   const [supplierId, setSupplierId] = useState("");
   const [expected, setExpected] = useState("");
@@ -74,7 +76,9 @@ export function ConvertToPoDialog({
             <Select value={supplierId} onChange={(e) => setSupplierId(e.target.value)}>
               {suppliers?.items.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.name}
+                  {/* An option carries no markup, so the standing rides
+                      in the text rather than as a badge. */}
+                  {s.name} — {reputationLabel(reputations.get(s.id))}
                 </option>
               ))}
             </Select>

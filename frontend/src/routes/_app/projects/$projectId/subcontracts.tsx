@@ -38,6 +38,7 @@ import {
 import type { SubcontractRead } from "@/lib/api/generated/model";
 import { money, moneyExact } from "@/lib/format";
 import { toast } from "@/lib/toast";
+import { reputationLabel, useReputations } from "@/features/procurement/ReputationTag";
 
 export const Route = createFileRoute("/_app/projects/$projectId/subcontracts")({
   component: ProjectSubcontracts,
@@ -169,6 +170,7 @@ function CreateDialog({
 }) {
   const queryClient = useQueryClient();
   const create = useCreateSubcontract();
+  const reputations = useReputations();
   const { data: suppliers } = useListSuppliers({ page: 1, page_size: 200 });
   const [form, setForm] = useState({
     supplier_id: "",
@@ -242,7 +244,9 @@ function CreateDialog({
               <option value="">Choose a subcontractor</option>
               {suppliers?.items.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.name}
+                  {/* An option carries no markup, so the standing rides
+                      in the text rather than as a badge. */}
+                  {s.name} — {reputationLabel(reputations.get(s.id))}
                 </option>
               ))}
             </Select>

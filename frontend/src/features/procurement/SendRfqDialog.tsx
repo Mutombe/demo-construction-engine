@@ -22,6 +22,7 @@ import {
 } from "@/lib/api/generated/endpoints";
 import { fmtDate } from "@/lib/format";
 import { toast } from "@/lib/toast";
+import { ReputationTag, useReputations } from "@/features/procurement/ReputationTag";
 
 const STATUS_TONE: Record<string, "secondary" | "warning" | "success" | "outline"> = {
   sent: "secondary",
@@ -40,6 +41,7 @@ export function SendRfqDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const reputations = useReputations();
   const queryClient = useQueryClient();
   const { data: suppliers } = useListSuppliers({ page: 1, page_size: 200 });
   const { data: invites } = useListRfqInvites(rfqId, { query: { enabled: open } });
@@ -186,6 +188,10 @@ export function SendRfqDialog({
                         }
                       />
                       <span className="flex-1 truncate">{supplier.name}</span>
+                      <ReputationTag
+                        reputation={reputations.get(supplier.id)}
+                        showDetail={false}
+                      />
                       {invited && (
                         <span className="text-xs text-muted-foreground">already sent</span>
                       )}

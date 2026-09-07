@@ -205,3 +205,20 @@ def get_matching_report(db: DbDep, _=proc_admin) -> list[MatchRow]:
     ordered is caught here rather than after it has been paid.
     """
     return supplier_portal.matching_report(db)
+
+
+@staff_router.get("/supplier-invoices/{invoice_id}", response_model=InvoiceRead)
+def get_supplier_invoice(invoice_id: uuid.UUID, db: DbDep, _=proc_admin) -> InvoiceRead:
+    """One claim, on its own page.
+
+    Declared after the fixed `/matching` route so that path is not swallowed by
+    this one — FastAPI matches in order, and a literal segment has to be
+    registered before the parameter that would also match it.
+    """
+    from app.core.exceptions import NotFoundError
+    from app.modules.procurement.models import SupplierInvoice
+
+    invoice = db.get(SupplierInvoice, invoice_id)
+    if invoice is None:
+        raise NotFoundError("Invoice not found")
+    return invoice

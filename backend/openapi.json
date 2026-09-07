@@ -8152,6 +8152,55 @@
         ]
       }
     },
+    "/api/v1/supplier-invoices/{invoice_id}": {
+      "get": {
+        "tags": [
+          "supplier-portal"
+        ],
+        "summary": "Get Supplier Invoice",
+        "description": "One claim, on its own page.\n\nDeclared after the fixed `/matching` route so that path is not swallowed by\nthis one \u2014 FastAPI matches in order, and a literal segment has to be\nregistered before the parameter that would also match it.",
+        "operationId": "get_supplier_invoice",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "invoice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Invoice Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/sync/bootstrap/{project_id}": {
       "get": {
         "tags": [

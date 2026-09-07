@@ -36,6 +36,7 @@ export const Route = createFileRoute("/_app/procurement/invoices")({
 
 function SupplierInvoices() {
   const queryClient = useQueryClient();
+  const navigate = Route.useNavigate();
   const invoicesQuery = useListSupplierInvoices({ status: "submitted" });
   const { data: invoices, isLoading } = invoicesQuery;
   const { data: mismatches } = useGetMatchingReport();
@@ -102,7 +103,16 @@ function SupplierInvoices() {
               </TableHeader>
               <TableBody>
                 {flagged.map((row) => (
-                  <TableRow key={row.invoice_id}>
+                  <TableRow
+                    key={row.invoice_id}
+                    className="cursor-pointer"
+                    onClick={() =>
+                      void navigate({
+                        to: "/procurement/invoices/$invoiceId",
+                        params: { invoiceId: row.invoice_id },
+                      })
+                    }
+                  >
                     <TableCell className="font-medium">
                       {row.reference ?? row.doc_number}
                     </TableCell>
@@ -152,7 +162,16 @@ function SupplierInvoices() {
               </TableHeader>
               <TableBody>
                 {rows.map((row) => (
-                  <TableRow key={row.id}>
+                  <TableRow
+                    key={row.id}
+                    className="cursor-pointer"
+                    onClick={() =>
+                      void navigate({
+                        to: "/procurement/invoices/$invoiceId",
+                        params: { invoiceId: row.id },
+                      })
+                    }
+                  >
                     <TableCell>
                       <div className="font-medium">{row.reference ?? row.doc_number}</div>
                       {flaggedIds.has(row.id) && (
@@ -168,7 +187,10 @@ function SupplierInvoices() {
                     <TableCell className="text-sm text-muted-foreground">
                       {row.notes ?? "—"}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell
+                      className="text-right"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <Can perm="procurement:write">
                         <div className="flex justify-end gap-1">
                           <Button

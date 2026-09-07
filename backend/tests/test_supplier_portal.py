@@ -265,3 +265,26 @@ def test_a_decision_is_made_once(client, db):
     url = f"/api/v1/supplier-invoices/{invoice['id']}/decide"
     assert client.post(url, json={"accept": True}, headers=headers).status_code == 200
     assert client.post(url, json={"accept": True}, headers=headers).status_code == 409
+
+
+def test_the_matching_route_is_not_swallowed_by_the_invoice_id_route(client, db):
+    """`/matching` is a literal segment that would also match `{invoice_id}`.
+    Registration order is what keeps them apart, and order is easy to lose."""
+    headers = _proc(db)
+    res = client.get("/api/v1/supplier-invoices/matching", headers=headers)
+    assert res.status_code == 200
+    assert isinstance(res.json(), list)
+
+
+def test_one_invoice_opens_on_its_own(client, db):
+    headers = _proc(db)
+    supplier = make_supplier(db)
+    token = _link(client, headers, supplier)
+    invoice = client.post(
+        f"/api/v1/supplier-portal/{token}/invoices",
+        json={"reference": "INV-77", "amount": "900"},
+    ).json()
+
+    res = client.get(f"/api/v1/supplier-invoices/{invoice['id']}", headers=headers)
+    assert res.status_code == 200
+    assert res.json()["reference"] == "INV-77"

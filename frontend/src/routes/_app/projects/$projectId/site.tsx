@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowCounterClockwise, CheckCircle, FileText, Plus, UsersThree } from "@phosphor-icons/react";
+import { ArrowCounterClockwise, CheckCircle, FileText, PencilSimple, Plus, UsersThree } from "@phosphor-icons/react";
 import { ClaudeIcon } from "@/components/ui/claude-icon";
 import { useState } from "react";
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
@@ -37,6 +37,7 @@ export const Route = createFileRoute("/_app/projects/$projectId/site")({
 
 function SiteTab() {
   const { projectId } = Route.useParams();
+  const navigate = Route.useNavigate();
   const queryClient = useQueryClient();
   const canWrite = usePermission("site:write");
   const [diaryPage, setDiaryPage] = useState(1);
@@ -121,14 +122,12 @@ function SiteTab() {
               {diary?.items.map((entry) => (
                 <TableRow
                   key={entry.id}
-                  className={canWrite ? "cursor-pointer" : undefined}
-                  onClick={
-                    canWrite
-                      ? () => {
-                          setEditingEntry(entry);
-                          setDiaryDialog(true);
-                        }
-                      : undefined
+                  className="cursor-pointer"
+                  onClick={() =>
+                    void navigate({
+                      to: "/site/diary/$entryId",
+                      params: { entryId: entry.id },
+                    })
                   }
                 >
                   <TableCell className="whitespace-nowrap font-medium">
@@ -148,15 +147,30 @@ function SiteTab() {
                     className="text-right"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <Button
-                      variant={entry.timesheets_pushed ? "ghost" : "outline"}
-                      size="sm"
-                      title="Record the crew and push their timesheets"
-                      onClick={() => setLabourEntryId(entry.id)}
-                    >
-                      <UsersThree />
-                      {entry.timesheets_pushed ? "In payroll" : "Labour"}
-                    </Button>
+                    <div className="flex justify-end gap-1.5">
+                      {canWrite && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          title="Edit the day"
+                          onClick={() => {
+                            setEditingEntry(entry);
+                            setDiaryDialog(true);
+                          }}
+                        >
+                          <PencilSimple />
+                        </Button>
+                      )}
+                      <Button
+                        variant={entry.timesheets_pushed ? "ghost" : "outline"}
+                        size="sm"
+                        title="Record the crew and push their timesheets"
+                        onClick={() => setLabourEntryId(entry.id)}
+                      >
+                        <UsersThree />
+                        {entry.timesheets_pushed ? "In payroll" : "Labour"}
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -199,7 +213,16 @@ function SiteTab() {
                 </TableRow>
               )}
               {issues?.items.map((issue) => (
-                <TableRow key={issue.id}>
+                <TableRow
+                  key={issue.id}
+                  className="cursor-pointer"
+                  onClick={() =>
+                    void navigate({
+                      to: "/site/issues/$issueId",
+                      params: { issueId: issue.id },
+                    })
+                  }
+                >
                   <TableCell>
                     <div className="font-medium">{issue.title}</div>
                     {issue.resolution_notes && (

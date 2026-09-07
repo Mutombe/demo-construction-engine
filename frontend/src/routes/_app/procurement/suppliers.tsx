@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ClickableRow, RowActions } from "@/components/ui/linked-row";
+import { ReputationTag, useReputations } from "@/features/procurement/ReputationTag";
 import { DEFAULT_PAGE_SIZE, PaginationBar } from "@/components/ui/pagination";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import {
@@ -46,6 +47,9 @@ function SuppliersPage() {
   const [editing, setEditing] = useState<SupplierRead | null>(null);
   const queryClient = useQueryClient();
   const canWrite = usePermission("procurement:write");
+  // One request for the whole page: a standing badge on forty suppliers
+  // should not be forty requests.
+  const reputations = useReputations();
   const { data, isLoading } = useListSuppliers(
     { search: search || undefined, page, page_size: DEFAULT_PAGE_SIZE },
     { query: { placeholderData: keepPreviousData } },
@@ -102,16 +106,17 @@ function SuppliersPage() {
             <TableRow>
               <TableHead>Supplier</TableHead>
               <TableHead>Contact</TableHead>
+              <TableHead>Standing</TableHead>
               <TableHead>Categories</TableHead>
               <TableHead>Status</TableHead>
               {canWrite && <TableHead className="w-40" />}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading && !data && <TableSkeleton columns={canWrite ? 5 : 4} rows={6} />}
+            {isLoading && !data && <TableSkeleton columns={canWrite ? 6 : 5} rows={6} />}
             {!isLoading && !data?.items.length && (
               <TableRow>
-                <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
                   No suppliers yet.
                 </TableCell>
               </TableRow>
@@ -135,6 +140,9 @@ function SuppliersPage() {
                   <div className="text-xs text-muted-foreground">
                     {[s.email, s.phone].filter(Boolean).join(" · ")}
                   </div>
+                </TableCell>
+                <TableCell>
+                  <ReputationTag reputation={reputations.get(s.id)} showDetail={false} />
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   {s.categories ?? "—"}

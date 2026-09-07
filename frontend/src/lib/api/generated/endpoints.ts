@@ -12151,6 +12151,104 @@ export function useGetMatchingReport<TData = Awaited<ReturnType<typeof getMatchi
 
 
 /**
+ * One claim, on its own page.
+ *
+ * Declared after the fixed `/matching` route so that path is not swallowed by
+ * this one — FastAPI matches in order, and a literal segment has to be
+ * registered before the parameter that would also match it.
+ * @summary Get Supplier Invoice
+ */
+export const getSupplierInvoice = (
+    invoiceId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<InvoiceRead>(
+      {url: `/api/v1/supplier-invoices/${invoiceId}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetSupplierInvoiceQueryKey = (invoiceId: string,) => {
+    return [
+    `/api/v1/supplier-invoices/${invoiceId}`
+    ] as const;
+    }
+
+
+export const getGetSupplierInvoiceQueryOptions = <TData = Awaited<ReturnType<typeof getSupplierInvoice>>, TError = HTTPValidationError>(invoiceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupplierInvoice>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSupplierInvoiceQueryKey(invoiceId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSupplierInvoice>>> = ({ signal }) => getSupplierInvoice(invoiceId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: invoiceId !== null && invoiceId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSupplierInvoice>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetSupplierInvoiceQueryResult = NonNullable<Awaited<ReturnType<typeof getSupplierInvoice>>>
+export type GetSupplierInvoiceQueryError = HTTPValidationError
+
+
+export function useGetSupplierInvoice<TData = Awaited<ReturnType<typeof getSupplierInvoice>>, TError = HTTPValidationError>(
+ invoiceId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupplierInvoice>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSupplierInvoice>>,
+          TError,
+          Awaited<ReturnType<typeof getSupplierInvoice>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSupplierInvoice<TData = Awaited<ReturnType<typeof getSupplierInvoice>>, TError = HTTPValidationError>(
+ invoiceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupplierInvoice>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSupplierInvoice>>,
+          TError,
+          Awaited<ReturnType<typeof getSupplierInvoice>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSupplierInvoice<TData = Awaited<ReturnType<typeof getSupplierInvoice>>, TError = HTTPValidationError>(
+ invoiceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupplierInvoice>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Supplier Invoice
+ */
+
+export function useGetSupplierInvoice<TData = Awaited<ReturnType<typeof getSupplierInvoice>>, TError = HTTPValidationError>(
+ invoiceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupplierInvoice>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetSupplierInvoiceQueryOptions(invoiceId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
  * The small pack a device keeps so its forms still work with no signal.
  * @summary Get Bootstrap
  */
