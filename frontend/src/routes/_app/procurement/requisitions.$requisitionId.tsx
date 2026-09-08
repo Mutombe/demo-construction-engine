@@ -247,19 +247,29 @@ function RequisitionDetailPage() {
             <TableBody>
               {(requisition.items ?? []).map((line) => (
                 <TableRow key={line.id}>
-                  <TableCell className="font-medium">{line.description}</TableCell>
+                  <TableCell className="font-medium">
+                    {/* A line refers to a priced item in the bill. That is where
+                        somebody wants to go from here, so the description is the
+                        link rather than a word in the last column. */}
+                    {line.boq_item_id ? (
+                      <EntityLink
+                        to="/projects/$projectId/boq"
+                        params={{ projectId: requisition.project_id }}
+                        title="Open this line in the bill of quantities"
+                      >
+                        {line.description}
+                      </EntityLink>
+                    ) : (
+                      line.description
+                    )}
+                  </TableCell>
                   <TableCell className="text-muted-foreground">{line.unit}</TableCell>
                   <TableCell className="text-right tabular-nums">
                     {Number(line.quantity).toLocaleString()}
                   </TableCell>
                   <TableCell>
                     {line.boq_item_id ? (
-                      <EntityLink
-                        to="/projects/$projectId/boq"
-                        params={{ projectId: requisition.project_id }}
-                      >
-                        Linked to BOQ
-                      </EntityLink>
+                      <span className="text-xs text-muted-foreground">from the bill</span>
                     ) : (
                       <span className="text-xs text-muted-foreground">
                         not linked, priced by hand

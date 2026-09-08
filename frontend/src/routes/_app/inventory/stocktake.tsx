@@ -35,6 +35,7 @@ import {
 import { fmtDate, moneyExact } from "@/lib/format";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
+import { EntityLink } from "@/components/ui/linked-row";
 
 export const Route = createFileRoute("/_app/inventory/stocktake")({
   component: StocktakePage,
@@ -325,7 +326,15 @@ function CountSheet({
               return (
                 <TableRow key={line.id}>
                   <TableCell>
-                    <div className="font-medium">{line.name}</div>
+                    {/* Counting a line usually raises a question about the item
+                        itself, so it opens from here rather than sending
+                        somebody back through the stock list. */}
+                    <EntityLink
+                      to="/inventory/$itemId"
+                      params={{ itemId: line.stock_item_id }}
+                    >
+                      <span className="font-medium">{line.name}</span>
+                    </EntityLink>
                     <div className="font-mono text-xs text-muted-foreground">{line.code}</div>
                   </TableCell>
                   <TableCell className="text-right tabular-nums text-muted-foreground">

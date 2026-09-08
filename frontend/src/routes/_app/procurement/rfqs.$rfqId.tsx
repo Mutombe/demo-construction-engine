@@ -164,7 +164,19 @@ function RfqDetailPage() {
                 <TableBody>
                   {(rfq.items ?? []).map((item) => (
                     <TableRow key={item.id}>
-                      <TableCell>{item.description}</TableCell>
+                      <TableCell>
+                        {item.boq_item_id ? (
+                          <EntityLink
+                            to="/projects/$projectId/boq"
+                            params={{ projectId: rfq.project_id }}
+                            title="Open this line in the bill of quantities"
+                          >
+                            {item.description}
+                          </EntityLink>
+                        ) : (
+                          item.description
+                        )}
+                      </TableCell>
                       <TableCell className="text-right tabular-nums">
                         {Number(item.quantity).toLocaleString()}
                       </TableCell>

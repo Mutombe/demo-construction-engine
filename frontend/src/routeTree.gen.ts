@@ -48,6 +48,9 @@ import { Route as AppSubcontractsIndexRouteImport } from './routes/_app/subcontr
 import { Route as AppSubcontractsSubcontractIdRouteImport } from './routes/_app/subcontracts.$subcontractId'
 import { Route as AppTasksTaskIdRouteImport } from './routes/_app/tasks.$taskId'
 import { Route as AppValuationsValuationIdRouteImport } from './routes/_app/valuations/$valuationId'
+import { Route as AppAccountingAccountsAccountIdRouteImport } from './routes/_app/accounting.accounts.$accountId'
+import { Route as AppAccountingJournalsJournalIdRouteImport } from './routes/_app/accounting.journals.$journalId'
+import { Route as AppAdminUsersUserIdRouteImport } from './routes/_app/admin/users.$userId'
 import { Route as AppInventoryStocktakeStocktakeIdRouteImport } from './routes/_app/inventory/stocktake.$stocktakeId'
 import { Route as AppPayrollRunsRunIdRouteImport } from './routes/_app/payroll/runs.$runId'
 import { Route as AppPayrollWorkersWorkerIdRouteImport } from './routes/_app/payroll/workers.$workerId'
@@ -265,6 +268,23 @@ const AppValuationsValuationIdRoute =
     path: '/valuations/$valuationId',
     getParentRoute: () => AppRoute,
   } as any)
+const AppAccountingAccountsAccountIdRoute =
+  AppAccountingAccountsAccountIdRouteImport.update({
+    id: '/accounts/$accountId',
+    path: '/accounts/$accountId',
+    getParentRoute: () => AppAccountingRoute,
+  } as any)
+const AppAccountingJournalsJournalIdRoute =
+  AppAccountingJournalsJournalIdRouteImport.update({
+    id: '/journals/$journalId',
+    path: '/journals/$journalId',
+    getParentRoute: () => AppAccountingRoute,
+  } as any)
+const AppAdminUsersUserIdRoute = AppAdminUsersUserIdRouteImport.update({
+  id: '/admin/users/$userId',
+  path: '/admin/users/$userId',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppInventoryStocktakeStocktakeIdRoute =
   AppInventoryStocktakeStocktakeIdRouteImport.update({
     id: '/$stocktakeId',
@@ -377,7 +397,7 @@ const AppSiteIssuesIssueIdRoute = AppSiteIssuesIssueIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
-  '/accounting': typeof AppAccountingRoute
+  '/accounting': typeof AppAccountingRouteWithChildren
   '/assistant': typeof AppAssistantRoute
   '/calendar': typeof AppCalendarRoute
   '/field': typeof AppFieldRoute
@@ -413,6 +433,9 @@ export interface FileRoutesByFullPath {
   '/reports/': typeof AppReportsIndexRoute
   '/settings/': typeof AppSettingsIndexRoute
   '/subcontracts/': typeof AppSubcontractsIndexRoute
+  '/accounting/accounts/$accountId': typeof AppAccountingAccountsAccountIdRoute
+  '/accounting/journals/$journalId': typeof AppAccountingJournalsJournalIdRoute
+  '/admin/users/$userId': typeof AppAdminUsersUserIdRoute
   '/inventory/stocktake/$stocktakeId': typeof AppInventoryStocktakeStocktakeIdRoute
   '/payroll/runs/$runId': typeof AppPayrollRunsRunIdRoute
   '/payroll/workers/$workerId': typeof AppPayrollWorkersWorkerIdRoute
@@ -435,7 +458,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
-  '/accounting': typeof AppAccountingRoute
+  '/accounting': typeof AppAccountingRouteWithChildren
   '/assistant': typeof AppAssistantRoute
   '/calendar': typeof AppCalendarRoute
   '/field': typeof AppFieldRoute
@@ -471,6 +494,9 @@ export interface FileRoutesByTo {
   '/reports': typeof AppReportsIndexRoute
   '/settings': typeof AppSettingsIndexRoute
   '/subcontracts': typeof AppSubcontractsIndexRoute
+  '/accounting/accounts/$accountId': typeof AppAccountingAccountsAccountIdRoute
+  '/accounting/journals/$journalId': typeof AppAccountingJournalsJournalIdRoute
+  '/admin/users/$userId': typeof AppAdminUsersUserIdRoute
   '/inventory/stocktake/$stocktakeId': typeof AppInventoryStocktakeStocktakeIdRoute
   '/payroll/runs/$runId': typeof AppPayrollRunsRunIdRoute
   '/payroll/workers/$workerId': typeof AppPayrollWorkersWorkerIdRoute
@@ -495,7 +521,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
-  '/_app/accounting': typeof AppAccountingRoute
+  '/_app/accounting': typeof AppAccountingRouteWithChildren
   '/_app/assistant': typeof AppAssistantRoute
   '/_app/calendar': typeof AppCalendarRoute
   '/_app/field': typeof AppFieldRoute
@@ -532,6 +558,9 @@ export interface FileRoutesById {
   '/_app/reports/': typeof AppReportsIndexRoute
   '/_app/settings/': typeof AppSettingsIndexRoute
   '/_app/subcontracts/': typeof AppSubcontractsIndexRoute
+  '/_app/accounting/accounts/$accountId': typeof AppAccountingAccountsAccountIdRoute
+  '/_app/accounting/journals/$journalId': typeof AppAccountingJournalsJournalIdRoute
+  '/_app/admin/users/$userId': typeof AppAdminUsersUserIdRoute
   '/_app/inventory/stocktake/$stocktakeId': typeof AppInventoryStocktakeStocktakeIdRoute
   '/_app/payroll/runs/$runId': typeof AppPayrollRunsRunIdRoute
   '/_app/payroll/workers/$workerId': typeof AppPayrollWorkersWorkerIdRoute
@@ -593,6 +622,9 @@ export interface FileRouteTypes {
     | '/reports/'
     | '/settings/'
     | '/subcontracts/'
+    | '/accounting/accounts/$accountId'
+    | '/accounting/journals/$journalId'
+    | '/admin/users/$userId'
     | '/inventory/stocktake/$stocktakeId'
     | '/payroll/runs/$runId'
     | '/payroll/workers/$workerId'
@@ -651,6 +683,9 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/subcontracts'
+    | '/accounting/accounts/$accountId'
+    | '/accounting/journals/$journalId'
+    | '/admin/users/$userId'
     | '/inventory/stocktake/$stocktakeId'
     | '/payroll/runs/$runId'
     | '/payroll/workers/$workerId'
@@ -711,6 +746,9 @@ export interface FileRouteTypes {
     | '/_app/reports/'
     | '/_app/settings/'
     | '/_app/subcontracts/'
+    | '/_app/accounting/accounts/$accountId'
+    | '/_app/accounting/journals/$journalId'
+    | '/_app/admin/users/$userId'
     | '/_app/inventory/stocktake/$stocktakeId'
     | '/_app/payroll/runs/$runId'
     | '/_app/payroll/workers/$workerId'
@@ -1016,6 +1054,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppValuationsValuationIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/accounting/accounts/$accountId': {
+      id: '/_app/accounting/accounts/$accountId'
+      path: '/accounts/$accountId'
+      fullPath: '/accounting/accounts/$accountId'
+      preLoaderRoute: typeof AppAccountingAccountsAccountIdRouteImport
+      parentRoute: typeof AppAccountingRoute
+    }
+    '/_app/accounting/journals/$journalId': {
+      id: '/_app/accounting/journals/$journalId'
+      path: '/journals/$journalId'
+      fullPath: '/accounting/journals/$journalId'
+      preLoaderRoute: typeof AppAccountingJournalsJournalIdRouteImport
+      parentRoute: typeof AppAccountingRoute
+    }
+    '/_app/admin/users/$userId': {
+      id: '/_app/admin/users/$userId'
+      path: '/admin/users/$userId'
+      fullPath: '/admin/users/$userId'
+      preLoaderRoute: typeof AppAdminUsersUserIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/inventory/stocktake/$stocktakeId': {
       id: '/_app/inventory/stocktake/$stocktakeId'
       path: '/$stocktakeId'
@@ -1152,6 +1211,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppAccountingRouteChildren {
+  AppAccountingAccountsAccountIdRoute: typeof AppAccountingAccountsAccountIdRoute
+  AppAccountingJournalsJournalIdRoute: typeof AppAccountingJournalsJournalIdRoute
+}
+
+const AppAccountingRouteChildren: AppAccountingRouteChildren = {
+  AppAccountingAccountsAccountIdRoute: AppAccountingAccountsAccountIdRoute,
+  AppAccountingJournalsJournalIdRoute: AppAccountingJournalsJournalIdRoute,
+}
+
+const AppAccountingRouteWithChildren = AppAccountingRoute._addFileChildren(
+  AppAccountingRouteChildren,
+)
+
 interface AppFleetRouteChildren {
   AppFleetEquipmentIdRoute: typeof AppFleetEquipmentIdRoute
 }
@@ -1249,7 +1322,7 @@ const AppProjectsProjectIdRouteWithChildren =
   AppProjectsProjectIdRoute._addFileChildren(AppProjectsProjectIdRouteChildren)
 
 interface AppRouteChildren {
-  AppAccountingRoute: typeof AppAccountingRoute
+  AppAccountingRoute: typeof AppAccountingRouteWithChildren
   AppAssistantRoute: typeof AppAssistantRoute
   AppCalendarRoute: typeof AppCalendarRoute
   AppFieldRoute: typeof AppFieldRoute
@@ -1281,6 +1354,7 @@ interface AppRouteChildren {
   AppReportsIndexRoute: typeof AppReportsIndexRoute
   AppSettingsIndexRoute: typeof AppSettingsIndexRoute
   AppSubcontractsIndexRoute: typeof AppSubcontractsIndexRoute
+  AppAdminUsersUserIdRoute: typeof AppAdminUsersUserIdRoute
   AppPayrollRunsRunIdRoute: typeof AppPayrollRunsRunIdRoute
   AppPayrollWorkersWorkerIdRoute: typeof AppPayrollWorkersWorkerIdRoute
   AppProcurementPosPoIdRoute: typeof AppProcurementPosPoIdRoute
@@ -1290,7 +1364,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
-  AppAccountingRoute: AppAccountingRoute,
+  AppAccountingRoute: AppAccountingRouteWithChildren,
   AppAssistantRoute: AppAssistantRoute,
   AppCalendarRoute: AppCalendarRoute,
   AppFieldRoute: AppFieldRoute,
@@ -1322,6 +1396,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppReportsIndexRoute: AppReportsIndexRoute,
   AppSettingsIndexRoute: AppSettingsIndexRoute,
   AppSubcontractsIndexRoute: AppSubcontractsIndexRoute,
+  AppAdminUsersUserIdRoute: AppAdminUsersUserIdRoute,
   AppPayrollRunsRunIdRoute: AppPayrollRunsRunIdRoute,
   AppPayrollWorkersWorkerIdRoute: AppPayrollWorkersWorkerIdRoute,
   AppProcurementPosPoIdRoute: AppProcurementPosPoIdRoute,

@@ -234,6 +234,7 @@ function Payables() {
 }
 
 function TrialBalance() {
+  const navigate = Route.useNavigate();
   const { data } = useGetTrialBalance({});
   if (!data) return <Skeleton />;
 
@@ -262,7 +263,16 @@ function TrialBalance() {
               </TableRow>
             )}
             {data.rows.map((row) => (
-              <TableRow key={row.account_id}>
+              <TableRow
+                key={row.account_id}
+                className="cursor-pointer"
+                onClick={() =>
+                  void navigate({
+                    to: "/accounting/accounts/$accountId",
+                    params: { accountId: row.account_id },
+                  })
+                }
+              >
                 <TableCell className="font-mono text-xs">{row.code}</TableCell>
                 <TableCell>{row.name}</TableCell>
                 <TableCell className="text-right tabular-nums">
@@ -394,6 +404,7 @@ function StatementBlock({
 }
 
 function Journals() {
+  const navigate = Route.useNavigate();
   // The journal grows for the life of the company, so it has never been
   // something to fetch whole.
   const [page, setPage] = useState(1);
@@ -428,7 +439,16 @@ function Journals() {
               </TableRow>
             )}
             {rows.map((journal) => (
-              <TableRow key={journal.id}>
+              <TableRow
+                key={journal.id}
+                className="cursor-pointer"
+                onClick={() =>
+                  void navigate({
+                    to: "/accounting/journals/$journalId",
+                    params: { journalId: journal.id },
+                  })
+                }
+              >
                 <TableCell className="font-mono text-xs">{journal.doc_number}</TableCell>
                 <TableCell className="whitespace-nowrap text-sm">
                   {fmtDate(journal.journal_date)}

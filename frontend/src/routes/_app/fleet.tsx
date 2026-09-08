@@ -33,6 +33,7 @@ import {
 } from "@/lib/api/generated/endpoints";
 import { fmtDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { EntityLink } from "@/components/ui/linked-row";
 
 const searchSchema = z.object({
   tab: z
@@ -301,7 +302,14 @@ function Utilisation() {
               return (
                 <TableRow key={String(row.equipment_id)}>
                   <TableCell>
-                    <div className="font-medium">{String(row.name)}</div>
+                    {/* Both of these tables are about one machine at a time, and
+                        the answer to any of them is on its page. */}
+                    <EntityLink
+                      to="/fleet/$equipmentId"
+                      params={{ equipmentId: String(row.equipment_id) }}
+                    >
+                      <span className="font-medium">{String(row.name)}</span>
+                    </EntityLink>
                     <div className="font-mono text-xs text-muted-foreground">
                       {String(row.code)}
                     </div>
@@ -388,7 +396,14 @@ function Fuel() {
               {data.map((row, index) => (
                 <TableRow key={`${row.fuel_log_id}-${index}`}>
                   <TableCell>
-                    <div className="font-medium">{String(row.name)}</div>
+                    {/* Both of these tables are about one machine at a time, and
+                        the answer to any of them is on its page. */}
+                    <EntityLink
+                      to="/fleet/$equipmentId"
+                      params={{ equipmentId: String(row.equipment_id) }}
+                    >
+                      <span className="font-medium">{String(row.name)}</span>
+                    </EntityLink>
                     <div className="font-mono text-xs text-muted-foreground">
                       {String(row.code)}
                     </div>

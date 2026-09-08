@@ -32,6 +32,7 @@ import { errDetail } from "@/lib/api/errors";
 import { useCreateUser, useListUsers, useUpdateUser } from "@/lib/api/generated/endpoints";
 import { fmtDate, ROLE_LABELS } from "@/lib/format";
 import { toast } from "@/lib/toast";
+import { EntityLink } from "@/components/ui/linked-row";
 
 const ROLES = ["admin", "project_manager", "site_manager", "procurement_officer", "viewer"];
 
@@ -124,7 +125,14 @@ export function UsersPanel() {
               {isLoading && !data && <TableSkeleton columns={6} />}
               {data?.items.map((u) => (
                 <TableRow key={u.id}>
-                  <TableCell className="font-medium">{u.full_name}</TableCell>
+                  <TableCell className="font-medium">
+                    {/* The row carries its own controls, so the name is the link
+                        rather than the whole row — a click meant for the role
+                        picker must not navigate away. */}
+                    <EntityLink to="/admin/users/$userId" params={{ userId: u.id }}>
+                      {u.full_name}
+                    </EntityLink>
+                  </TableCell>
                   <TableCell className="text-muted-foreground">{u.email}</TableCell>
                   <TableCell>
                     <Select
