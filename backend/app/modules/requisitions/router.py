@@ -8,11 +8,12 @@ from app.common.schemas import Page
 from app.core.deps import DbDep, require_roles
 from app.modules.procurement.schemas import PoDetail, RfqDetail
 from app.modules.procurement.service import po_detail, rfq_detail
-from app.modules.requisitions import service
+from app.modules.requisitions import line, service
 from app.modules.requisitions.schemas import (
     ConvertToPo,
     RequisitionCreate,
     RequisitionDetail,
+    RequisitionLineDetail,
     RequisitionRead,
 )
 
@@ -84,3 +85,15 @@ def convert_requisition_to_po(
 ) -> PoDetail:
     po = service.convert_to_po(db, requisition_id, body, user.id)
     return po_detail(db, po.id)
+
+
+@router.get("/requisition-items/{item_id}", response_model=RequisitionLineDetail)
+def get_requisition_line(item_id: uuid.UUID, db: DbDep) -> RequisitionLineDetail:
+    """One requested line, and what became of it.
+
+    A line is where a shortage on site turns into buying, and following it from
+    the request to the delivery is the question people actually have. The line
+    row itself holds a description and a quantity, so everything else is found
+    by looking at what happened around it.
+    """
+    return line.line_detail(db, item_id)

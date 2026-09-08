@@ -56,6 +56,7 @@ import { Route as AppPayrollRunsRunIdRouteImport } from './routes/_app/payroll/r
 import { Route as AppPayrollWorkersWorkerIdRouteImport } from './routes/_app/payroll/workers.$workerId'
 import { Route as AppProcurementInvoicesInvoiceIdRouteImport } from './routes/_app/procurement/invoices.$invoiceId'
 import { Route as AppProcurementPosPoIdRouteImport } from './routes/_app/procurement/pos.$poId'
+import { Route as AppProcurementRequisitionItemsItemIdRouteImport } from './routes/_app/procurement/requisition-items.$itemId'
 import { Route as AppProcurementRequisitionsRequisitionIdRouteImport } from './routes/_app/procurement/requisitions.$requisitionId'
 import { Route as AppProcurementRfqsRfqIdRouteImport } from './routes/_app/procurement/rfqs.$rfqId'
 import { Route as AppProcurementSuppliersSupplierIdRouteImport } from './routes/_app/procurement/suppliers.$supplierId'
@@ -313,6 +314,12 @@ const AppProcurementPosPoIdRoute = AppProcurementPosPoIdRouteImport.update({
   path: '/procurement/pos/$poId',
   getParentRoute: () => AppRoute,
 } as any)
+const AppProcurementRequisitionItemsItemIdRoute =
+  AppProcurementRequisitionItemsItemIdRouteImport.update({
+    id: '/procurement/requisition-items/$itemId',
+    path: '/procurement/requisition-items/$itemId',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppProcurementRequisitionsRequisitionIdRoute =
   AppProcurementRequisitionsRequisitionIdRouteImport.update({
     id: '/$requisitionId',
@@ -441,6 +448,7 @@ export interface FileRoutesByFullPath {
   '/payroll/workers/$workerId': typeof AppPayrollWorkersWorkerIdRoute
   '/procurement/invoices/$invoiceId': typeof AppProcurementInvoicesInvoiceIdRoute
   '/procurement/pos/$poId': typeof AppProcurementPosPoIdRoute
+  '/procurement/requisition-items/$itemId': typeof AppProcurementRequisitionItemsItemIdRoute
   '/procurement/requisitions/$requisitionId': typeof AppProcurementRequisitionsRequisitionIdRoute
   '/procurement/rfqs/$rfqId': typeof AppProcurementRfqsRfqIdRoute
   '/procurement/suppliers/$supplierId': typeof AppProcurementSuppliersSupplierIdRoute
@@ -502,6 +510,7 @@ export interface FileRoutesByTo {
   '/payroll/workers/$workerId': typeof AppPayrollWorkersWorkerIdRoute
   '/procurement/invoices/$invoiceId': typeof AppProcurementInvoicesInvoiceIdRoute
   '/procurement/pos/$poId': typeof AppProcurementPosPoIdRoute
+  '/procurement/requisition-items/$itemId': typeof AppProcurementRequisitionItemsItemIdRoute
   '/procurement/requisitions/$requisitionId': typeof AppProcurementRequisitionsRequisitionIdRoute
   '/procurement/rfqs/$rfqId': typeof AppProcurementRfqsRfqIdRoute
   '/procurement/suppliers/$supplierId': typeof AppProcurementSuppliersSupplierIdRoute
@@ -566,6 +575,7 @@ export interface FileRoutesById {
   '/_app/payroll/workers/$workerId': typeof AppPayrollWorkersWorkerIdRoute
   '/_app/procurement/invoices/$invoiceId': typeof AppProcurementInvoicesInvoiceIdRoute
   '/_app/procurement/pos/$poId': typeof AppProcurementPosPoIdRoute
+  '/_app/procurement/requisition-items/$itemId': typeof AppProcurementRequisitionItemsItemIdRoute
   '/_app/procurement/requisitions/$requisitionId': typeof AppProcurementRequisitionsRequisitionIdRoute
   '/_app/procurement/rfqs/$rfqId': typeof AppProcurementRfqsRfqIdRoute
   '/_app/procurement/suppliers/$supplierId': typeof AppProcurementSuppliersSupplierIdRoute
@@ -630,6 +640,7 @@ export interface FileRouteTypes {
     | '/payroll/workers/$workerId'
     | '/procurement/invoices/$invoiceId'
     | '/procurement/pos/$poId'
+    | '/procurement/requisition-items/$itemId'
     | '/procurement/requisitions/$requisitionId'
     | '/procurement/rfqs/$rfqId'
     | '/procurement/suppliers/$supplierId'
@@ -691,6 +702,7 @@ export interface FileRouteTypes {
     | '/payroll/workers/$workerId'
     | '/procurement/invoices/$invoiceId'
     | '/procurement/pos/$poId'
+    | '/procurement/requisition-items/$itemId'
     | '/procurement/requisitions/$requisitionId'
     | '/procurement/rfqs/$rfqId'
     | '/procurement/suppliers/$supplierId'
@@ -754,6 +766,7 @@ export interface FileRouteTypes {
     | '/_app/payroll/workers/$workerId'
     | '/_app/procurement/invoices/$invoiceId'
     | '/_app/procurement/pos/$poId'
+    | '/_app/procurement/requisition-items/$itemId'
     | '/_app/procurement/requisitions/$requisitionId'
     | '/_app/procurement/rfqs/$rfqId'
     | '/_app/procurement/suppliers/$supplierId'
@@ -1110,6 +1123,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProcurementPosPoIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/procurement/requisition-items/$itemId': {
+      id: '/_app/procurement/requisition-items/$itemId'
+      path: '/procurement/requisition-items/$itemId'
+      fullPath: '/procurement/requisition-items/$itemId'
+      preLoaderRoute: typeof AppProcurementRequisitionItemsItemIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/procurement/requisitions/$requisitionId': {
       id: '/_app/procurement/requisitions/$requisitionId'
       path: '/$requisitionId'
@@ -1358,6 +1378,7 @@ interface AppRouteChildren {
   AppPayrollRunsRunIdRoute: typeof AppPayrollRunsRunIdRoute
   AppPayrollWorkersWorkerIdRoute: typeof AppPayrollWorkersWorkerIdRoute
   AppProcurementPosPoIdRoute: typeof AppProcurementPosPoIdRoute
+  AppProcurementRequisitionItemsItemIdRoute: typeof AppProcurementRequisitionItemsItemIdRoute
   AppProcurementRfqsRfqIdRoute: typeof AppProcurementRfqsRfqIdRoute
   AppSiteDiaryEntryIdRoute: typeof AppSiteDiaryEntryIdRoute
   AppSiteIssuesIssueIdRoute: typeof AppSiteIssuesIssueIdRoute
@@ -1400,6 +1421,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppPayrollRunsRunIdRoute: AppPayrollRunsRunIdRoute,
   AppPayrollWorkersWorkerIdRoute: AppPayrollWorkersWorkerIdRoute,
   AppProcurementPosPoIdRoute: AppProcurementPosPoIdRoute,
+  AppProcurementRequisitionItemsItemIdRoute:
+    AppProcurementRequisitionItemsItemIdRoute,
   AppProcurementRfqsRfqIdRoute: AppProcurementRfqsRfqIdRoute,
   AppSiteDiaryEntryIdRoute: AppSiteDiaryEntryIdRoute,
   AppSiteIssuesIssueIdRoute: AppSiteIssuesIssueIdRoute,

@@ -61,3 +61,48 @@ class ConvertToPo(BaseModel):
     supplier_id: uuid.UUID
     expected_delivery: date | None = None
     notes: str | None = None
+
+
+class LineEnquiry(BaseModel):
+    rfq_id: uuid.UUID
+    doc_number: str
+    title: str
+    status: str
+
+
+class LineOrder(BaseModel):
+    purchase_order_id: uuid.UUID
+    doc_number: str
+    status: str
+    supplier_id: uuid.UUID
+    supplier_name: str | None = None
+    quantity: Decimal
+    unit_price: Decimal
+    expected_delivery: date | None = None
+    received_date: date | None = None
+
+
+class RequisitionLineDetail(BaseModel):
+    """A requested line, and everything that happened because of it."""
+
+    id: uuid.UUID
+    requisition_id: uuid.UUID
+    doc_number: str
+    requisition_status: str
+    project_id: uuid.UUID | None = None
+    needed_by: date | None = None
+    description: str
+    unit: str
+    quantity: Decimal
+    ordered_quantity: Decimal
+    over_ordered: Decimal
+    boq_item_id: uuid.UUID | None = None
+    boq_description: str | None = None
+    stock_item_id: uuid.UUID | None = None
+    stock_code: str | None = None
+    stock_on_hand: Decimal | None = None
+    enquiries: list[LineEnquiry] = []
+    orders: list[LineOrder] = []
+    # "reference" where somebody linked it to the bill, "description" where the
+    # connection is only that the wording matches.
+    matched_by: str

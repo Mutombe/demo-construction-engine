@@ -248,20 +248,13 @@ function RequisitionDetailPage() {
               {(requisition.items ?? []).map((line) => (
                 <TableRow key={line.id}>
                   <TableCell className="font-medium">
-                    {/* A line refers to a priced item in the bill. That is where
-                        somebody wants to go from here, so the description is the
-                        link rather than a word in the last column. */}
-                    {line.boq_item_id ? (
-                      <EntityLink
-                        to="/projects/$projectId/boq"
-                        params={{ projectId: requisition.project_id }}
-                        title="Open this line in the bill of quantities"
-                      >
-                        {line.description}
-                      </EntityLink>
-                    ) : (
-                      line.description
-                    )}
+                    <EntityLink
+                      to="/procurement/requisition-items/$itemId"
+                      params={{ itemId: line.id }}
+                      title="Follow this line through to what was ordered"
+                    >
+                      {line.description}
+                    </EntityLink>
                   </TableCell>
                   <TableCell className="text-muted-foreground">{line.unit}</TableCell>
                   <TableCell className="text-right tabular-nums">

@@ -5606,6 +5606,55 @@
         }
       }
     },
+    "/api/v1/requisition-items/{item_id}": {
+      "get": {
+        "tags": [
+          "requisitions"
+        ],
+        "summary": "Get Requisition Line",
+        "description": "One requested line, and what became of it.\n\nA line is where a shortage on site turns into buying, and following it from\nthe request to the delivery is the question people actually have. The line\nrow itself holds a description and a quantity, so everything else is found\nby looking at what happened around it.",
+        "operationId": "get_requisition_line",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequisitionLineDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects/{project_id}/diary": {
       "get": {
         "tags": [
@@ -28060,6 +28109,35 @@
         ],
         "title": "LedgerRow"
       },
+      "LineEnquiry": {
+        "properties": {
+          "rfq_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Rfq Id"
+          },
+          "doc_number": {
+            "type": "string",
+            "title": "Doc Number"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rfq_id",
+          "doc_number",
+          "title",
+          "status"
+        ],
+        "title": "LineEnquiry"
+      },
       "LineFinding": {
         "properties": {
           "rfq_item_id": {
@@ -28085,6 +28163,83 @@
           "note"
         ],
         "title": "LineFinding"
+      },
+      "LineOrder": {
+        "properties": {
+          "purchase_order_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Purchase Order Id"
+          },
+          "doc_number": {
+            "type": "string",
+            "title": "Doc Number"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "supplier_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Supplier Id"
+          },
+          "supplier_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Name"
+          },
+          "quantity": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Quantity"
+          },
+          "unit_price": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Unit Price"
+          },
+          "expected_delivery": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Delivery"
+          },
+          "received_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Received Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "purchase_order_id",
+          "doc_number",
+          "status",
+          "supplier_id",
+          "quantity",
+          "unit_price"
+        ],
+        "title": "LineOrder"
       },
       "LoginRequest": {
         "properties": {
@@ -35895,6 +36050,168 @@
           "quantity"
         ],
         "title": "RequisitionItemRead"
+      },
+      "RequisitionLineDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "requisition_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Requisition Id"
+          },
+          "doc_number": {
+            "type": "string",
+            "title": "Doc Number"
+          },
+          "requisition_status": {
+            "type": "string",
+            "title": "Requisition Status"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "needed_by": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Needed By"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "quantity": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Quantity"
+          },
+          "ordered_quantity": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ordered Quantity"
+          },
+          "over_ordered": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Over Ordered"
+          },
+          "boq_item_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Boq Item Id"
+          },
+          "boq_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Boq Description"
+          },
+          "stock_item_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stock Item Id"
+          },
+          "stock_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stock Code"
+          },
+          "stock_on_hand": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stock On Hand"
+          },
+          "enquiries": {
+            "items": {
+              "$ref": "#/components/schemas/LineEnquiry"
+            },
+            "type": "array",
+            "title": "Enquiries",
+            "default": []
+          },
+          "orders": {
+            "items": {
+              "$ref": "#/components/schemas/LineOrder"
+            },
+            "type": "array",
+            "title": "Orders",
+            "default": []
+          },
+          "matched_by": {
+            "type": "string",
+            "title": "Matched By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "requisition_id",
+          "doc_number",
+          "requisition_status",
+          "description",
+          "unit",
+          "quantity",
+          "ordered_quantity",
+          "over_ordered",
+          "matched_by"
+        ],
+        "title": "RequisitionLineDetail",
+        "description": "A requested line, and everything that happened because of it."
       },
       "RequisitionRead": {
         "properties": {

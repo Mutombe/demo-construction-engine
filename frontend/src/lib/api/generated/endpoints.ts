@@ -326,6 +326,7 @@ import type {
   RequirementUpdate,
   RequisitionCreate,
   RequisitionDetail,
+  RequisitionLineDetail,
   RequisitionRead,
   RetentionRegisterParams,
   RetentionReleaseCreate,
@@ -8577,6 +8578,105 @@ export const useConvertRequisitionToPo = <TError = HTTPValidationError,
       > => {
       return useMutation(getConvertRequisitionToPoMutationOptions(options), queryClient);
     }
+
+/**
+ * One requested line, and what became of it.
+ *
+ * A line is where a shortage on site turns into buying, and following it from
+ * the request to the delivery is the question people actually have. The line
+ * row itself holds a description and a quantity, so everything else is found
+ * by looking at what happened around it.
+ * @summary Get Requisition Line
+ */
+export const getRequisitionLine = (
+    itemId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return apiMutator<RequisitionLineDetail>(
+      {url: `/api/v1/requisition-items/${itemId}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetRequisitionLineQueryKey = (itemId: string,) => {
+    return [
+    `/api/v1/requisition-items/${itemId}`
+    ] as const;
+    }
+
+
+export const getGetRequisitionLineQueryOptions = <TData = Awaited<ReturnType<typeof getRequisitionLine>>, TError = HTTPValidationError>(itemId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequisitionLine>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRequisitionLineQueryKey(itemId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRequisitionLine>>> = ({ signal }) => getRequisitionLine(itemId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: itemId !== null && itemId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRequisitionLine>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetRequisitionLineQueryResult = NonNullable<Awaited<ReturnType<typeof getRequisitionLine>>>
+export type GetRequisitionLineQueryError = HTTPValidationError
+
+
+export function useGetRequisitionLine<TData = Awaited<ReturnType<typeof getRequisitionLine>>, TError = HTTPValidationError>(
+ itemId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequisitionLine>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRequisitionLine>>,
+          TError,
+          Awaited<ReturnType<typeof getRequisitionLine>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetRequisitionLine<TData = Awaited<ReturnType<typeof getRequisitionLine>>, TError = HTTPValidationError>(
+ itemId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequisitionLine>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRequisitionLine>>,
+          TError,
+          Awaited<ReturnType<typeof getRequisitionLine>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetRequisitionLine<TData = Awaited<ReturnType<typeof getRequisitionLine>>, TError = HTTPValidationError>(
+ itemId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequisitionLine>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Requisition Line
+ */
+
+export function useGetRequisitionLine<TData = Awaited<ReturnType<typeof getRequisitionLine>>, TError = HTTPValidationError>(
+ itemId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequisitionLine>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetRequisitionLineQueryOptions(itemId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 /**
  * @summary List Diary Entries

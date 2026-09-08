@@ -1,3 +1,4 @@
+from decimal import Decimal
 from datetime import date, timedelta
 
 from sqlalchemy import select
@@ -265,3 +266,116 @@ def test_filter_by_status_and_project(client, db):
 
     by_status = client.get("/api/v1/requisitions?status=cancelled", headers=site).json()
     assert [r["id"] for r in by_status["items"]] == [cancelled["id"]]
+
+
+# --- Following a line through to what it became ------------------------------
+
+
+def test_a_line_can_be_opened_even_with_nothing_linked_to_it(client, db):
+    """Requisition lines are typed on site and usually carry no bill or stock
+    reference. A page that only worked for linked lines would be blank on
+    almost every real one."""
+    headers = _site(db)
+    project = make_project(db)
+    res = client.post(
+        f"/api/v1/projects/{project.id}/requisitions",
+        json={"items": [{"description": "Cement 42.5N 50kg", "unit": "bag",
+                         "quantity": "40"}]},
+        headers=headers,
+    )
+    assert res.status_code == 201, res.text
+    line_id = res.json()["items"][0]["id"]
+
+    detail = client.get(f"/api/v1/requisition-items/{line_id}", headers=headers)
+    assert detail.status_code == 200, detail.text
+    body = detail.json()
+    assert body["description"] == "Cement 42.5N 50kg"
+    assert Decimal(body["quantity"]) == Decimal("40.000")
+    assert body["matched_by"] == "description"
+
+
+def test_a_line_finds_the_order_raised_for_it(client, db):
+    headers = _site(db)
+    proc = _proc(db)
+    project = make_project(db)
+    supplier = make_supplier(db)
+
+    requisition = client.post(
+        f"/api/v1/projects/{project.id}/requisitions",
+        json={"items": [{"description": "River sand", "unit": "m3", "quantity": "12"}]},
+        headers=headers,
+    ).json()
+    line_id = requisition["items"][0]["id"]
+
+    client.post(
+        f"/api/v1/projects/{project.id}/purchase-orders",
+        json={
+            "supplier_id": str(supplier.id),
+            "items": [{"description": "River sand", "unit": "m3", "quantity": "12",
+                       "unit_price": "30"}],
+        },
+        headers=proc,
+    )
+
+    body = client.get(f"/api/v1/requisition-items/{line_id}", headers=headers).json()
+    assert len(body["orders"]) == 1
+    assert body["orders"][0]["supplier_name"] == supplier.name
+    assert Decimal(body["ordered_quantity"]) == Decimal("12")
+
+
+def test_ordering_more_than_was_asked_for_is_visible(client, db):
+    headers = _site(db)
+    proc = _proc(db)
+    project = make_project(db)
+    supplier = make_supplier(db)
+
+    requisition = client.post(
+        f"/api/v1/projects/{project.id}/requisitions",
+        json={"items": [{"description": "Rebar Y12", "unit": "tonne", "quantity": "2"}]},
+        headers=headers,
+    ).json()
+    line_id = requisition["items"][0]["id"]
+
+    client.post(
+        f"/api/v1/projects/{project.id}/purchase-orders",
+        json={
+            "supplier_id": str(supplier.id),
+            "items": [{"description": "Rebar Y12", "unit": "tonne", "quantity": "5",
+                       "unit_price": "900"}],
+        },
+        headers=proc,
+    )
+
+    body = client.get(f"/api/v1/requisition-items/{line_id}", headers=headers).json()
+    assert Decimal(body["over_ordered"]) == Decimal("3.000")
+
+
+def test_another_project_s_order_is_not_credited_to_this_line(client, db):
+    """The wording matches across the whole company; the line belongs to one
+    job, and only that job's buying counts."""
+    headers = _site(db)
+    proc = _proc(db)
+    ours = make_project(db)
+    theirs = make_project(db)
+    supplier = make_supplier(db)
+
+    requisition = client.post(
+        f"/api/v1/projects/{ours.id}/requisitions",
+        json={"items": [{"description": "Shutter ply", "unit": "sheet",
+                         "quantity": "20"}]},
+        headers=headers,
+    ).json()
+    line_id = requisition["items"][0]["id"]
+
+    client.post(
+        f"/api/v1/projects/{theirs.id}/purchase-orders",
+        json={
+            "supplier_id": str(supplier.id),
+            "items": [{"description": "Shutter ply", "unit": "sheet", "quantity": "20",
+                       "unit_price": "18"}],
+        },
+        headers=proc,
+    )
+
+    body = client.get(f"/api/v1/requisition-items/{line_id}", headers=headers).json()
+    assert body["orders"] == []
